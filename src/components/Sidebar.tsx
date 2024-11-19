@@ -1,8 +1,7 @@
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 import { Home, Library, Settings } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 const routes = [
   {
@@ -36,7 +35,9 @@ export function Sidebar() {
             {routes.map((route) => (
               <Button
                 key={route.path}
-                variant={location.pathname === route.path ? 'secondary' : 'ghost'}
+                variant={
+                  location.pathname === route.path ? 'secondary' : 'ghost'
+                }
                 className={cn('w-full justify-start', {
                   'bg-secondary': location.pathname === route.path,
                 })}
@@ -49,14 +50,6 @@ export function Sidebar() {
               </Button>
             ))}
           </div>
-        </div>
-        <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-            Connected Services
-          </h2>
-          <ScrollArea className="h-[300px] px-1">
-            <div className="space-y-1 p-2"></div>
-          </ScrollArea>
         </div>
       </div>
     </div>

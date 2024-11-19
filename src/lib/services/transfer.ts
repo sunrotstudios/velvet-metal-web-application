@@ -1,3 +1,6 @@
+import { refreshSpotifyToken } from '@/lib/api/spotify';
+import { isTokenExpired } from '@/lib/auth';
+
 const APPLE_DEVELOPER_TOKEN =
   'eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjZLVkRTNjc2NVMifQ.eyJpYXQiOjE3MzE0NTQ2OTEsImV4cCI6MTc0NzAwNjY5MSwiaXNzIjoiRFlXNEFHOTQ0MiJ9.Us6UP86UTEZJtCdyVLlOGGj-hw_pZ4lu4Pk-htEbolgWrph6P_toc9INvLhzVgVlD5ToyiD_m8CssZlPunUGHw';
 
@@ -18,8 +21,7 @@ interface Track {
 
 interface TransferProgress {
   stage: 'fetching' | 'creating' | 'searching' | 'adding';
-  current?: number;
-  total?: number;
+  progress: number; // 0-100
   message: string;
 }
 
@@ -34,6 +36,37 @@ interface TransferPlaylistParams {
 
 async function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function ensureFreshToken(
+  service: 'spotify' | 'apple-music',
+  token: string
+) {
+  if (service === 'spotify') {
+    const expiresAt = parseInt(
+      localStorage.getItem('spotify_token_expires_at') || '0'
+    );
+    const refreshToken = localStorage.getItem('spotify_refresh_token');
+
+    if (isTokenExpired(expiresAt) && refreshToken) {
+      try {
+        const newAuth = await refreshSpotifyToken(refreshToken);
+        localStorage.setItem('spotify_access_token', newAuth.access_token);
+        localStorage.setItem('spotify_refresh_token', newAuth.refresh_token);
+        localStorage.setItem(
+          'spotify_token_expires_at',
+          String(Math.floor(Date.now() / 1000 + newAuth.expires_in))
+        );
+        return newAuth.access_token;
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+        throw new Error(
+          'Your Spotify session has expired. Please reconnect your account.'
+        );
+      }
+    }
+  }
+  return token;
 }
 
 async function retryWithBackoff(
@@ -65,13 +98,15 @@ async function createPlaylist(
   { name, description }: { name: string; description: string },
   token: string
 ) {
+  const freshToken = await ensureFreshToken(service, token);
+
   console.log(`Creating playlist in ${service}:`, { name, description });
 
   if (service === 'spotify') {
     const response = await fetch('https://api.spotify.com/v1/me/playlists', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${freshToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -138,6 +173,7 @@ export async function transferPlaylist({
   // 1. Get tracks from source playlist
   onProgress?.({
     stage: 'fetching',
+    progress: 0,
     message: 'Fetching tracks from source playlist...',
   });
   const tracks = await getPlaylistTracks(
@@ -148,7 +184,14 @@ export async function transferPlaylist({
 
   // 2. Create new playlist
   onProgress?.({
+    stage: 'fetching',
+    progress: 20,
+    message: `Found ${tracks.length} tracks`,
+  });
+
+  onProgress?.({
     stage: 'creating',
+    progress: 25,
     message: 'Creating new playlist in target service...',
   });
   const newPlaylist = await createPlaylist(
@@ -160,12 +203,10 @@ export async function transferPlaylist({
     targetToken
   );
 
-  // 3. Search and add tracks
   onProgress?.({
-    stage: 'searching',
-    current: 0,
-    total: tracks.length,
-    message: `Searching for tracks in ${targetService}...`,
+    stage: 'creating',
+    progress: 30,
+    message: 'Playlist created successfully',
   });
 
   await addTracksToPlaylist(
@@ -173,18 +214,21 @@ export async function transferPlaylist({
     newPlaylist.id,
     tracks,
     targetToken,
-    (current) =>
+    (current) => {
+      const searchProgress = (current / tracks.length) * 70; // 70% of remaining progress
+
       onProgress?.({
         stage: 'searching',
-        current,
-        total: tracks.length,
-        message: `Found ${current}/${tracks.length} tracks...`,
-      })
+        progress: Math.min(30 + searchProgress, 99), // Cap at 99% until complete
+        message: `Processing tracks (${current}/${tracks.length})`,
+      });
+    }
   );
 
   onProgress?.({
     stage: 'adding',
-    message: 'Adding tracks to playlist...',
+    progress: 100,
+    message: 'Transfer complete! You can now close this window.',
   });
 
   return newPlaylist;
@@ -195,6 +239,8 @@ async function getPlaylistTracks(
   playlistId: string,
   token: string
 ): Promise<Track[]> {
+  const freshToken = await ensureFreshToken(service, token);
+
   console.log(`Fetching tracks from ${service} playlist ${playlistId}`);
 
   if (service === 'spotify') {
@@ -202,7 +248,7 @@ async function getPlaylistTracks(
       `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${freshToken}`,
         },
       }
     );
@@ -266,6 +312,8 @@ async function addTracksToPlaylist(
   token: string,
   onProgress?: (current: number) => void
 ) {
+  const freshToken = await ensureFreshToken(service, token);
+
   console.log(
     `Starting to add ${tracks.length} tracks to ${service} playlist ${playlistId}`
   );
@@ -293,7 +341,7 @@ async function addTracksToPlaylist(
           )}&type=track&limit=1`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${freshToken}`,
             },
           }
         );
@@ -334,7 +382,7 @@ async function addTracksToPlaylist(
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${freshToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

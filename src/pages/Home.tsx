@@ -1,20 +1,21 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Music2, Music, Check } from 'lucide-react';
-import { getSpotifyAuthUrl } from '@/lib/api/spotify';
-import { authorizeAppleMusic } from '@/lib/api/apple-music';
 import { useAuth } from '@/contexts/auth-context';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { authorizeAppleMusic } from '@/lib/api/apple-music';
+import { getSpotifyAuthUrl } from '@/lib/api/spotify';
 import pb from '@/lib/pocketbase';
+import { syncLibrary } from '@/lib/services/librarySync';
 import updateConnectedServices from '@/lib/services/updateConnectedServices';
+import { useQuery } from '@tanstack/react-query';
+import { Check, Music, Music2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export default function Home() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: userServices } = useQuery({
+  const { data: userServices, refetch: refetchServices } = useQuery({
     queryKey: ['userServices', user?.id],
     queryFn: async () => {
       if (!user) return null;
@@ -33,8 +34,6 @@ export default function Home() {
   );
 
   const handleSpotifyConnect = () => {
-    console.log('Starting Spotify connection...');
-    console.log('Auth URL:', getSpotifyAuthUrl());
     window.location.href = getSpotifyAuthUrl();
   };
 
@@ -52,7 +51,9 @@ export default function Home() {
         expiresAt: null,
       });
 
+      await refetchServices();
       toast.success('Successfully connected to Apple Music');
+      await syncLibrary(user.id, 'apple-music');
       navigate('/library');
     } catch (error) {
       console.error('Apple Music authorization failed:', error);
@@ -66,56 +67,77 @@ export default function Home() {
   };
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">
-          Welcome, {user?.name}
-        </h2>
-        <Button onClick={handleLogout} className="ml-auto">
-          Logout
-        </Button>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Music className="h-6 w-6" />
-              Spotify
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isSpotifyConnected ? (
-              <div className="flex items-center justify-center gap-2 text-green-500">
-                <Check className="h-5 w-5" />
-                <span>Connected</span>
-              </div>
-            ) : (
-              <Button onClick={handleSpotifyConnect} className="w-full">
-                Connect Spotify Account
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Music2 className="h-6 w-6" />
-              Apple Music
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isAppleMusicConnected ? (
-              <div className="flex items-center justify-center gap-2 text-green-500">
-                <Check className="h-5 w-5" />
-                <span>Connected</span>
-              </div>
-            ) : (
-              <Button onClick={handleAppleMusicConnect} className="w-full">
-                Connect Apple Music Account
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-accent/10">
+      <div className="container mx-auto max-w-5xl space-y-8 p-8">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-4xl font-bold tracking-tight">
+              Welcome back, {user?.name}
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Connect your music services to get started
+            </p>
+          </div>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="hover:bg-accent text-foreground"
+          >
+            Logout
+          </Button>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="group relative overflow-hidden border-2 transition-all hover:border-primary/50">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <Music className="h-7 w-7" />
+                Spotify
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center min-h-[100px]">
+              {isSpotifyConnected ? (
+                <div className="flex items-center gap-3 rounded-lg bg-green-500/10 p-4 text-green-500">
+                  <Check className="h-5 w-5" />
+                  <span className="font-medium">Connected to Spotify</span>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleSpotifyConnect}
+                  className="relative w-full max-w-[200px] overflow-hidden bg-gradient-to-r from-green-500 to-green-600 transition-transform hover:scale-[1.02] px-8 py-6"
+                >
+                  <span className="relative z-10">Connect</span>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="group relative overflow-hidden border-2 transition-all hover:border-primary/50">
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <Music2 className="h-7 w-7" />
+                Apple Music
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center min-h-[100px]">
+              {isAppleMusicConnected ? (
+                <div className="flex items-center gap-3 rounded-lg bg-green-500/10 p-4 text-green-500">
+                  <Check className="h-5 w-5" />
+                  <span className="font-medium">Connected to Apple Music</span>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleAppleMusicConnect}
+                  className="relative w-full max-w-[200px] overflow-hidden bg-gradient-to-r from-pink-500 to-pink-600 transition-transform hover:scale-[1.02] px-8 py-6"
+                >
+                  <span className="relative z-10">Connect</span>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

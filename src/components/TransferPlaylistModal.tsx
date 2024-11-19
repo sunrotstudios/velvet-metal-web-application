@@ -13,11 +13,11 @@ import { transferPlaylist } from '@/lib/services/transfer';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 interface TransferProgress {
   stage: 'fetching' | 'creating' | 'searching' | 'adding';
-  current?: number;
-  total?: number;
+  progress: number; // 0-100
   message: string;
 }
 
@@ -56,7 +56,12 @@ export function TransferPlaylistModal({
     }
 
     setIsTransferring(true);
-    setProgress(null);
+    setProgress({
+      stage: 'fetching',
+      progress: 0,
+      message: 'Starting transfer...',
+    });
+
     try {
       await transferPlaylist({
         sourceService,
@@ -66,13 +71,13 @@ export function TransferPlaylistModal({
         targetToken,
         onProgress: setProgress,
       });
-      toast.success('Playlist transferred successfully');
-      onOpenChange(false);
-      onTransferComplete?.();
+
+      // Don't close the modal immediately
+      setIsTransferring(false);
+      // Success message will be shown in the progress indicator
     } catch (error) {
       console.error('Transfer error:', error);
       toast.error('Failed to transfer playlist');
-    } finally {
       setIsTransferring(false);
       setProgress(null);
     }
@@ -132,23 +137,52 @@ export function TransferPlaylistModal({
           </div>
 
           {progress ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
+                <span className="text-muted-foreground font-medium">
                   {progress.message}
                 </span>
-                {progress.current && progress.total && (
-                  <span className="text-muted-foreground font-medium">
-                    {progress.current}/{progress.total}
-                  </span>
-                )}
+                <span className="text-muted-foreground">
+                  {Math.round(progress.progress)}%
+                </span>
               </div>
-              {progress.current && progress.total && (
-                <Progress
-                  value={(progress.current / progress.total) * 100}
-                  className="h-2"
-                />
-              )}
+              <Progress value={progress.progress} className="h-2" />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={cn('h-2 w-2 rounded-full', {
+                      'bg-primary animate-pulse': progress.stage === 'fetching',
+                      'bg-primary': progress.stage !== 'fetching',
+                    })}
+                  />
+                  Fetching
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className={cn('h-2 w-2 rounded-full', {
+                      'bg-primary animate-pulse': progress.stage === 'creating',
+                      'bg-muted': progress.progress < 20,
+                      'bg-primary':
+                        progress.progress >= 20 &&
+                        progress.stage !== 'creating',
+                    })}
+                  />
+                  Creating
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className={cn('h-2 w-2 rounded-full', {
+                      'bg-primary animate-pulse':
+                        progress.stage === 'searching',
+                      'bg-muted': progress.progress < 30,
+                      'bg-primary':
+                        progress.progress >= 30 &&
+                        progress.stage !== 'searching',
+                    })}
+                  />
+                  Processing
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-2 rounded-md border p-4">
@@ -161,19 +195,32 @@ export function TransferPlaylistModal({
           )}
 
           <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isTransferring}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleTransfer} disabled={isTransferring}>
-              {isTransferring && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Transfer
-            </Button>
+            {progress?.progress === 100 ? (
+              <Button
+                onClick={() => {
+                  onOpenChange(false);
+                  onTransferComplete?.();
+                }}
+              >
+                Close
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isTransferring}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleTransfer} disabled={isTransferring}>
+                  {isTransferring && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Transfer
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>
