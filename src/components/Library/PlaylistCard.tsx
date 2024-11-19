@@ -1,13 +1,13 @@
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { NormalizedPlaylist, ViewMode } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { ViewMode, Playlist } from '@/lib/types';
 import { Play, Plus } from 'lucide-react';
 
 interface PlaylistCardProps {
-  playlist: Playlist;
+  playlist: NormalizedPlaylist;
   viewMode: ViewMode;
-  onTransfer: (playlist: Playlist) => void;
+  onTransfer: (playlist: NormalizedPlaylist) => void;
 }
 
 export const PlaylistCard = ({
@@ -15,27 +15,16 @@ export const PlaylistCard = ({
   viewMode,
   onTransfer,
 }: PlaylistCardProps) => {
-  const getTrackCount = () => {
-    if (playlist.tracks?.total) return playlist.tracks.total;
-    if (playlist.attributes?.trackCount) return playlist.attributes.trackCount;
-    return 0;
-  };
-
-  const getArtworkUrl = (url?: string) => {
-    if (!url) return '';
-    if (url.includes('api.spotify.com')) return url;
-    return url.replace('{w}', '500').replace('{h}', '500');
-  };
-
-  const playlistName = playlist.name || playlist.attributes?.name;
-  const trackCount = getTrackCount();
+  if (!playlist) {
+    return null;
+  }
 
   return (
     <Card
       className="group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-accent"
       role="button"
       tabIndex={0}
-      aria-label={`Playlist: ${playlistName}`}
+      aria-label={`Playlist: ${playlist.name}`}
     >
       <div
         className={cn(
@@ -51,13 +40,17 @@ export const PlaylistCard = ({
             viewMode === 'grid' ? 'aspect-square w-full' : 'h-20 w-20'
           )}
         >
-          <img
-            src={getArtworkUrl(
-              playlist.images?.[0]?.url || playlist.attributes?.artwork?.url
-            )}
-            alt={`${playlistName} cover`}
-            className="h-full w-full object-cover transition-all duration-300 group-hover/image:scale-105"
-          />
+          {playlist.artwork.url ? (
+            <img
+              src={playlist.artwork.url}
+              alt={`${playlist.name} cover`}
+              className="h-full w-full object-cover transition-all duration-300 group-hover/image:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-accent">
+              <Play className="h-8 w-8 text-muted-foreground" />
+            </div>
+          )}
           <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity duration-200 group-hover/image:opacity-100">
             <Button
               size="icon"
@@ -72,10 +65,11 @@ export const PlaylistCard = ({
           <div className="flex items-start justify-between">
             <div>
               <h3 className="line-clamp-1 font-medium leading-none">
-                {playlistName}
+                {playlist.name}
               </h3>
               <p className="line-clamp-1 text-sm text-muted-foreground">
-                {trackCount} {trackCount === 1 ? 'track' : 'tracks'}
+                {playlist.trackCount}{' '}
+                {playlist.trackCount === 1 ? 'track' : 'tracks'}
               </p>
             </div>
             <Button
@@ -83,7 +77,7 @@ export const PlaylistCard = ({
               variant="ghost"
               className="h-8 w-8 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100"
               onClick={() => onTransfer(playlist)}
-              aria-label={`Transfer playlist: ${playlistName}`}
+              aria-label={`Transfer playlist: ${playlist.name}`}
             >
               <Plus className="h-4 w-4" />
             </Button>

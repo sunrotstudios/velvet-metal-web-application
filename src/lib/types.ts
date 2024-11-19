@@ -31,6 +31,20 @@ export interface NormalizedAlbum {
   sourceId: string;
 }
 
+export interface NormalizedPlaylist {
+  id: string;
+  sourceId: string;
+  sourceService: ServiceType;
+  name: string;
+  artwork: {
+    url: string;
+    width: number | null;
+    height: number | null;
+  };
+  trackCount: number;
+  dateAdded: string | null;
+}
+
 export interface AlbumTrack {
   id: string;
   name: string;

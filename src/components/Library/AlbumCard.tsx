@@ -3,7 +3,7 @@ import { NormalizedAlbum, ViewMode } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from './ui/button';
+import { Button } from '../ui/button';
 
 interface AlbumCardProps {
   album: NormalizedAlbum;

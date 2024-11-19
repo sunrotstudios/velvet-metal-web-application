@@ -52,6 +52,48 @@ function normalizeAlbumData(
   }
 }
 
+export function normalizePlaylistData(
+  playlist: any,
+  service: ServiceType
+): NormalizedPlaylist {
+  if (service === 'spotify') {
+    return {
+      id: playlist.id,
+      sourceId: playlist.id,
+      sourceService: 'spotify',
+      name: playlist.name || 'Untitled Playlist',
+      artwork: {
+        url: playlist.images?.[0]?.url || '',
+        width: playlist.images?.[0]?.width || null,
+        height: playlist.images?.[0]?.height || null,
+      },
+      trackCount: playlist.tracks?.total || 0,
+      dateAdded: playlist.added_at || null,
+    };
+  } else {
+    // Apple Music
+    const artworkUrl = playlist.attributes?.artwork?.url
+      ? playlist.attributes.artwork.url
+          .replace('{w}', '500')
+          .replace('{h}', '500')
+      : '';
+
+    return {
+      id: playlist.id,
+      sourceId: playlist.id,
+      sourceService: 'apple-music',
+      name: playlist.attributes?.name || 'Untitled Playlist',
+      artwork: {
+        url: artworkUrl,
+        width: playlist.attributes?.artwork?.width || null,
+        height: playlist.attributes?.artwork?.height || null,
+      },
+      trackCount: playlist.attributes?.trackCount || 0,
+      dateAdded: playlist.attributes?.dateAdded || null,
+    };
+  }
+}
+
 export async function syncLibrary(
   userId: string,
   service: 'spotify' | 'apple-music',

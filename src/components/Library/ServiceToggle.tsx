@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ServiceType } from '@/lib/types';
-import { Music2, Music } from 'lucide-react';
+import { Music, Music2 } from 'lucide-react';
 
 interface ServiceToggleProps {
   activeService: ServiceType;

@@ -1,6 +1,9 @@
-import { AlbumCard } from '@/components/AlbumCard';
+import { ExportLibraryDialog } from '@/components/ExportLibraryDialog';
+import { AlbumCard } from '@/components/Library/AlbumCard';
+import { PlaylistCard } from '@/components/Library/PlaylistCard';
+import VirtualizedAlbumGrid from '@/components/Library/VirtualizedAlbumGrid';
+import VirtualizedPlaylistGrid from '@/components/Library/VirtualizedPlaylistGrid';
 import { LibrarySkeleton } from '@/components/LibrarySkeleton';
-import { PlaylistCard } from '@/components/PlaylistCard';
 import { TransferPlaylistModal } from '@/components/TransferPlaylistModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,15 +21,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import VirtualizedGrid from '@/components/VirtualizedGrid';
 import { useAuth } from '@/contexts/auth-context';
 import { useDebounce } from '@/hooks/useDebounce';
 import pb from '@/lib/pocketbase';
-import { getStoredLibrary, syncLibrary } from '@/lib/services/librarySync';
+import {
+  getStoredLibrary,
+  normalizePlaylistData,
+  syncLibrary,
+} from '@/lib/services/librarySync';
 import { NormalizedAlbum, Playlist, ServiceType, ViewMode } from '@/lib/types';
-import { cn } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  Download,
   Grid,
   Library as LibraryIcon,
   List,
@@ -55,6 +61,7 @@ export default function Library() {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [activeTab, setActiveTab] = useState<'albums' | 'playlists'>('albums');
   const queryClient = useQueryClient();
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   const MemoizedAlbumCard = memo(AlbumCard);
   const MemoizedPlaylistCard = memo(PlaylistCard);
@@ -74,7 +81,7 @@ export default function Library() {
   // Check if the user's service is connected
   const isServiceConnected = useMemo(() => {
     return userServices?.some(
-      (service) => service.id === activeService && service.connected
+      (service: any) => service.id === activeService && service.connected
     );
   }, [userServices, activeService]);
 
@@ -157,21 +164,25 @@ export default function Library() {
     return result;
   }, [albums, debouncedSearchQuery, sortBy, sortFunction]);
 
+  const normalizedPlaylists = useMemo(() => {
+    return playlists.map((playlist) =>
+      normalizePlaylistData(playlist, activeService)
+    );
+  }, [playlists, activeService]);
+
   const filteredPlaylists = useMemo(() => {
-    let result = playlists;
+    let result = normalizedPlaylists;
     if (debouncedSearchQuery) {
-      result = result.filter((playlist: Playlist) =>
-        (playlist.name || playlist.attributes?.name || '')
-          .toLowerCase()
-          .includes(debouncedSearchQuery.toLowerCase())
+      result = result.filter((playlist) =>
+        playlist.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       );
     }
 
     if (sortBy) {
       const [key, order] = sortBy.split('-');
-      result = [...result].sort((a: Playlist, b: Playlist) => {
-        const aValue = (a.name || a.attributes?.name || '').toLowerCase();
-        const bValue = (b.name || b.attributes?.name || '').toLowerCase();
+      result = [...result].sort((a, b) => {
+        const aValue = a.name.toLowerCase();
+        const bValue = b.name.toLowerCase();
         if (aValue < bValue) return order === 'asc' ? -1 : 1;
         if (aValue > bValue) return order === 'asc' ? 1 : -1;
         return 0;
@@ -179,7 +190,7 @@ export default function Library() {
     }
 
     return result;
-  }, [playlists, debouncedSearchQuery, sortBy]);
+  }, [normalizedPlaylists, debouncedSearchQuery, sortBy]);
 
   const handleTransfer = useCallback((playlist: Playlist) => {
     setSelectedPlaylist(playlist);
@@ -243,7 +254,7 @@ export default function Library() {
     <>
       <div className="flex-1 space-y-6 p-8 pt-6">
         {/* TOP HEADER */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Your Library</h2>
             <p className="text-muted-foreground">
@@ -251,79 +262,89 @@ export default function Library() {
               {activeService === 'spotify' ? 'Spotify' : 'Apple Music'}
             </p>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleManualRefresh}
-                  className="h-8 w-8"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refresh Library</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleManualRefresh}
+                    className="h-8 w-8"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Refresh Library</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           {/* CONTROL SECTION */}
-          <div className="flex flex-col mb-8 space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-            <div className="flex flex-col space-y-4 md:flex-row md:items-center md:gap-4">
-              <TabsList className="w-full md:w-[400px] grid grid-cols-2">
-                <TabsTrigger value="albums" className="flex items-center gap-2">
-                  <LibraryIcon className="h-4 w-4" />
-                  Albums
-                </TabsTrigger>
-                <TabsTrigger
-                  value="playlists"
-                  className="flex items-center gap-2"
-                >
-                  <ListMusic className="h-4 w-4" />
-                  Playlists
-                </TabsTrigger>
-              </TabsList>
+          <div className="flex flex-col space-y-4">
+            <div className="grid gap-4 md:grid-cols-[1fr_auto_auto]">
+              {/* Left Section: Tabs and Service Selection */}
+              <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
+                <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+                  <TabsTrigger
+                    value="albums"
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                  >
+                    <LibraryIcon className="mr-2 h-4 w-4" />
+                    Albums
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="playlists"
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                  >
+                    <ListMusic className="mr-2 h-4 w-4" />
+                    Playlists
+                  </TabsTrigger>
+                </TabsList>
 
-              <div className="flex items-center gap-0.5 rounded-md border p-0.5">
-                <Button
-                  variant={activeService === 'spotify' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveService('spotify')}
-                  className="flex-1 md:flex-initial items-center gap-2"
-                >
-                  <Music className="h-4 w-4" />
-                  <span className="hidden sm:inline">Spotify</span>
-                </Button>
-                <Button
-                  variant={
-                    activeService === 'apple-music' ? 'secondary' : 'ghost'
-                  }
-                  size="sm"
-                  onClick={() => setActiveService('apple-music')}
-                  className="flex-1 md:flex-initial items-center gap-2"
-                >
-                  <Music2 className="h-4 w-4" />
-                  <span className="hidden sm:inline">Apple Music</span>
-                </Button>
+                <div className="flex h-9 items-center gap-0.5 rounded-md border p-0.5">
+                  <Button
+                    variant={
+                      activeService === 'spotify' ? 'secondary' : 'ghost'
+                    }
+                    size="sm"
+                    onClick={() => setActiveService('spotify')}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <Music className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Spotify</span>
+                  </Button>
+                  <Button
+                    variant={
+                      activeService === 'apple-music' ? 'secondary' : 'ghost'
+                    }
+                    size="sm"
+                    onClick={() => setActiveService('apple-music')}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <Music2 className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Apple Music</span>
+                  </Button>
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-col space-y-4 md:flex-row md:items-center md:gap-3">
-              <div className="relative flex-1 md:w-[280px]">
+              {/* Middle Section: Search */}
+              <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search..."
-                  className="pl-8"
+                  className="h-9 pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
 
-              <div className="flex items-center gap-3">
+              {/* Right Section: Sort and View Controls */}
+              <div className="flex items-center gap-2">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="flex-1 md:w-[140px]">
+                  <SelectTrigger className="h-9 w-[130px]">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -335,12 +356,12 @@ export default function Library() {
                   </SelectContent>
                 </Select>
 
-                <div className="flex items-center gap-0.5 rounded-md border p-0.5">
+                <div className="flex h-9 items-center gap-0.5 rounded-md border p-0.5">
                   <Button
                     variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                     size="icon"
                     onClick={() => setViewMode('grid')}
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     aria-label="Grid View"
                   >
                     <Grid className="h-4 w-4" />
@@ -349,10 +370,19 @@ export default function Library() {
                     variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                     size="icon"
                     onClick={() => setViewMode('list')}
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     aria-label="List View"
                   >
                     <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsExportOpen(true)}
+                    className="h-7 w-7"
+                    aria-label="Export Library"
+                  >
+                    <Download className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -374,7 +404,7 @@ export default function Library() {
                 <p>No albums available.</p>
               </div>
             ) : (
-              <VirtualizedGrid
+              <VirtualizedAlbumGrid
                 items={filteredAlbums}
                 viewMode={viewMode}
                 ItemComponent={MemoizedAlbumCard}
@@ -397,27 +427,41 @@ export default function Library() {
                 <p>No playlists available.</p>
               </div>
             ) : (
-              <div
-                className={cn(
-                  'grid gap-6',
-                  viewMode === 'grid'
-                    ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-                    : 'grid-cols-1'
-                )}
-              >
-                {filteredPlaylists.map((playlist: Playlist) => (
-                  <MemoizedPlaylistCard
-                    key={playlist.id}
-                    playlist={playlist}
-                    viewMode={viewMode}
-                    onTransfer={handleTransfer}
-                  />
-                ))}
-              </div>
+              // <div
+              //   className={cn(
+              //     'grid gap-6',
+              //     viewMode === 'grid'
+              //       ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+              //       : 'grid-cols-1'
+              //   )}
+              // >
+              //   {filteredPlaylists.map((playlist: Playlist) => (
+              //     <MemoizedPlaylistCard
+              //       key={playlist.id}
+              //       playlist={playlist}
+              //       viewMode={viewMode}
+              //       onTransfer={handleTransfer}
+              //     />
+              //   ))}
+              // </div>
+              <VirtualizedPlaylistGrid
+                items={filteredPlaylists}
+                viewMode={viewMode}
+                ItemComponent={MemoizedPlaylistCard}
+                onTransfer={handleTransfer}
+              />
             )}
           </TabsContent>
         </Tabs>
       </div>
+
+      <ExportLibraryDialog
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        albums={albums}
+        playlists={playlists}
+        service={activeService}
+      />
 
       {selectedPlaylist && (
         <TransferPlaylistModal
@@ -427,7 +471,7 @@ export default function Library() {
           playlist={selectedPlaylist}
           onTransferComplete={() => {
             setSelectedPlaylist(null);
-            toast.success('Playlist transferred successfully!');
+            queryClient.invalidateQueries(['storedLibrary']);
           }}
         />
       )}
