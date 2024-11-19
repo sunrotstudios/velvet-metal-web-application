@@ -1,38 +1,23 @@
-import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth-context';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  authRequired?: boolean;
-}
-
-export default function ProtectedRoute({
-  children,
-  authRequired = true,
-}: ProtectedRouteProps) {
+export default function ProtectedRoute() {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  console.log('ProtectedRoute: User state', user);
-  console.log('ProtectedRoute: Loading state', loading);
-
   if (loading) {
-    return null;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold">Loading...</h2>
+        </div>
+      </div>
+    );
   }
 
-  // For auth required routes (like Home)
-  if (authRequired && !user) {
-    console.log('ProtectedRoute: Redirecting to login');
-
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // For non-auth required routes (like Login/Register)
-  if (!authRequired && user) {
-    console.log('ProtectedRoute: Redirecting to home');
-
-    return <Navigate to="/" replace />;
-  }
-
-  return <>{children}</>;
+  return <Outlet />;
 }

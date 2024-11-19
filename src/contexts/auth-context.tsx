@@ -17,8 +17,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('AuthProvider: Initializing user state');
-
     setUser(pb.authStore.model as AuthModel | null);
     setLoading(false);
 
@@ -27,10 +25,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(pb.authStore.model as AuthModel | null);
     });
-    console.log(
-      'AuthProvider: User state after initialization',
-      pb.authStore.model
-    );
   }, []);
 
   const login = async (email: string, password: string) => {

@@ -1,22 +1,44 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { exchangeSpotifyCode } from '@/lib/api/spotify';
-import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth-context';
+import { exchangeSpotifyCode } from '@/lib/api/spotify';
+import { syncLibrary } from '@/lib/services/librarySync';
 import updateConnectedServices from '@/lib/services/updateConnectedServices';
+import { SyncProgress } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import pb from '../lib/pocketbase';
 
 export default function SpotifyCallback() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
 
   const handleSpotifyCallback = async (
     accessToken: string,
     refreshToken: string,
     expiresAt: number
   ) => {
-    if (!user) return;
+    if (!user) {
+      console.error('No user found in handleSpotifyCallback');
+      return;
+    }
 
     try {
+      console.log('Starting Spotify connection update...', {
+        userId: user.id,
+        accessToken: accessToken.substring(0, 10) + '...',
+        expiresAt,
+      });
+
+      const progressToast = toast.loading('Connecting to Spotify...', {
+        duration: Infinity,
+      });
+
+      // First, verify the user exists
+      const userRecord = await pb.collection('users').getOne(user.id);
+      console.log('Found user record:', userRecord);
+
+      // Update connected services
       await updateConnectedServices(user.id, {
         id: 'spotify',
         name: 'Spotify',
@@ -25,15 +47,37 @@ export default function SpotifyCallback() {
         refreshToken,
         expiresAt,
       });
-      console.log('Spotify connection updated in PocketBase');
+
+      console.log('Services updated successfully');
+
+      // Sync library with progress updates
+      await syncLibrary(user.id, 'spotify', (progress) => {
+        setSyncProgress(progress);
+        toast.loading(
+          `${
+            progress.phase === 'albums' ? 'Syncing Albums' : 'Syncing Playlists'
+          }: ${progress.current}/${progress.total}`,
+          { id: progressToast }
+        );
+      });
+
+      toast.success('Library synced successfully!', {
+        id: progressToast,
+      });
+
+      return true; // Add a return value to check if the process completed
     } catch (error) {
-      console.error('Failed to update Spotify connection:', error);
-      toast.error('Failed to save Spotify connection');
+      console.error('Detailed error in handleSpotifyCallback:', {
+        error,
+        userId: user.id,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error; // Re-throw to be caught by the caller
     }
   };
 
   useEffect(() => {
-    console.log('SpotifyCallback mounted');
+    console.log('SpotifyCallback Initialized');
     console.log('User:', user);
 
     if (!user) {
@@ -79,29 +123,35 @@ export default function SpotifyCallback() {
     localStorage.removeItem('spotify_auth_state');
 
     exchangeSpotifyCode(code)
-      .then((data) => {
+      .then(async (data) => {
         console.log('Received Spotify tokens:', {
-          accessToken: data.access_token,
-          refreshToken: data.refresh_token,
+          accessToken: data.access_token.substring(0, 10) + '...',
+          hasRefreshToken: !!data.refresh_token,
         });
 
         localStorage.setItem('spotify_access_token', data.access_token);
         if (data.refresh_token) {
           localStorage.setItem('spotify_refresh_token', data.refresh_token);
         }
-        toast.success('Successfully connected to Spotify');
 
-        return handleSpotifyCallback(
+        const success = await handleSpotifyCallback(
           data.access_token,
           data.refresh_token || '',
           Date.now() + data.expires_in * 1000
         );
-      })
-      .then(() => {
-        navigate('/library');
+
+        if (success) {
+          toast.success('Successfully connected to Spotify');
+          navigate('/library');
+        } else {
+          throw new Error('Failed to update user profile');
+        }
       })
       .catch((error) => {
-        console.error('Failed to exchange code:', error);
+        console.error('Detailed error in Spotify callback:', {
+          error,
+          stack: error instanceof Error ? error.stack : undefined,
+        });
         toast.error(
           error instanceof Error
             ? error.message
