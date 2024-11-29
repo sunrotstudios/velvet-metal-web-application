@@ -28,7 +28,7 @@ import {
   getStoredLibrary,
   normalizePlaylistData,
   syncLibrary,
-} from '@/lib/services/librarySync';
+} from '@/lib/services';
 import { NormalizedAlbum, Playlist, ServiceType, ViewMode } from '@/lib/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -91,6 +91,7 @@ export default function Library() {
     queryFn: async () => {
       try {
         const data = await getStoredLibrary(user!.id, activeService);
+        console.log('Stored Library Data:', data);
         return data;
       } catch (error) {
         if (error.status === 404) {
@@ -120,7 +121,9 @@ export default function Library() {
     },
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const albums: NormalizedAlbum[] = data?.albums || [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const playlists: Playlist[] = data?.playlists || [];
 
   const sortFunction = useCallback(
@@ -165,6 +168,8 @@ export default function Library() {
   }, [albums, debouncedSearchQuery, sortBy, sortFunction]);
 
   const normalizedPlaylists = useMemo(() => {
+    console.log('Normalizing Playlists:', playlists);
+    if (!playlists) return [];
     return playlists.map((playlist) =>
       normalizePlaylistData(playlist, activeService)
     );

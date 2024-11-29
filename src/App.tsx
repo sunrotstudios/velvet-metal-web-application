@@ -6,7 +6,7 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { PlayerProvider } from '@/contexts/player-context';
 import AlbumDetails from '@/pages/AlbumDetails';
 import Home from '@/pages/Home';
-import Library from '@/pages/Library';
+import Library from '@/pages/Library/index';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Settings from '@/pages/Settings';

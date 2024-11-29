@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { authorizeAppleMusic } from '@/lib/api/apple-music';
 import { getSpotifyAuthUrl } from '@/lib/api/spotify';
 import pb from '@/lib/pocketbase';
-import { syncLibrary } from '@/lib/services/librarySync';
+import { syncLibrary } from '@/lib/services';
 import updateConnectedServices from '@/lib/services/updateConnectedServices';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Music, Music2 } from 'lucide-react';

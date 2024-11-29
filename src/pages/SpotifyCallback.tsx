@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/auth-context';
 import { exchangeSpotifyCode } from '@/lib/api/spotify';
-import { syncLibrary } from '@/lib/services/librarySync';
+import { syncLibrary } from '@/lib/services';
 import updateConnectedServices from '@/lib/services/updateConnectedServices';
 import { SyncProgress } from '@/lib/types';
 import { useEffect, useState } from 'react';
