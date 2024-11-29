@@ -56,7 +56,6 @@ export default function Library() {
   const isServiceConnected = userServices?.some(
     (service: any) => service.id === activeService && service.connected
   );
-
   // Get Stored Library
   const { data, isLoading, isError } = useQuery({
     queryKey: ['storedLibrary', activeService],
@@ -99,7 +98,6 @@ export default function Library() {
     debouncedSearchQuery,
     sortBy
   );
-
   const handleManualRefresh = async () => {
     try {
       const accessToken = localStorage.getItem(
@@ -148,7 +146,6 @@ export default function Library() {
       }
     }
   };
-
   const handleTransfer = (playlist: Playlist) => {
     setSelectedPlaylist(playlist);
     setIsTransferModalOpen(true);
@@ -197,7 +194,6 @@ export default function Library() {
           />
         </Tabs>
       </div>
-
       <ExportLibraryDialog
         open={isExportOpen}
         onOpenChange={setIsExportOpen}

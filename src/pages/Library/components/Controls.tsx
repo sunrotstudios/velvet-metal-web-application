@@ -7,9 +7,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TabsList } from '@/components/ui/tabs';
+import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ServiceType, ViewMode } from '@/lib/types';
-import { Download, Grid, List, Music, Music2, Search } from 'lucide-react';
+import {
+  Download,
+  Grid,
+  Library as LibraryIcon,
+  List,
+  ListMusic,
+  Search,
+} from 'lucide-react';
 
 interface ControlsProps {
   activeService: ServiceType;
@@ -39,35 +46,41 @@ export const Controls = ({
   return (
     <div className="flex flex-col space-y-4">
       <div className="grid gap-4 md:grid-cols-[1fr_auto_auto]">
-        {/* Left Section */}
+        {/* Left Section: Tabs and Service Selection */}
         <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
-          <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
-            {/* Tab triggers moved to LibraryTabs component */}
+          <TabsList className="inline-flex h-9 items-center justify-center rounded-lg p-1 text-muted-foreground">
+            <TabsTrigger
+              value="albums"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              <LibraryIcon className="mr-2 h-4 w-4" />
+              Albums
+            </TabsTrigger>
+            <TabsTrigger
+              value="playlists"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              <ListMusic className="mr-2 h-4 w-4" />
+              Playlists
+            </TabsTrigger>
           </TabsList>
 
-          <div className="flex h-9 items-center gap-0.5 rounded-md border p-0.5">
-            <Button
-              variant={activeService === 'spotify' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setActiveService('spotify')}
-              className="flex-1 sm:flex-initial"
-            >
-              <Music className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Spotify</span>
-            </Button>
-            <Button
-              variant={activeService === 'apple-music' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setActiveService('apple-music')}
-              className="flex-1 sm:flex-initial"
-            >
-              <Music2 className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Apple Music</span>
-            </Button>
-          </div>
+          <Select
+            value={activeService}
+            onValueChange={(value: ServiceType) => setActiveService(value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Service" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="spotify">Spotify</SelectItem>
+              <SelectItem value="apple-music">Apple Music</SelectItem>
+              <SelectItem value="tidal">Tidal</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Search Section */}
+        {/* Middle Section: Search */}
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -78,7 +91,7 @@ export const Controls = ({
           />
         </div>
 
-        {/* Right Section */}
+        {/* Right Section: Sort and View Controls */}
         <div className="flex items-center gap-2">
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="h-9 w-[130px]">

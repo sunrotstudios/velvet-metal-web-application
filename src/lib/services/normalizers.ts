@@ -47,20 +47,47 @@ export function normalizeAlbumData(
 export function normalizePlaylistData(
   playlist: any,
   service: ServiceType
-): NormalizedPlaylist {
+): NormalizedPlaylist | null {
+  if (!playlist) {
+    return null;
+  }
+
   if (service === 'spotify') {
+    if (!playlist.id) {
+      return null;
+    }
+
     return {
-      id: playlist.id || null,
-      sourceId: playlist.id,
-      sourceService: 'spotify',
+      id: playlist.id,
       name: playlist.name || 'Untitled Playlist',
-      artwork: {
-        url: playlist.images?.[0]?.url || '',
-        width: playlist.images?.[0]?.width || null,
-        height: playlist.images?.[0]?.height || null,
+      description: playlist.description || '',
+      artwork: playlist.images?.[0]
+        ? {
+            url: playlist.images[0].url,
+            height: playlist.images[0].height,
+            width: playlist.images[0].width,
+          }
+        : undefined,
+      metadata: {
+        platform: 'spotify',
+        externalUrl: playlist.external_urls?.spotify,
+        isPublic: playlist.public || false,
+        isCollaborative: playlist.collaborative || false,
+        lastModified: playlist.snapshot_id
+          ? new Date().toISOString()
+          : undefined,
       },
-      trackCount: playlist.tracks?.total || 0,
-      dateAdded: playlist.added_at || null,
+      owner: playlist.owner
+        ? {
+            id: playlist.owner.id,
+            displayName: playlist.owner.display_name,
+            externalUrl: playlist.owner.external_urls?.spotify,
+          }
+        : undefined,
+      tracks: {
+        total: playlist.tracks?.total || 0,
+        href: playlist.tracks?.href,
+      },
     };
   }
 
@@ -73,15 +100,25 @@ export function normalizePlaylistData(
 
   return {
     id: playlist.id,
-    sourceId: playlist.id,
-    sourceService: 'apple-music',
     name: playlist.attributes?.name || 'Untitled Playlist',
-    artwork: {
-      url: artworkUrl,
-      width: playlist.attributes?.artwork?.width || null,
-      height: playlist.attributes?.artwork?.height || null,
+    description: playlist.attributes?.description || '',
+    artwork: artworkUrl
+      ? {
+          url: artworkUrl,
+          height: playlist.attributes?.artwork?.height,
+          width: playlist.attributes?.artwork?.width,
+        }
+      : undefined,
+    metadata: {
+      platform: 'apple_music',
+      isPublic: false, // Apple Music playlists are private by default
+      isCollaborative: false,
+      createdAt: playlist.attributes?.dateAdded,
+      lastModified: playlist.attributes?.lastModifiedDate,
     },
-    trackCount: playlist.attributes?.trackCount || 0,
-    dateAdded: playlist.attributes?.dateAdded || null,
+    tracks: {
+      total: playlist.relationships?.tracks?.data?.length || 0,
+      href: playlist.attributes?.playParams?.globalId,
+    },
   };
 }

@@ -11,7 +11,7 @@ export interface UserAlbums {
 export interface UserPlaylists {
   user: string; // Relation to users collection
   service: ServiceType;
-  playlists: Playlist[]; // Store the full playlist data
+  playlists: NormalizedPlaylist[]; // Store the full playlist data
   lastSynced: Date;
 }
 // THE FINAL ALBUM TYPE
@@ -33,16 +33,34 @@ export interface NormalizedAlbum {
 
 export interface NormalizedPlaylist {
   id: string;
-  sourceId: string;
-  sourceService: ServiceType;
   name: string;
-  artwork: {
+  description?: string;
+
+  artwork?: {
     url: string;
-    width: number | null;
-    height: number | null;
+    height?: number | null;
+    width?: number | null;
   };
-  trackCount: number;
-  dateAdded: string | null;
+
+  metadata: {
+    platform: 'apple_music' | 'spotify';
+    externalUrl?: string;
+    isPublic: boolean;
+    isCollaborative: boolean;
+    createdAt?: string;
+    lastModified?: string;
+  };
+
+  owner?: {
+    id: string;
+    displayName?: string;
+    externalUrl?: string;
+  };
+
+  tracks?: {
+    total: number;
+    href?: string;
+  };
 }
 
 export interface AlbumTrack {

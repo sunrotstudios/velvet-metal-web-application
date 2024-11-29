@@ -1,11 +1,11 @@
 import {
-  getAppleMusicAlbums,
+  getAllAppleMusicAlbums,
   getAppleMusicLibrary,
 } from '@/lib/api/apple-music';
 import { getAllSpotifyAlbums, getSpotifyPlaylists } from '@/lib/api/spotify';
 import pb from '@/lib/pocketbase';
 import { ServiceType, SyncProgress } from '@/lib/types';
-import { normalizeAlbumData } from './normalizers';
+import { normalizeAlbumData, normalizePlaylistData } from './normalizers';
 
 export async function syncLibrary(
   userId: string,
@@ -29,7 +29,7 @@ export async function syncLibrary(
     const albums =
       service === 'spotify'
         ? { items: await getAllSpotifyAlbums(userId, token) }
-        : await getAppleMusicAlbums(token);
+        : await getAllAppleMusicAlbums(token);
 
     onProgress?.({
       total: 100,
@@ -42,6 +42,8 @@ export async function syncLibrary(
       service === 'spotify'
         ? await getSpotifyPlaylists(token)
         : await getAppleMusicLibrary(token);
+
+    console.log(playlists);
 
     const [albumsRecord, playlistsRecord] = await Promise.all([
       pb
@@ -68,7 +70,14 @@ export async function syncLibrary(
     const playlistsData = {
       user: userId,
       service,
-      playlists: service === 'spotify' ? playlists.items : playlists.data,
+      playlists:
+        service === 'spotify'
+          ? playlists.items.map((playlist: any) =>
+              normalizePlaylistData(playlist, service)
+            )
+          : playlists.data.map((playlist: any) =>
+              normalizePlaylistData(playlist, service)
+            ),
       lastSynced: now,
     };
 

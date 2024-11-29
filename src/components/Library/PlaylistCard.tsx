@@ -19,6 +19,9 @@ export const PlaylistCard = ({
     return null;
   }
 
+  // Get artwork URL safely with fallback
+  const artworkUrl = playlist.artwork?.url || '';
+
   return (
     <Card
       className="group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-accent"
@@ -40,9 +43,9 @@ export const PlaylistCard = ({
             viewMode === 'grid' ? 'aspect-square w-full' : 'h-20 w-20'
           )}
         >
-          {playlist.artwork.url ? (
+          {artworkUrl ? (
             <img
-              src={playlist.artwork.url}
+              src={artworkUrl}
               alt={`${playlist.name} cover`}
               className="h-full w-full object-cover transition-all duration-300 group-hover/image:scale-105"
             />
@@ -68,8 +71,8 @@ export const PlaylistCard = ({
                 {playlist.name}
               </h3>
               <p className="line-clamp-1 text-sm text-muted-foreground">
-                {playlist.trackCount}{' '}
-                {playlist.trackCount === 1 ? 'track' : 'tracks'}
+                {playlist.tracks?.total || 0}{' '}
+                {playlist.tracks?.total === 1 ? 'track' : 'tracks'}
               </p>
             </div>
             <Button

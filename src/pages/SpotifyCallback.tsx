@@ -53,12 +53,10 @@ export default function SpotifyCallback() {
       // Sync library with progress updates
       await syncLibrary(user.id, 'spotify', (progress) => {
         setSyncProgress(progress);
-        toast.loading(
-          `${
-            progress.phase === 'albums' ? 'Syncing Albums' : 'Syncing Playlists'
-          }: ${progress.current}/${progress.total}`,
-          { id: progressToast }
-        );
+        const progressMessage =
+          progress.phase === 'albums' ? `Syncing Albums` : `Syncing Playlists`;
+
+        toast.loading(progressMessage, { id: progressToast });
       });
 
       toast.success('Library synced successfully!', {
@@ -115,7 +113,6 @@ export default function SpotifyCallback() {
     }
 
     if (state !== storedState) {
-      toast.error('Invalid state parameter');
       navigate('/');
       return;
     }

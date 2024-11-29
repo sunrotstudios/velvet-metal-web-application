@@ -1,4 +1,3 @@
-import { Player } from '@/components/Player';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -10,7 +9,7 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col">
       <div className="flex md:hidden items-center justify-between p-4 border-b">
         <Button
           variant="ghost"
@@ -37,11 +36,10 @@ export default function Layout() {
         >
           <Sidebar onClose={() => setSidebarOpen(false)} />
         </div>
-        <main className="flex-1 bg-background p-4">
+        <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>
-      <Player />
     </div>
   );
 }
