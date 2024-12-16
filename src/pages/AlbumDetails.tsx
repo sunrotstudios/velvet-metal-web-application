@@ -84,13 +84,15 @@ export default function AlbumDetails() {
       </Button>
       {/* Album Header */}
       <div className="flex items-start gap-8">
-        <div className="relative aspect-square w-48 overflow-hidden rounded-lg">
-          <img
-            src={album.artwork.url}
-            alt={album.name}
-            className="h-full w-full object-cover"
-          />
-        </div>
+        {album.artwork?.url && (
+          <div className="relative aspect-square w-48 overflow-hidden rounded-lg">
+            <img
+              src={album.artwork.url}
+              alt={album.name}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        )}
         <div className="flex flex-col justify-end space-y-4">
           <div>
             <h1 className="text-4xl font-bold">{album.name}</h1>

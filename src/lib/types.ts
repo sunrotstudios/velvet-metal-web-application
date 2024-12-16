@@ -14,6 +14,41 @@ export interface UserPlaylists {
   playlists: NormalizedPlaylist[]; // Store the full playlist data
   lastSynced: Date;
 }
+
+export interface UserPlaylist {
+  id: string;
+  user_id: string;
+  service: ServiceType;
+  playlist_id: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+  tracks_count?: number;
+  owner_id?: string;
+  owner_name?: string;
+  is_public: boolean;
+  external_url?: string;
+  synced_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserAlbum {
+  id: string;
+  user_id: string;
+  service: ServiceType;
+  album_id: string;
+  name: string;
+  artist_name: string;
+  release_date?: string;
+  image_url?: string;
+  tracks_count?: number;
+  external_url?: string;
+  synced_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // THE FINAL ALBUM TYPE
 export interface NormalizedAlbum {
   id: string;
@@ -29,6 +64,7 @@ export interface NormalizedAlbum {
   dateAdded?: string;
   sourceService: 'spotify' | 'apple-music';
   sourceId: string;
+  albumType: 'album' | 'single' | 'ep';
 }
 
 export interface NormalizedPlaylist {
@@ -121,8 +157,26 @@ export interface Track {
 }
 
 export interface SyncProgress {
-  total: number;
+  phase: 'albums' | 'playlists' | 'complete';
   current: number;
-  phase: 'albums' | 'playlists';
+  total: number;
   service: ServiceType;
+}
+
+export interface PlaylistMetadata {
+  name: string;
+  description: string;
+}
+
+export interface SearchResult {
+  id: string;
+  uri?: string;
+  name: string;
+  artist: string;
+  isrc?: string;
+}
+
+export interface ApiError extends Error {
+  status?: number;
+  code?: string;
 }

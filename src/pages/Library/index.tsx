@@ -3,12 +3,13 @@ import { AlbumCard } from '@/components/Library/AlbumCard';
 import { PlaylistCard } from '@/components/Library/PlaylistCard';
 import { LibrarySkeleton } from '@/components/LibrarySkeleton';
 import { TransferPlaylistModal } from '@/components/TransferPlaylistModal';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Tabs } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useFilters } from '@/hooks/useFilters';
-import pb from '@/lib/pocketbase';
 import { getStoredLibrary, syncLibrary } from '@/lib/services';
+import { getUserServices } from '@/lib/services/streaming-auth';
 import { Playlist, ServiceType, ViewMode } from '@/lib/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { memo, useState } from 'react';
@@ -35,6 +36,9 @@ export default function Library() {
   const [sortBy, setSortBy] = useState<string>('name-asc');
   const [activeTab, setActiveTab] = useState<'albums' | 'playlists'>('albums');
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [albumTypeFilter, setAlbumTypeFilter] = useState<
+    'all' | 'album' | 'single' | 'ep'
+  >('all');
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -43,28 +47,43 @@ export default function Library() {
   const MemoizedPlaylistCard = memo(PlaylistCard);
 
   // Get user services and check connection
-  const { data: userServices } = useQuery({
+  const { data: userServices, isLoading: servicesLoading } = useQuery({
     queryKey: ['userServices', user?.id],
     queryFn: async () => {
-      if (!user) return null;
-      const record = await pb.collection('users').getOne(user.id);
-      return record.connectedServices || [];
+      console.log('Fetching user services for user:', user?.id);
+      if (!user) return [];
+      const services = await getUserServices(user.id);
+      console.log('User services:', services);
+      return services;
     },
     enabled: !!user,
   });
 
-  const isServiceConnected = userServices?.some(
-    (service: any) => service.id === activeService && service.connected
-  );
+  const isServiceConnected = userServices?.includes(activeService);
+  console.log('Service connection status:', {
+    activeService,
+    userServices,
+    isServiceConnected,
+    servicesLoading,
+  });
+
   // Get Stored Library
   const { data, isLoading, isError } = useQuery({
     queryKey: ['storedLibrary', activeService],
     queryFn: async () => {
       try {
+        console.log('Fetching library for service:', activeService);
+        console.log('User ID:', user!.id);
         const data = await getStoredLibrary(user!.id, activeService);
-        console.log('Stored Library Data:', data);
+        console.log('Raw library data from database:', {
+          albumsCount: data.albums?.length || 0,
+          playlistsCount: data.playlists?.length || 0,
+          sampleAlbum: data.albums?.[0],
+          samplePlaylist: data.playlists?.[0],
+        });
         return data;
       } catch (error) {
+        console.error('Error fetching library:', error);
         if (error.status === 404) {
           return {
             albums: [],
@@ -75,19 +94,59 @@ export default function Library() {
         throw error;
       }
     },
-    enabled: !!activeService && !!user && isServiceConnected,
+    enabled:
+      !!activeService && !!user && !!isServiceConnected && !servicesLoading,
     staleTime: 5 * 60 * 1000,
     retry: 1,
     select: (data) => {
+      console.log('Processing library data:', {
+        albumsCount: data.albums?.length || 0,
+        playlistsCount: data.playlists?.length || 0,
+        sampleAlbum: data.albums?.[0],
+        samplePlaylist: data.playlists?.[0],
+      });
+      
       const processed = {
         albums: Array.isArray(data.albums)
-          ? data.albums
-          : data.albums?.items || data.albums?.data || [],
+          ? data.albums.map((album) => ({
+              ...album,
+              name: album.name,
+              artistName: album.artist_name,
+              albumType: (album.album_type || 'album').toLowerCase(),
+              artwork: {
+                url: album.image_url,
+                width: null,
+                height: null,
+              },
+              trackCount: album.tracks_count || 0,
+            }))
+          : [],
         playlists: Array.isArray(data.playlists)
-          ? data.playlists
-          : data.playlists?.items || data.playlists?.data || [],
+          ? data.playlists.map((playlist) => ({
+              ...playlist,
+              name: playlist.name,
+              description: playlist.description,
+              tracks: {
+                total: playlist.tracks_count || 0,
+                href: null,
+              },
+              artwork: {
+                url: playlist.image_url,
+                width: null,
+                height: null,
+              },
+            }))
+          : [],
         lastSynced: data.lastSynced,
       };
+      
+      console.log('Processed data:', {
+        albumsCount: processed.albums.length,
+        playlistsCount: processed.playlists.length,
+        sampleAlbum: processed.albums[0],
+        samplePlaylist: processed.playlists[0],
+      });
+      
       return processed;
     },
   });
@@ -96,8 +155,19 @@ export default function Library() {
     data?.albums || [],
     data?.playlists || [],
     debouncedSearchQuery,
-    sortBy
+    sortBy,
+    albumTypeFilter
   );
+
+  console.log('Filtered data:', {
+    filteredAlbums,
+    filteredPlaylists,
+    searchQuery: debouncedSearchQuery,
+    sortBy,
+    albumTypeFilter,
+    albumTypes: data?.albums?.map((album) => album.albumType) || [],
+  });
+
   const handleManualRefresh = async () => {
     try {
       const accessToken = localStorage.getItem(
@@ -146,6 +216,12 @@ export default function Library() {
       }
     }
   };
+
+  const handleAlbumTypeChange = (albumType: 'all' | 'album' | 'single' | 'ep') => {
+    setAlbumTypeFilter(albumType);
+    toast.info(`Showing ${albumType} albums`);
+  };
+
   const handleTransfer = (playlist: Playlist) => {
     setSelectedPlaylist(playlist);
     setIsTransferModalOpen(true);
@@ -156,44 +232,63 @@ export default function Library() {
   }
 
   return (
-    <>
-      <div className="flex-1 space-y-6 p-8 pt-6">
-        <Header activeService={activeService} onRefresh={handleManualRefresh} />
+    <div className="flex h-full flex-col">
+      {/* Fixed Header Section */}
+      <div className="flex-none">
+        <div className="p-8 pb-2">
+          <Header activeService={activeService} onRefresh={handleManualRefresh} />
+        </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <Controls
-            activeService={activeService}
-            setActiveService={setActiveService}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            onExport={() => setIsExportOpen(true)}
-            activeTab={activeTab}
-          />
+        <div className="px-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Controls
+              activeService={activeService}
+              setActiveService={setActiveService}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              onExport={() => setIsExportOpen(true)}
+              activeTab={activeTab}
+              albumTypeFilter={albumTypeFilter}
+              onAlbumTypeChange={handleAlbumTypeChange}
+            />
 
-          <AlbumsTab
-            isLoading={isLoading}
-            isError={isError}
-            albums={data?.albums || []}
-            filteredAlbums={filteredAlbums}
-            viewMode={viewMode}
-            ItemComponent={MemoizedAlbumCard}
-          />
+            {/* Scrollable Content Area */}
+            <div className="h-[calc(100vh-12rem)] overflow-y-auto">
+              {isLoading ? (
+                <LoadingSpinner centered />
+              ) : isError ? (
+                <div className="text-center text-red-500">
+                  An error occurred while loading your library. Please try again.
+                </div>
+              ) : (
+                <>
+                  <AlbumsTab
+                    isLoading={isLoading}
+                    isError={isError}
+                    albums={data?.albums || []}
+                    filteredAlbums={filteredAlbums}
+                    viewMode={viewMode}
+                    ItemComponent={MemoizedAlbumCard}
+                  />
 
-          <PlaylistsTab
-            isLoading={isLoading}
-            isError={isError}
-            playlists={data?.playlists || []}
-            filteredPlaylists={filteredPlaylists}
-            viewMode={viewMode}
-            ItemComponent={MemoizedPlaylistCard}
-            onTransfer={handleTransfer}
-          />
-        </Tabs>
+                  <PlaylistsTab
+                    playlists={data?.playlists || []}
+                    filteredPlaylists={filteredPlaylists}
+                    viewMode={viewMode}
+                    ItemComponent={MemoizedPlaylistCard}
+                    onTransfer={handleTransfer}
+                  />
+                </>
+              )}
+            </div>
+          </Tabs>
+        </div>
       </div>
+
       <ExportLibraryDialog
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
@@ -208,12 +303,13 @@ export default function Library() {
           onOpenChange={setIsTransferModalOpen}
           sourceService={activeService}
           playlist={selectedPlaylist}
+          userId={user!.id}
           onTransferComplete={() => {
             setSelectedPlaylist(null);
             queryClient.invalidateQueries(['storedLibrary']);
           }}
         />
       )}
-    </>
+    </div>
   );
 }

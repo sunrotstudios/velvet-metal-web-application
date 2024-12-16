@@ -36,33 +36,38 @@ const VirtualizedGrid = ({
     return GRID_COLUMN_COUNTS.base;
   }, []);
 
-  const Cell = useCallback(
-    ({ columnIndex, rowIndex, style, data }) => {
-      const { items, ItemComponent, columnCount } = data;
-      const index = rowIndex * columnCount + columnIndex;
+  const Cell = useCallback(({ columnIndex, rowIndex, style, data }) => {
+    const { items, ItemComponent, columnCount } = data;
+    const index = rowIndex * columnCount + columnIndex;
 
-      if (index >= items.length) return null;
+    console.log('Cell rendering:', {
+      columnIndex,
+      rowIndex,
+      index,
+      itemsLength: items.length,
+    });
 
-      const item = items[index];
+    if (index >= items.length) return null;
 
-      // Adjust the cell style to account for gaps
-      const adjustedStyle = {
-        ...style,
-        left: `${parseFloat(style.left) + GRID_GAP}px`,
-        top: `${parseFloat(style.top) + GRID_GAP}px`,
-        width: `${parseFloat(style.width) - GRID_GAP}px`,
-        height: `${parseFloat(style.height) - GRID_GAP}px`,
-        padding: CELL_PADDING,
-      };
+    const item = items[index];
+    console.log('Cell item:', item);
 
-      return (
-        <div style={adjustedStyle}>
-          <ItemComponent album={item} viewMode={viewMode} />
-        </div>
-      );
-    },
-    [viewMode]
-  );
+    // Adjust the cell style to account for gaps
+    const adjustedStyle = {
+      ...style,
+      left: `${parseFloat(style.left) + GRID_GAP}px`,
+      top: `${parseFloat(style.top) + GRID_GAP}px`,
+      width: `${parseFloat(style.width) - GRID_GAP}px`,
+      height: `${parseFloat(style.height) - GRID_GAP}px`,
+      padding: `${CELL_PADDING}px`,
+    };
+
+    return (
+      <div style={adjustedStyle}>
+        <ItemComponent album={item} viewMode="grid" />
+      </div>
+    );
+  }, []);
 
   if (viewMode === 'list') {
     return (

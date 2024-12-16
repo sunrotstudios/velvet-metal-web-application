@@ -8,12 +8,14 @@ interface PlaylistCardProps {
   playlist: NormalizedPlaylist;
   viewMode: ViewMode;
   onTransfer: (playlist: NormalizedPlaylist) => void;
+  onView: (playlist: NormalizedPlaylist) => void;
 }
 
 export const PlaylistCard = ({
   playlist,
   viewMode,
   onTransfer,
+  onView,
 }: PlaylistCardProps) => {
   if (!playlist) {
     return null;
@@ -28,6 +30,7 @@ export const PlaylistCard = ({
       role="button"
       tabIndex={0}
       aria-label={`Playlist: ${playlist.name}`}
+      onClick={() => onView(playlist)}
     >
       <div
         className={cn(
@@ -75,15 +78,26 @@ export const PlaylistCard = ({
                 {playlist.tracks?.total === 1 ? 'track' : 'tracks'}
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100"
-              onClick={() => onTransfer(playlist)}
-              aria-label={`Transfer playlist: ${playlist.name}`}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={() => onView(playlist)}
+                aria-label={`View playlist: ${playlist.name}`}
+              >
+                <Play className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={() => onTransfer(playlist)}
+                aria-label={`Transfer playlist: ${playlist.name}`}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

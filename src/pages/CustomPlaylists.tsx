@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
 import { usePlex } from '@/contexts/plex-context';
 import { PlexAPI } from '@/lib/api/plex';
-import pb from '@/lib/pocketbase';
+import { supabase } from '@/lib/supabase';
 import { CustomPlaylist } from '@/lib/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Plus } from 'lucide-react';
@@ -30,11 +30,14 @@ export default function CustomPlaylists() {
     queryKey: ['customPlaylists', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const records = await pb.collection('customPlaylists').getFullList({
-        filter: `user = "${user.id}"`,
-        sort: '-created',
-      });
-      return records;
+      const { data, error } = await supabase
+        .from('custom_playlists')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!user,
   });
@@ -54,7 +57,7 @@ export default function CustomPlaylists() {
   });
 
   const handleSaveCustomPlaylist = async (
-    playlistData: Omit<CustomPlaylist, 'id' | 'createdAt' | 'updatedAt'>
+    playlistData: Omit<CustomPlaylist, 'id' | 'created_at' | 'updated_at'>
   ) => {
     console.log('Saving playlist with tracks:', playlistData.tracks);
 
@@ -65,20 +68,29 @@ export default function CustomPlaylists() {
       }
 
       if (editingPlaylist) {
-        await pb.collection('customPlaylists').update(editingPlaylist.id, {
-          name: playlistData.name,
-          description: playlistData.description,
-          tracks: playlistData.tracks,
-          user: user.id,
-        });
+        const { error: updateError } = await supabase
+          .from('custom_playlists')
+          .update({
+            name: playlistData.name,
+            description: playlistData.description,
+            tracks: playlistData.tracks,
+            user_id: user.id,
+          })
+          .eq('id', editingPlaylist.id);
+
+        if (updateError) throw updateError;
         toast.success('Playlist updated successfully');
       } else {
-        await pb.collection('customPlaylists').create({
-          name: playlistData.name,
-          description: playlistData.description,
-          tracks: playlistData.tracks,
-          user: user.id,
-        });
+        const { error: createError } = await supabase
+          .from('custom_playlists')
+          .insert({
+            name: playlistData.name,
+            description: playlistData.description,
+            tracks: playlistData.tracks,
+            user_id: user.id,
+          });
+
+        if (createError) throw createError;
         toast.success('Playlist created successfully');
       }
 
@@ -93,7 +105,12 @@ export default function CustomPlaylists() {
 
   const handleDeletePlaylist = async (playlistId: string) => {
     try {
-      await pb.collection('customPlaylists').delete(playlistId);
+      const { error } = await supabase
+        .from('custom_playlists')
+        .delete()
+        .eq('id', playlistId);
+
+      if (error) throw error;
       toast.success('Playlist deleted successfully');
       queryClient.invalidateQueries(['customPlaylists', user?.id]);
       setSelectedPlaylist(null);

@@ -1,14 +1,24 @@
-import { Music4 } from 'lucide-react';
+import whiteLogo from '../../public/white-logo.png';
 
 interface LogoProps {
   className?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export const Logo = ({ className }: LogoProps) => {
+export const Logo = ({ className, size = 'md' }: LogoProps) => {
+  const sizeClasses = {
+    sm: 'h-16',
+    md: 'h-24',
+    lg: 'h-32',
+  };
+
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <Music4 className="h-6 w-6" />
-      <span className="text-xl font-bold">Velvet Metal</span>
+    <div className={`flex items-center justify-center ${className}`}>
+      <img
+        src={whiteLogo}
+        alt="Velvet Metal"
+        className={`${sizeClasses[size]} object-contain`}
+      />
     </div>
   );
 };

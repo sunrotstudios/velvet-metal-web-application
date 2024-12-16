@@ -3,24 +3,25 @@ import {
   getAppleMusicLibrary,
 } from '@/lib/api/apple-music';
 import { getAllSpotifyAlbums, getSpotifyPlaylists } from '@/lib/api/spotify';
-import pb from '@/lib/pocketbase';
+import { database } from './database';
+import { storage } from './storage';
 import { ServiceType, SyncProgress } from '@/lib/types';
 import { normalizeAlbumData, normalizePlaylistData } from './normalizers';
+import { getStoredLibrary } from './storage';
+import { getServiceAuth } from './streaming-auth';
 
 export async function syncLibrary(
   userId: string,
   service: ServiceType,
   onProgress?: (progress: SyncProgress) => void
 ) {
-  const token = localStorage.getItem(
-    service === 'spotify' ? 'spotify_access_token' : 'apple_music_token'
-  );
-
-  if (!token) throw new Error('No access token found');
+  const auth = await getServiceAuth(userId, service);
+  if (!auth) throw new Error(`No ${service} authentication found`);
 
   try {
+    // Start album sync
     onProgress?.({
-      total: 0,
+      total: 100,
       current: 0,
       phase: 'albums',
       service,
@@ -28,74 +29,94 @@ export async function syncLibrary(
 
     const albums =
       service === 'spotify'
-        ? { items: await getAllSpotifyAlbums(userId, token) }
-        : await getAllAppleMusicAlbums(token);
+        ? { items: await getAllSpotifyAlbums(userId, auth.accessToken) }
+        : await getAllAppleMusicAlbums(auth.accessToken);
+
+    console.log(`Fetched ${albums.items.length} albums for ${service}`);
+
+    // Update progress after albums are fetched
+    onProgress?.({
+      total: 100,
+      current: 25,
+      phase: 'albums',
+      service,
+    });
+
+    // Start normalizing albums
+    const normalizedAlbums = albums.items.map(album => 
+      normalizeAlbumData(album, service)
+    );
+
+    console.log(`Normalized ${normalizedAlbums.length} albums for ${service}`);
+
+    // Save albums to database
+    await database.saveAlbums(userId, normalizedAlbums);
 
     onProgress?.({
       total: 100,
-      current: 0,
+      current: 50,
       phase: 'playlists',
       service,
     });
 
     const playlists =
       service === 'spotify'
-        ? await getSpotifyPlaylists(token)
-        : await getAppleMusicLibrary(token);
+        ? await getSpotifyPlaylists(auth.accessToken)
+        : await getAppleMusicLibrary(auth.accessToken);
 
-    console.log(playlists);
+    console.log(`Fetched ${playlists.items.length} playlists for ${service}`);
 
-    const [albumsRecord, playlistsRecord] = await Promise.all([
-      pb
-        .collection('userAlbums')
-        .getFirstListItem(`user="${userId}" && service="${service}"`)
-        .catch(() => null),
-      pb
-        .collection('userPlaylists')
-        .getFirstListItem(`user="${userId}" && service="${service}"`)
-        .catch(() => null),
-    ]);
-
-    const now = new Date().toISOString();
-
-    const albumsData = {
-      user: userId,
+    // Update progress after playlists are fetched
+    onProgress?.({
+      total: 100,
+      current: 75,
+      phase: 'playlists',
       service,
-      albums: (service === 'spotify' ? albums.items : albums.data).map(
-        (album: any) => normalizeAlbumData(album, service)
-      ),
-      lastSynced: now,
-    };
+    });
 
-    const playlistsData = {
-      user: userId,
+    const normalizedPlaylists = playlists.items
+      .map(playlist => normalizePlaylistData(playlist, service))
+      .filter(p => p !== null); // Filter out null playlists
+
+    console.log(`Normalized ${normalizedPlaylists.length} playlists for ${service}`);
+
+    // Save to database
+    console.log('Saving to database...');
+    await database.savePlaylists(userId, normalizedPlaylists);
+
+    // Save to storage for offline access
+    console.log('Saving to storage...');
+    await syncLibraryToStorage(userId, service, {
+      albums: normalizedAlbums,
+      playlists: normalizedPlaylists,
+      lastSynced: new Date().toISOString(),
+    });
+
+    // Complete sync
+    onProgress?.({
+      total: 100,
+      current: 100,
+      phase: 'complete',
       service,
-      playlists:
-        service === 'spotify'
-          ? playlists.items.map((playlist: any) =>
-              normalizePlaylistData(playlist, service)
-            )
-          : playlists.data.map((playlist: any) =>
-              normalizePlaylistData(playlist, service)
-            ),
-      lastSynced: now,
+    });
+
+    return {
+      albums: normalizedAlbums,
+      playlists: normalizedPlaylists,
+      lastSynced: new Date().toISOString(),
     };
-
-    // Update or create records with a small delay to prevent auto-cancellation
-    await Promise.all([
-      albumsRecord
-        ? pb.collection('userAlbums').update(albumsRecord.id, albumsData)
-        : pb.collection('userAlbums').create(albumsData),
-      playlistsRecord
-        ? pb
-            .collection('userPlaylists')
-            .update(playlistsRecord.id, playlistsData)
-        : pb.collection('userPlaylists').create(playlistsData),
-    ]);
-
-    return { albums, playlists };
   } catch (error) {
-    console.error('Failed to sync library:', error);
+    console.error(`Failed to sync ${service} library:`, error);
     throw error;
   }
 }
+
+async function syncLibraryToStorage(
+  userId: string,
+  service: ServiceType,
+  libraryData: any
+) {
+  await storage.setItem(`library_${service}_${userId}`, libraryData);
+}
+
+export { getStoredLibrary };

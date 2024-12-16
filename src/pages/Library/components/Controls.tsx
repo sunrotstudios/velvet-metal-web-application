@@ -29,6 +29,8 @@ interface ControlsProps {
   setViewMode: (mode: ViewMode) => void;
   onExport: () => void;
   activeTab: string;
+  albumTypeFilter: 'all' | 'album' | 'single' | 'ep';
+  onAlbumTypeChange: (type: 'all' | 'album' | 'single' | 'ep') => void;
 }
 
 export const Controls = ({
@@ -42,6 +44,8 @@ export const Controls = ({
   setViewMode,
   onExport,
   activeTab,
+  albumTypeFilter,
+  onAlbumTypeChange,
 }: ControlsProps) => {
   return (
     <div className="flex flex-col space-y-4">
@@ -78,6 +82,20 @@ export const Controls = ({
               <SelectItem value="tidal">Tidal</SelectItem>
             </SelectContent>
           </Select>
+
+          {activeTab === 'albums' && (
+            <Select value={albumTypeFilter} onValueChange={onAlbumTypeChange}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Album Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="album">Album</SelectItem>
+                <SelectItem value="single">Single</SelectItem>
+                <SelectItem value="ep">EP</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Middle Section: Search */}

@@ -5,6 +5,15 @@ export function normalizeAlbumData(
   service: 'spotify' | 'apple-music'
 ): NormalizedAlbum {
   if (service === 'spotify') {
+    let albumType: 'album' | 'single' | 'ep' = 'album';
+    const spotifyType = album.album?.album_type?.toLowerCase();
+
+    if (spotifyType === 'single') {
+      albumType = 'single';
+    } else if (spotifyType === 'ep' || (album.album?.total_tracks || 0) <= 6) {
+      albumType = 'ep';
+    }
+
     return {
       id: album.album?.id || album.id,
       sourceId: album.album?.id || album.id,
@@ -19,10 +28,18 @@ export function normalizeAlbumData(
       releaseDate: album.album?.release_date || '',
       trackCount: album.album?.total_tracks || 0,
       dateAdded: album.added_at || null,
+      albumType,
     };
   }
 
   // Apple Music
+  let albumType: 'album' | 'single' | 'ep' = 'album';
+  if (album.attributes?.isSingle) {
+    albumType = 'single';
+  } else if ((album.attributes?.trackCount || 0) <= 6) {
+    albumType = 'ep';
+  }
+
   const artworkUrl = album.attributes?.artwork?.url
     ? album.attributes.artwork.url.replace('{w}', '1200').replace('{h}', '1200')
     : '';
@@ -41,6 +58,7 @@ export function normalizeAlbumData(
     releaseDate: album.attributes?.releaseDate || '',
     trackCount: album.attributes?.trackCount || 0,
     dateAdded: album.attributes?.dateAdded || null,
+    albumType,
   };
 }
 
