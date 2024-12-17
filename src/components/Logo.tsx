@@ -1,4 +1,4 @@
-import whiteLogo from '../../public/white-logo.png';
+import blackLogo from '../../public/black-logo.png';
 
 interface LogoProps {
   className?: string;
@@ -15,7 +15,7 @@ export const Logo = ({ className, size = 'md' }: LogoProps) => {
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <img
-        src={whiteLogo}
+        src={blackLogo}
         alt="Velvet Metal"
         className={`${sizeClasses[size]} object-contain`}
       />
