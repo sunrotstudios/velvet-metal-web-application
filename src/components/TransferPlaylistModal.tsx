@@ -131,7 +131,7 @@ export function TransferPlaylistModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
             Transfer "{playlist.name}" to {targetService === 'apple-music' ? 'Apple Music' : 'Spotify'}

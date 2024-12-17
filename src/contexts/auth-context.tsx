@@ -1,14 +1,17 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import type { AuthUser } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, display_name: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    display_name: string
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -27,7 +30,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -45,17 +50,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const register = async (email: string, password: string, display_name: string) => {
+  const register = async (
+    email: string,
+    password: string,
+    display_name: string
+  ) => {
     // First sign up the user
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          display_name,
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
+      {
+        email,
+        password,
+        options: {
+          data: {
+            display_name,
+          },
         },
-      },
-    });
+      }
+    );
 
     if (signUpError) throw signUpError;
 

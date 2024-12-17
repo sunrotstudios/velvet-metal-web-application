@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 
-export type ServiceType = 'spotify' | 'apple-music';
+export type ServiceType = 'spotify' | 'apple-music' | 'lastfm';
 
 interface ServiceTokens {
   accessToken: string;
@@ -68,10 +68,15 @@ export async function getServiceAuth(
       throw error;
     }
 
+    if (!data?.access_token) {
+      console.log('No access token found in service auth');
+      return null;
+    }
+
     console.log('Service auth retrieved successfully');
     return {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
+      accessToken: String(data.access_token),
+      refreshToken: data.refresh_token ? String(data.refresh_token) : undefined,
       expiresAt: data.token_expires_at ? new Date(data.token_expires_at) : undefined,
     };
   } catch (error) {

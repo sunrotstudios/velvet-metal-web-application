@@ -3,23 +3,29 @@ import { Card } from '@/components/ui/card';
 import { NormalizedPlaylist, ViewMode } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Play, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface PlaylistCardProps {
   playlist: NormalizedPlaylist;
   viewMode: ViewMode;
   onTransfer: (playlist: NormalizedPlaylist) => void;
-  onView: (playlist: NormalizedPlaylist) => void;
 }
 
 export const PlaylistCard = ({
   playlist,
   viewMode,
   onTransfer,
-  onView,
 }: PlaylistCardProps) => {
+  const navigate = useNavigate();
+
   if (!playlist) {
     return null;
   }
+
+  const handleClick = () => {
+    // Use playlist_id for navigation
+    navigate(`/playlist/${playlist.playlist_id}`);
+  };
 
   // Get artwork URL safely with fallback
   const artworkUrl = playlist.artwork?.url || '';
@@ -30,11 +36,11 @@ export const PlaylistCard = ({
       role="button"
       tabIndex={0}
       aria-label={`Playlist: ${playlist.name}`}
-      onClick={() => onView(playlist)}
+      onClick={handleClick}
     >
       <div
         className={cn(
-          'flex',
+          'flex p-4',
           viewMode === 'grid'
             ? 'flex-col space-y-3'
             : 'flex-row items-center gap-4'
@@ -49,11 +55,11 @@ export const PlaylistCard = ({
           {artworkUrl ? (
             <img
               src={artworkUrl}
-              alt={`${playlist.name} cover`}
-              className="h-full w-full object-cover transition-all duration-300 group-hover/image:scale-105"
+              alt={playlist.name}
+              className="h-full w-full object-cover transition-all group-hover/image:scale-105"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-accent">
+            <div className="flex h-full w-full items-center justify-center bg-muted">
               <Play className="h-8 w-8 text-muted-foreground" />
             </div>
           )}
@@ -61,44 +67,33 @@ export const PlaylistCard = ({
             <Button
               size="icon"
               variant="ghost"
-              className="h-10 w-10 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
+              className="h-8 w-8 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Add play functionality
+              }}
             >
-              <Play className="h-5 w-5" />
+              <Play className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTransfer(playlist);
+              }}
+            >
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
         </div>
-        <div className="flex flex-1 flex-col space-y-1 p-2">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="line-clamp-1 font-medium leading-none">
-                {playlist.name}
-              </h3>
-              <p className="line-clamp-1 text-sm text-muted-foreground">
-                {playlist.tracks?.total || 0}{' '}
-                {playlist.tracks?.total === 1 ? 'track' : 'tracks'}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100"
-                onClick={() => onView(playlist)}
-                aria-label={`View playlist: ${playlist.name}`}
-              >
-                <Play className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100"
-                onClick={() => onTransfer(playlist)}
-                aria-label={`Transfer playlist: ${playlist.name}`}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+
+        <div className="flex flex-col min-w-0">
+          <h3 className="truncate text-sm font-medium">{playlist.name}</h3>
+          <p className="text-sm text-muted-foreground">
+            {playlist.tracks_count} tracks
+          </p>
         </div>
       </div>
     </Card>

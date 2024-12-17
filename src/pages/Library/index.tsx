@@ -110,9 +110,9 @@ export default function Library() {
         albums: Array.isArray(data.albums)
           ? data.albums.map((album) => ({
               ...album,
-              name: album.name,
-              artistName: album.artist_name,
-              albumType: (album.album_type || 'album').toLowerCase(),
+              name: album.name || '',
+              artistName: album.artist_name || '',
+              albumType: album.album_type?.toLowerCase() || 'album',
               artwork: {
                 url: album.image_url,
                 width: null,
@@ -124,8 +124,8 @@ export default function Library() {
         playlists: Array.isArray(data.playlists)
           ? data.playlists.map((playlist) => ({
               ...playlist,
-              name: playlist.name,
-              description: playlist.description,
+              name: playlist.name || '',
+              description: playlist.description || '',
               tracks: {
                 total: playlist.tracks_count || 0,
                 href: null,

@@ -13,7 +13,7 @@ export type AuthUser = {
   id: string;
   email: string;
   user_metadata: {
-    name: string;
+    display_name: string;
     avatar?: string;
   };
   created_at: string;

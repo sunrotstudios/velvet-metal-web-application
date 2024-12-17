@@ -1,4 +1,5 @@
 import VirtualizedAlbumGrid from '@/components/Library/VirtualizedAlbumGrid';
+import { AlbumListHeader } from '@/components/Library/AlbumListHeader';
 import { TabsContent } from '@/components/ui/tabs';
 import { NormalizedAlbum, ViewMode } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
@@ -35,11 +36,14 @@ export const AlbumsTab = ({
           <p>No albums available.</p>
         </div>
       ) : (
-        <VirtualizedAlbumGrid
-          items={filteredAlbums}
-          viewMode={viewMode}
-          ItemComponent={ItemComponent}
-        />
+        <div className="space-y-1">
+          {viewMode === 'list' && <AlbumListHeader />}
+          <VirtualizedAlbumGrid
+            items={filteredAlbums}
+            viewMode={viewMode}
+            ItemComponent={ItemComponent}
+          />
+        </div>
       )}
     </TabsContent>
   );

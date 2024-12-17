@@ -6,34 +6,38 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Clock, Play, Plus } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '@/contexts/auth-context';
+import { getServiceAuth } from '@/lib/services/streaming-auth';
 
 export default function AlbumDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const accessToken = localStorage.getItem('spotify_access_token');
-
-  console.log('AlbumDetails rendering:', { id, accessToken });
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (!accessToken) {
-      console.log('No access token found, redirecting to login');
+    if (!user) {
+      console.log('No user found, redirecting to login');
       navigate('/login', { state: { from: `/album/${id}` } });
     }
-  }, [accessToken, id, navigate]);
+  }, [user, id, navigate]);
 
   const {
     data: album,
     isLoading,
     error,
   } = useQuery<DetailedAlbum>({
-    queryKey: ['albumDetails', id],
-    queryFn: () => {
+    queryKey: ['albumDetails', id, user?.id],
+    queryFn: async () => {
       if (!id) throw new Error('No album ID provided');
-      if (!accessToken) throw new Error('No access token available');
+      if (!user) throw new Error('No user found');
+      
+      const auth = await getServiceAuth(user.id, 'spotify');
+      if (!auth) throw new Error('Spotify not connected');
+      
       console.log('Fetching album details for:', id);
-      return getSpotifyAlbumDetails(id, accessToken);
+      return getSpotifyAlbumDetails(user.id, id, auth.accessToken);
     },
-    enabled: !!id && !!accessToken,
+    enabled: !!id && !!user,
   });
 
   console.log('Query state:', { album, isLoading, error });

@@ -12,14 +12,37 @@ export default function Home() {
   });
 
   return (
-    <div className="container mx-auto max-w-5xl p-4 space-y-8">
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Connect Your Music Services</h2>
-        <p className="text-muted-foreground">
-          Connect your favorite music services to sync and manage your music
-          library in one place.
-        </p>
-        <ServicesGrid />
+    <div className="flex h-screen flex-col items-center justify-center px-4 py-12">
+      {/* Hero Section */}
+      <div className=" max-w-3xl text-center">
+        <h1 className="mb-6 text-5xl font-bold tracking-tight text-primary">
+          Welcome
+          {user?.user_metadata?.display_name
+            ? `, ${user.user_metadata.display_name}`
+            : ''}
+          ! 👋
+        </h1>
+      </div>
+
+      {/* Services Section */}
+      <div className="w-full max-w-4xl rounded-xl bg-card p-8 shadow-lg">
+        <div className="mb-10 text-center">
+          <h2 className="mb-4 text-3xl font-bold">
+            Connect Your Music Services
+          </h2>
+        </div>
+
+        <div className="px-4">
+          <ServicesGrid />
+        </div>
+
+        {connectedServices && connectedServices.length > 0 && (
+          <div className="mt-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Connected Services: {connectedServices.length}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

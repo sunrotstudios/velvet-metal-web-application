@@ -1,36 +1,50 @@
 import VirtualizedPlaylistGrid from '@/components/Library/VirtualizedPlaylistGrid';
+import { PlaylistCard } from '@/components/Library/PlaylistCard';
 import { TabsContent } from '@/components/ui/tabs';
 import { NormalizedPlaylist, ViewMode } from '@/lib/types';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface PlaylistsTabProps {
   playlists: NormalizedPlaylist[];
-  filteredPlaylists: NormalizedPlaylist[];
+  isLoading: boolean;
   viewMode: ViewMode;
-  ItemComponent: React.ComponentType<any>;
   onTransfer: (playlist: NormalizedPlaylist) => void;
 }
 
-export const PlaylistsTab = ({
+export function PlaylistsTab({
   playlists,
-  filteredPlaylists,
+  isLoading,
   viewMode,
-  ItemComponent,
   onTransfer,
-}: PlaylistsTabProps) => {
-  return (
-    <TabsContent value="playlists" className="space-y-6">
-      {playlists.length === 0 ? (
-        <div className="flex justify-center">
-          <p>No playlists available.</p>
+}: PlaylistsTabProps) {
+  if (isLoading) {
+    return (
+      <TabsContent value="playlists" className="mt-0 flex-1">
+        <div className="flex h-[400px] items-center justify-center">
+          <LoadingSpinner size="lg" />
         </div>
-      ) : (
-        <VirtualizedPlaylistGrid
-          items={filteredPlaylists}
-          viewMode={viewMode}
-          ItemComponent={ItemComponent}
-          onTransfer={onTransfer}
-        />
-      )}
+      </TabsContent>
+    );
+  }
+
+  if (!playlists?.length) {
+    return (
+      <TabsContent value="playlists" className="mt-0 flex-1">
+        <div className="flex h-[400px] items-center justify-center">
+          <p className="text-muted-foreground">No playlists found</p>
+        </div>
+      </TabsContent>
+    );
+  }
+
+  return (
+    <TabsContent value="playlists" className="mt-0 flex-1">
+      <VirtualizedPlaylistGrid
+        items={playlists}
+        viewMode={viewMode}
+        ItemComponent={PlaylistCard}
+        onTransfer={onTransfer}
+      />
     </TabsContent>
   );
-};
+}

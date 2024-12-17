@@ -58,24 +58,31 @@ export const AlbumCard = ({ album, viewMode }: AlbumCardProps) => {
   return (
     <>
       <Card
-        className="group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-accent cursor-pointer"
+        className={cn(
+          "group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-accent cursor-pointer",
+          viewMode === 'list' && "hover:bg-accent/5"
+        )}
         onClick={handleClick}
       >
-        <CardContent className="p-4">
+        <CardContent className={cn(
+          "p-4",
+          viewMode === 'list' && "px-6 py-3"
+        )}>
           <div
             className={cn(
               'flex',
               viewMode === 'grid'
                 ? 'flex-col space-y-2'
-                : 'flex-row items-center gap-3'
+                : 'flex-row items-center gap-6'
             )}
           >
+            {/* Album Artwork */}
             <div
               className={cn(
                 'group relative overflow-hidden rounded-xl',
                 viewMode === 'grid'
                   ? 'aspect-square w-full'
-                  : 'h-16 w-16 sm:h-20 sm:w-20'
+                  : 'h-[72px] w-[72px] flex-shrink-0'
               )}
             >
               {album.image_url ? (
@@ -93,32 +100,65 @@ export const AlbumCard = ({ album, viewMode }: AlbumCardProps) => {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
+                  className="h-8 w-8 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
                   aria-label="Play album"
                   onClick={handlePlayClick}
                 >
-                  <Play className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Play className="h-4 w-4" />
                 </Button>
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
+                  className="h-8 w-8 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
                   aria-label="Transfer album"
                   onClick={handleTransferClick}
                 >
-                  <ArrowLeftRight className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <ArrowLeftRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col min-w-0">
-              <h3 className="line-clamp-1 text-sm font-medium">{album.name}</h3>
-              <p className="line-clamp-1 text-xs sm:text-sm text-muted-foreground">
-                {album.artist_name}
-              </p>
-              {viewMode === 'list' && (
-                <p className="mt-1 text-xs text-muted-foreground">{releaseYear}</p>
-              )}
-            </div>
+
+            {/* Album Info */}
+            {viewMode === 'grid' ? (
+              <div className="flex flex-col min-w-0">
+                <h3 className="line-clamp-1 text-sm font-medium">{album.name}</h3>
+                <p className="line-clamp-1 text-xs sm:text-sm text-muted-foreground">
+                  {album.artist_name}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-1 items-center gap-6">
+                {/* Title and Artist */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="line-clamp-1 text-sm font-medium">{album.name}</h3>
+                  <p className="line-clamp-1 text-sm text-muted-foreground">
+                    {album.artist_name}
+                  </p>
+                </div>
+
+                {/* Album Type */}
+                <div className="w-24 flex-shrink-0 hidden md:block">
+                  <span className="text-sm capitalize px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                    {album.album_type}
+                  </span>
+                </div>
+
+                {/* Track Count */}
+                <div className="w-24 flex-shrink-0 text-sm text-muted-foreground hidden md:block">
+                  {album.tracks_count}
+                </div>
+
+                {/* Release Year */}
+                <div className="w-20 flex-shrink-0 text-sm text-muted-foreground hidden md:block">
+                  {releaseYear}
+                </div>
+
+                {/* Service Icon */}
+                <div className="w-24 flex-shrink-0 text-sm text-muted-foreground capitalize hidden md:block">
+                  {album.service === 'apple-music' ? 'Apple Music' : 'Spotify'}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

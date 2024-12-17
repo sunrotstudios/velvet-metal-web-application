@@ -69,34 +69,26 @@ export interface NormalizedAlbum {
 
 export interface NormalizedPlaylist {
   id: string;
+  user_id: string;
+  playlist_id: string;  // The platform-specific ID (e.g., Spotify's base62 ID)
   name: string;
   description?: string;
-
   artwork?: {
     url: string;
     height?: number | null;
     width?: number | null;
   };
-
-  metadata: {
-    platform: 'apple_music' | 'spotify';
-    externalUrl?: string;
-    isPublic: boolean;
-    isCollaborative: boolean;
-    createdAt?: string;
-    lastModified?: string;
-  };
-
+  tracks_count: number;
   owner?: {
     id: string;
-    displayName?: string;
-    externalUrl?: string;
+    display_name?: string;
   };
-
-  tracks?: {
-    total: number;
-    href?: string;
-  };
+  service: 'spotify' | 'apple-music';
+  is_public: boolean;
+  external_url?: string;
+  synced_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AlbumTrack {
@@ -115,6 +107,11 @@ export interface DetailedAlbum extends NormalizedAlbum {
   popularity?: number;
   copyrights?: string[];
   label?: string;
+  artwork: {
+    url: string;
+    width?: number;
+    height?: number;
+  };
 }
 
 export interface Album {

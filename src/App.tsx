@@ -3,8 +3,10 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/auth-context';
+import { LastFmProvider } from '@/contexts/LastFmContext';
 import AlbumDetails from '@/pages/AlbumDetails';
 import Home from '@/pages/Home';
+import LastFmDashboard from '@/pages/LastFmDashboard';
 import Library from '@/pages/Library/index';
 import Login from '@/pages/Login';
 import PlaylistDetails from '@/pages/PlaylistDetails';
@@ -34,25 +36,28 @@ function App() {
       <ThemeProvider>
         <Router>
           <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/spotify/callback" element={<SpotifyCallback />} />
-              <Route element={<ProtectedRoute />}>
-                <Route element={<Layout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/library" element={<Library />} />
-                  <Route path="/album/:id" element={<AlbumDetails />} />
-                  <Route path="/playlist/:id" element={<PlaylistDetails />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/transfer-history" element={<TransferHistory />} />
+            <LastFmProvider>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/spotify/callback" element={<SpotifyCallback />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<Layout />}>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/library" element={<Library />} />
+                    <Route path="/album/:id" element={<AlbumDetails />} />
+                    <Route path="/playlist/:id" element={<PlaylistDetails />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/transfer-history" element={<TransferHistory />} />
+                    <Route path="/lastfm" element={<LastFmDashboard />} />
+                  </Route>
                 </Route>
-              </Route>
-              <Route path="*" element={<Navigate to="/login" />} />
-            </Routes>
-            <Toaster />
+                <Route path="*" element={<Navigate to="/login" />} />
+              </Routes>
+            </LastFmProvider>
           </AuthProvider>
         </Router>
+        <Toaster />
         <ReactQueryDevtools initialIsOpen={false} />
       </ThemeProvider>
     </QueryClientProvider>

@@ -10,8 +10,13 @@ import {
   authorizeSpotify,
   unauthorizeSpotify,
 } from '@/lib/services/spotify-auth';
+import {
+  authorizeLastFm,
+  unauthorizeLastFm,
+} from '@/lib/services/lastfm-auth';
 import { ServiceType } from '@/lib/services/streaming-auth';
 import { useState } from 'react';
+import { useLastFm } from '@/contexts/LastFmContext';
 
 interface ServiceConnectionProps {
   service: ServiceType;
@@ -23,14 +28,16 @@ export function ServiceConnection({ service }: ServiceConnectionProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const { data: connectedServices, refetch: refetchConnectedServices } =
     useConnectedServices();
-  const isConnected = connectedServices?.includes(service);
+  const { username: lastFmUsername, setUsername: setLastFmUsername } = useLastFm();
+  const isConnected = service === 'lastfm' 
+    ? !!lastFmUsername 
+    : connectedServices?.includes(service);
 
   const handleConnect = async () => {
     if (!user) {
       toast({
         title: 'Error',
-        description: 'You must be signed in to connect a service',
-        variant: 'destructive',
+        description: 'You must be logged in to connect services.',
       });
       return;
     }
@@ -38,25 +45,22 @@ export function ServiceConnection({ service }: ServiceConnectionProps) {
     setIsConnecting(true);
     try {
       if (service === 'spotify') {
-        await authorizeSpotify(user.id);
+        await authorizeSpotify();
       } else if (service === 'apple-music') {
-        await authorizeAppleMusic(user.id);
+        await authorizeAppleMusic();
+      } else if (service === 'lastfm') {
+        const username = prompt('Enter your Last.fm username:');
+        if (username) {
+          await authorizeLastFm(username);
+          setLastFmUsername(username);
+        }
       }
       await refetchConnectedServices();
-      toast({
-        title: 'Success',
-        description: `Connected to ${
-          service === 'spotify' ? 'Spotify' : 'Apple Music'
-        }`,
-      });
     } catch (error) {
-      console.error(`Failed to connect to ${service}:`, error);
+      console.error('Error connecting service:', error);
       toast({
         title: 'Error',
-        description: `Failed to connect to ${
-          service === 'spotify' ? 'Spotify' : 'Apple Music'
-        }. Please try again.`,
-        variant: 'destructive',
+        description: 'Failed to connect service. Please try again.',
       });
     } finally {
       setIsConnecting(false);
@@ -64,57 +68,42 @@ export function ServiceConnection({ service }: ServiceConnectionProps) {
   };
 
   const handleDisconnect = async () => {
-    if (!user) {
-      toast({
-        title: 'Error',
-        description: 'You must be signed in to disconnect a service',
-        variant: 'destructive',
-      });
-      return;
-    }
+    if (!user) return;
 
+    setIsConnecting(true);
     try {
-      console.log('Starting service disconnect...', { service, userId: user.id });
-      
       if (service === 'spotify') {
         await unauthorizeSpotify(user.id);
       } else if (service === 'apple-music') {
         await unauthorizeAppleMusic(user.id);
+      } else if (service === 'lastfm') {
+        await unauthorizeLastFm();
+        setLastFmUsername('');
       }
-      
-      console.log('Service disconnected, refreshing connected services...');
       await refetchConnectedServices();
-      console.log('Connected services refreshed');
-      
       toast({
         title: 'Success',
-        description: `Disconnected from ${
-          service === 'spotify' ? 'Spotify' : 'Apple Music'
-        }`,
+        description: 'Service disconnected successfully.',
       });
     } catch (error) {
-      console.error(`Failed to disconnect from ${service}:`, error);
+      console.error('Error disconnecting service:', error);
       toast({
         title: 'Error',
-        description: `Failed to disconnect from ${
-          service === 'spotify' ? 'Spotify' : 'Apple Music'
-        }. Please try again.`,
-        variant: 'destructive',
+        description: 'Failed to disconnect service. Please try again.',
       });
+    } finally {
+      setIsConnecting(false);
     }
   };
 
   return (
     <Button
-      variant={isConnected ? 'destructive' : 'default'}
+      variant={isConnected ? 'outline' : 'default'}
       onClick={isConnected ? handleDisconnect : handleConnect}
       disabled={isConnecting}
+      size="sm"
     >
-      {isConnecting
-        ? 'Connecting...'
-        : isConnected
-        ? `Disconnect ${service === 'spotify' ? 'Spotify' : 'Apple Music'}`
-        : `Connect ${service === 'spotify' ? 'Spotify' : 'Apple Music'}`}
+      {isConnected ? 'Disconnect' : 'Connect'}
     </Button>
   );
 }
