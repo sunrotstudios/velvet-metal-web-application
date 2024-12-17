@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Home, Library, Settings } from 'lucide-react';
+import { History, Home, Library, Settings } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { AddServiceModal } from './AddServiceModal';
 
 const routes = [
   {
@@ -13,6 +14,11 @@ const routes = [
     path: '/library',
     label: 'Library',
     icon: Library,
+  },
+  {
+    path: '/transfer-history',
+    label: 'Transfer History',
+    icon: History,
   },
   {
     path: '/settings',
@@ -49,6 +55,9 @@ export function Sidebar() {
                 </Link>
               </Button>
             ))}
+            <div className="mt-4">
+              <AddServiceModal />
+            </div>
           </div>
         </div>
       </div>

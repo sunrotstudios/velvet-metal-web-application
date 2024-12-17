@@ -1,57 +1,86 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import pb from '@/lib/pocketbase';
-import type { AuthModel } from '@/lib/pocketbase';
+import { supabase } from '@/lib/supabase';
+import type { AuthUser } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface AuthContextType {
-  user: AuthModel | null;
+  user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
+  register: (email: string, password: string, display_name: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthModel | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setUser(pb.authStore.model as AuthModel | null);
-    setLoading(false);
-
-    pb.authStore.onChange(() => {
-      console.log('AuthProvider: Auth state changed');
-
-      setUser(pb.authStore.model as AuthModel | null);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    console.log('AuthProvider: Attempting login');
-
-    await pb.collection('users').authWithPassword(email, password);
-    console.log('AuthProvider: Login successful');
-  };
-
-  const register = async (email: string, password: string, name: string) => {
-    console.log('AuthProvider: Attempting registration');
-
-    await pb.collection('users').create({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-      passwordConfirm: password,
-      name,
     });
-    console.log('AuthProvider: Registration successful, logging in');
 
-    await login(email, password);
+    if (error) throw error;
   };
 
-  const logout = () => {
-    console.log('AuthProvider: Logging out');
+  const register = async (email: string, password: string, display_name: string) => {
+    // First sign up the user
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name,
+        },
+      },
+    });
 
-    pb.authStore.clear();
+    if (signUpError) throw signUpError;
+
+    // If successful, update the profile
+    if (signUpData.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ display_name })
+        .eq('id', signUpData.user.id);
+
+      if (profileError) {
+        // If profile update fails, delete the user and throw error
+        await supabase.auth.admin.deleteUser(signUpData.user.id);
+        throw profileError;
+      }
+    }
+
+    // Navigate to home after successful registration
+    navigate('/');
+  };
+
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    navigate('/login');
   };
 
   return (
@@ -60,10 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
-export const useAuth = () => {
+
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}

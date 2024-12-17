@@ -1,11 +1,11 @@
+import { Logo } from '@/components/Logo';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/auth-context';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth-context';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Logo } from '@/components/Logo';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,70 +24,70 @@ export default function Login() {
       await login(email, password);
       toast.success('Logged in successfully');
       navigate('/');
-    } catch (error) {
-      toast.error('Invalid email or password');
+    } catch (error: any) {
+      toast.error(error.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/50 p-4">
-      <div className="mb-8">
-        <Logo />
-      </div>
-      <Card className="w-full max-w-[400px]">
-        <CardHeader className="space-y-1 text-center">
-          <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your credentials to access your account
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="name@example.com"
-                required
-                autoComplete="email"
-                autoFocus
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
-            </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Button
-                variant="link"
-                className="p-0 font-normal"
-                onClick={() => navigate('/register')}
-              >
-                Create account
-              </Button>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-background to-accent/10 p-4">
+      <div className="w-full max-w-[400px] space-y-8">
+        <Logo className="mx-auto" size="lg" />
+        <Card className="border-2">
+          <CardHeader className="space-y-1 text-center">
+            <h1 className="text-2xl font-bold tracking-tight">Welcome Back</h1>
+            <p className="text-sm text-muted-foreground">
+              Enter your credentials to access your account
             </p>
-          </form>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  required
+                  autoComplete="email"
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Signing in...' : 'Sign in'}
+              </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                Don't have an account?{' '}
+                <Button
+                  variant="link"
+                  className="p-0 font-normal"
+                  onClick={() => navigate('/register')}
+                >
+                  Create account
+                </Button>
+              </p>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

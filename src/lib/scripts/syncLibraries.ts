@@ -1,15 +1,19 @@
-import pb from '@/lib/pocketbase';
+import { supabase } from '@/lib/supabase';
 import { syncLibrary } from '@/lib/services/librarySync';
 import cron from 'node-cron';
 
 const synchronizeLibraries = async () => {
   try {
-    const users = await pb.collection('users').getFullList(200, {
-      sort: '-created',
-    });
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
 
-    for (const user of users) {
-      const services = user.connectedServices || [];
+    if (error) throw error;
+
+    for (const user of users || []) {
+      const services = user.connected_services || [];
       for (const service of services) {
         if (
           service.connected &&

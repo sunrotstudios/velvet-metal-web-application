@@ -1,174 +1,145 @@
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
-import { exchangeSpotifyCode } from '@/lib/api/spotify';
-import { syncLibrary } from '@/lib/services/librarySync';
-import updateConnectedServices from '@/lib/services/updateConnectedServices';
-import { SyncProgress } from '@/lib/types';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { getSpotifyToken } from '@/lib/api/spotify';
+import { syncSpotifyLibrary } from '@/lib/services/spotify-library';
+import { saveServiceAuth } from '@/lib/services/streaming-auth';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import pb from '../lib/pocketbase';
 
 export default function SpotifyCallback() {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
-
-  const handleSpotifyCallback = async (
-    accessToken: string,
-    refreshToken: string,
-    expiresAt: number
-  ) => {
-    if (!user) {
-      console.error('No user found in handleSpotifyCallback');
-      return;
-    }
-
-    try {
-      console.log('Starting Spotify connection update...', {
-        userId: user.id,
-        accessToken: accessToken.substring(0, 10) + '...',
-        expiresAt,
-      });
-
-      const progressToast = toast.loading('Connecting to Spotify...', {
-        duration: Infinity,
-      });
-
-      // First, verify the user exists
-      const userRecord = await pb.collection('users').getOne(user.id);
-      console.log('Found user record:', userRecord);
-
-      // Update connected services
-      await updateConnectedServices(user.id, {
-        id: 'spotify',
-        name: 'Spotify',
-        connected: true,
-        accessToken,
-        refreshToken,
-        expiresAt,
-      });
-
-      console.log('Services updated successfully');
-
-      // Sync library with progress updates
-      await syncLibrary(user.id, 'spotify', (progress) => {
-        setSyncProgress(progress);
-        toast.loading(
-          `${
-            progress.phase === 'albums' ? 'Syncing Albums' : 'Syncing Playlists'
-          }: ${progress.current}/${progress.total}`,
-          { id: progressToast }
-        );
-      });
-
-      toast.success('Library synced successfully!', {
-        id: progressToast,
-      });
-
-      return true; // Add a return value to check if the process completed
-    } catch (error) {
-      console.error('Detailed error in handleSpotifyCallback:', {
-        error,
-        userId: user.id,
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-      throw error; // Re-throw to be caught by the caller
-    }
-  };
+  const { user, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
+  const processedCode = useRef<string | null>(null);
 
   useEffect(() => {
-    console.log('SpotifyCallback Initialized');
-    console.log('User:', user);
+    const code = searchParams.get('code');
+    const error = searchParams.get('error');
+    const callbackUrl = sessionStorage.getItem('auth_callback_url') || '/';
 
-    if (!user) {
-      console.log('No user found, returning');
+    // Wait for auth to load
+    if (authLoading) {
       return;
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const error = urlParams.get('error');
-    const state = urlParams.get('state');
-    const storedState = localStorage.getItem('spotify_auth_state');
-
-    console.log('URL Parameters:', {
-      code,
-      error,
-      state,
-      storedState,
-      fullUrl: window.location.href,
-    });
-
-    console.log('URL State:', state);
-    console.log('Stored State:', storedState);
-
+    // Handle errors first
     if (error) {
-      toast.error(`Spotify authorization failed: ${error}`);
-      navigate('/');
+      console.error('Spotify auth error:', error);
+      toast.error('Failed to connect to Spotify');
+      navigate(callbackUrl, { replace: true });
       return;
     }
 
     if (!code) {
-      toast.error('No authorization code received from Spotify');
-      navigate('/');
+      console.error('Missing code:', { code });
+      toast.error('Failed to connect to Spotify');
+      navigate(callbackUrl, { replace: true });
       return;
     }
 
-    if (state !== storedState) {
-      toast.error('Invalid state parameter');
-      navigate('/');
+    if (!user) {
+      console.error('No user found, redirecting to login');
+      toast.error('Please sign in to connect Spotify');
+      navigate('/login', { replace: true });
       return;
     }
 
-    localStorage.removeItem('spotify_auth_state');
+    // Don't process the same code twice
+    if (processedCode.current === code) {
+      return;
+    }
 
-    exchangeSpotifyCode(code)
-      .then(async (data) => {
-        console.log('Received Spotify tokens:', {
-          accessToken: data.access_token.substring(0, 10) + '...',
-          hasRefreshToken: !!data.refresh_token,
+    const connectSpotify = async () => {
+      try {
+        processedCode.current = code;
+        console.log('Starting Spotify connection flow...', {
+          userId: user.id,
+          code,
         });
 
-        localStorage.setItem('spotify_access_token', data.access_token);
-        if (data.refresh_token) {
-          localStorage.setItem('spotify_refresh_token', data.refresh_token);
-        }
+        const { access_token, refresh_token, expires_in } =
+          await getSpotifyToken(code);
 
-        const success = await handleSpotifyCallback(
-          data.access_token,
-          data.refresh_token || '',
-          Date.now() + data.expires_in * 1000
-        );
-
-        if (success) {
-          toast.success('Successfully connected to Spotify');
-          navigate('/library');
-        } else {
-          throw new Error('Failed to update user profile');
-        }
-      })
-      .catch((error) => {
-        console.error('Detailed error in Spotify callback:', {
-          error,
-          stack: error instanceof Error ? error.stack : undefined,
+        console.log('Got Spotify token:', {
+          access_token_length: access_token.length,
+          has_refresh_token: !!refresh_token,
+          expires_in,
         });
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : 'Failed to connect to Spotify'
-        );
-        navigate('/');
-      });
-  }, [navigate, user]);
+
+        const expiresAt = new Date();
+        expiresAt.setSeconds(expiresAt.getSeconds() + expires_in);
+
+        await saveServiceAuth(user.id, 'spotify', {
+          accessToken: access_token,
+          refreshToken: refresh_token,
+          expiresAt,
+        });
+
+        await queryClient.invalidateQueries(['serviceConnection']);
+        await queryClient.invalidateQueries(['userServices']);
+
+        // Start library sync in the background
+        toast.promise(syncSpotifyLibrary(user.id, access_token), {
+          loading: 'Syncing Spotify library...',
+          success: 'Library sync complete!',
+          error: 'Failed to sync library',
+        });
+
+        // Clear the callback URL from session storage
+        sessionStorage.removeItem('auth_callback_url');
+
+        // Navigate back immediately after saving auth
+        navigate(callbackUrl, { replace: true });
+        toast.success('Successfully connected to Spotify');
+      } catch (error) {
+        console.error('Failed to connect to Spotify:', error);
+        toast.error('Failed to connect to Spotify');
+        navigate(callbackUrl, { replace: true });
+      }
+    };
+
+    // Connect immediately when we have a code
+    connectSpotify();
+  }, [user, authLoading, searchParams, navigate, queryClient]);
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-accent/10 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center text-lg font-semibold">
+            Loading...
+          </CardHeader>
+          <CardContent className="flex items-center justify-center p-6">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="text-sm text-muted-foreground">
+                Please wait while we load your account...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-center">
-        <h2 className="text-2xl font-semibold">Connecting to Spotify...</h2>
-        <p className="text-muted-foreground">
-          Please wait while we complete the connection.
-        </p>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-accent/10 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center text-lg font-semibold">
+          Connecting to Spotify
+        </CardHeader>
+        <CardContent className="flex items-center justify-center p-6">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p className="text-sm text-muted-foreground">
+              Please wait while we connect your Spotify account...
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

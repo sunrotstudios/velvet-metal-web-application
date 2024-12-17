@@ -71,7 +71,53 @@ export const getAppleMusicLibrary = async (musicUserToken: string) => {
     throw new Error('Failed to fetch Apple Music library');
   }
 
-  return response.json();
+  const playlists = await response.json();
+
+  // Then, fetch track counts for each playlist
+  const playlistsWithTracks = await Promise.all(
+    playlists.data.map(async (playlist: any) => {
+      // Extract the catalog ID from the playParams
+      const catalogId =
+        playlist.attributes?.playParams?.catalogId || playlist.id;
+
+      const tracksResponse = await fetch(
+        `https://api.music.apple.com/v1/me/library/playlists/${catalogId}/tracks`,
+        {
+          headers: {
+            Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+            'Music-User-Token': musicUserToken,
+          },
+        }
+      );
+
+      if (!tracksResponse.ok) {
+        console.warn(`Failed to fetch tracks for playlist ${playlist.id}`);
+        return {
+          ...playlist,
+          relationships: {
+            tracks: {
+              data: [],
+            },
+          },
+        };
+      }
+
+      const tracksData = await tracksResponse.json();
+      return {
+        ...playlist,
+        relationships: {
+          tracks: {
+            data: tracksData.data || [],
+          },
+        },
+      };
+    })
+  );
+
+  return {
+    ...playlists,
+    data: playlistsWithTracks,
+  };
 };
 
 export const getAppleMusicAlbums = async (musicUserToken: string) => {
@@ -90,4 +136,39 @@ export const getAppleMusicAlbums = async (musicUserToken: string) => {
   }
 
   return response.json();
+};
+
+export const getAllAppleMusicAlbums = async (musicUserToken: string) => {
+  let allAlbums: any[] = [];
+  let offset = 0;
+  const limit = 100; // Apple Music's max limit per request
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await fetch(
+      `https://api.music.apple.com/v1/me/library/albums?limit=${limit}&offset=${offset}`,
+      {
+        headers: {
+          Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+          'Music-User-Token': musicUserToken,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch Apple Music albums');
+    }
+
+    const data = await response.json();
+    const albums = data.data || [];
+    allAlbums = [...allAlbums, ...albums];
+
+    // Check if there are more albums to fetch
+    hasMore = albums.length === limit;
+    offset += limit;
+  }
+
+  return {
+    data: allAlbums,
+  };
 };

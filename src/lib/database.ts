@@ -13,3 +13,20 @@ export interface UserPlaylists {
   playlists: any[]; // Store the full playlist data
   lastSynced: Date;
 }
+
+export interface TransferHistory {
+  id?: string;
+  user: string;
+  sourceService: 'spotify' | 'apple-music';
+  targetService: 'spotify' | 'apple-music';
+  sourcePlaylistId: string;
+  sourcePlaylistName: string;
+  targetPlaylistId?: string;
+  targetPlaylistName?: string;
+  tracksTotal: number;
+  tracksTransferred: number;
+  status: 'pending' | 'success' | 'failed';
+  error?: string;
+  startedAt: string;
+  completedAt?: string;
+}
