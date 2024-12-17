@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { LoadingState } from '@/components/ui/loading-state';
 import { useAuth } from '@/contexts/auth-context';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
 import { authorizeAppleMusic } from '@/lib/services/apple-music-auth';
@@ -6,6 +7,7 @@ import { authorizeSpotify } from '@/lib/services/spotify-auth';
 import { ServiceType } from '@/lib/services/streaming-auth';
 import { cn } from '@/lib/utils';
 import { AppleIcon, Music2, Waves } from 'lucide-react';
+import { useState } from 'react';
 import { useToast } from './ui/use-toast';
 
 const services = [
@@ -37,6 +39,7 @@ export function ServicesGrid() {
   const { toast } = useToast();
   const { data: connectedServices, refetch: refetchConnectedServices } =
     useConnectedServices();
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = async (service: ServiceType) => {
     if (!user) {
@@ -48,6 +51,7 @@ export function ServicesGrid() {
       return;
     }
 
+    setIsConnecting(true);
     try {
       if (service === 'spotify') {
         sessionStorage.setItem('auth_callback_url', window.location.pathname);
@@ -62,8 +66,18 @@ export function ServicesGrid() {
         description: `Failed to connect to ${service}`,
         variant: 'destructive',
       });
+    } finally {
+      setIsConnecting(false);
     }
   };
+
+  if (isConnecting) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <LoadingState text="Connecting service..." />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

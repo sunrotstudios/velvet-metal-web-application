@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Card } from '@/components/ui/card';
+import { LoadingState } from '@/components/ui/loading-state';
 import {
   Table,
   TableBody,
@@ -40,18 +41,13 @@ export default function TransferHistory() {
     queryKey: ['transfers', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      console.log('Fetching transfers for user:', user.id);
       const { data, error } = await supabase
         .from('transfers')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching transfers:', error);
-        throw error;
-      }
-      console.log('Fetched transfers data:', data);
+      if (error) throw error;
       return data as Transfer[];
     },
     enabled: !!user,
@@ -59,46 +55,61 @@ export default function TransferHistory() {
 
   if (!user) return null;
 
-  return (
-    <div className="container py-8">
-      <h1 className="text-2xl font-semibold mb-6">Transfer History</h1>
+  if (isLoading) {
+    return (
+      <div className="container py-8 space-y-4">
+        <h1 className="text-2xl font-semibold">Transfer History</h1>
+        <Card className="p-6">
+          <LoadingState text="Loading transfer history..." />
+        </Card>
+      </div>
+    );
+  }
 
-      {isLoading ? (
-        <LoadingSpinner centered />
-      ) : !transfers?.length ? (
-        <p className="text-center text-muted-foreground">
-          No transfers found. Start by transferring a playlist or album from your
-          library!
-        </p>
+  return (
+    <div className="container py-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Transfer History</h1>
+        <Badge variant="secondary" className="text-sm">
+          {transfers?.length || 0} transfers
+        </Badge>
+      </div>
+
+      {!transfers?.length ? (
+        <Card className="p-6">
+          <p className="text-center text-muted-foreground">
+            No transfers found. Start by transferring a playlist or album from your library!
+          </p>
+        </Card>
       ) : (
-        <div className="rounded-md border">
+        <Card className="p-6">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Source</TableHead>
                 <TableHead>Destination</TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead className="min-w-[200px]">Name</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Tracks</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="min-w-[200px]">Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {transfers.map((transfer) => (
                 <TableRow key={transfer.id}>
-                  <TableCell className="capitalize">
+                  <TableCell className="font-medium capitalize">
                     {transfer.source_service === 'apple-music'
                       ? 'Apple Music'
                       : transfer.source_service}
                   </TableCell>
-                  <TableCell className="capitalize">
+                  <TableCell className="font-medium capitalize">
                     {transfer.destination_service === 'apple-music'
                       ? 'Apple Music'
                       : transfer.destination_service}
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col">
-                      <span>{transfer.metadata.sourcePlaylistName}</span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium">{transfer.metadata.sourcePlaylistName}</span>
                       {transfer.metadata.targetPlaylistName && (
                         <span className="text-sm text-muted-foreground">
                           → {transfer.metadata.targetPlaylistName}
@@ -115,16 +126,17 @@ export default function TransferHistory() {
                           ? 'destructive'
                           : 'secondary'
                       }
+                      className="capitalize"
                     >
                       {transfer.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium">
                     {transfer.metadata.tracksCount || transfer.tracks_transferred || 0}
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col">
-                      <span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium">
                         {formatDistanceToNow(new Date(transfer.created_at), {
                           addSuffix: true,
                         })}
@@ -143,7 +155,7 @@ export default function TransferHistory() {
               ))}
             </TableBody>
           </Table>
-        </div>
+        </Card>
       )}
     </div>
   );

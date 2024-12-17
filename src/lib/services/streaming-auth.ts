@@ -5,7 +5,7 @@ export type ServiceType = 'spotify' | 'apple-music' | 'lastfm';
 interface ServiceTokens {
   accessToken: string;
   refreshToken?: string;
-  expiresAt?: Date;
+  expiresAt?: Date | null;
 }
 
 export async function saveServiceAuth(

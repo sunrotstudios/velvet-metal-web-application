@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { getServiceAuth, saveServiceAuth, removeServiceAuth } from '@/lib/services/streaming-auth';
+import { getValidToken } from '@/lib/services/token-manager';
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
@@ -11,28 +12,48 @@ export interface SpotifyAuth {
   expiresIn: number;
 }
 
+// Utility function to check if token needs refresh (5 minutes buffer)
+async function needsTokenRefresh(userId: string): Promise<boolean> {
+  const auth = await getServiceAuth(userId, 'spotify');
+  if (!auth?.expiresAt) return true;
+  
+  const expiresAt = new Date(auth.expiresAt);
+  const now = new Date();
+  // Add 5 minute buffer
+  const bufferMs = 5 * 60 * 1000;
+  return expiresAt.getTime() - now.getTime() <= bufferMs;
+}
+
+async function ensureFreshToken(userId: string): Promise<string> {
+  const auth = await getServiceAuth(userId, 'spotify');
+  if (!auth) {
+    throw new Error('No Spotify authentication found');
+  }
+
+  if (await needsTokenRefresh(userId)) {
+    if (!auth.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    
+    console.log('Token needs refresh, refreshing...');
+    const newAuth = await refreshSpotifyToken(auth.refreshToken);
+    await saveServiceAuth(userId, 'spotify', {
+      accessToken: newAuth.accessToken,
+      refreshToken: newAuth.refreshToken,
+      expiresAt: new Date(Date.now() + newAuth.expiresIn * 1000)
+    });
+    return newAuth.accessToken;
+  }
+
+  return auth.accessToken;
+}
+
 async function handleSpotifyRequest<T>(
-  accessToken: string,
+  userId: string,
   requestFn: (token: string) => Promise<T>
 ): Promise<T> {
-  const makeRequest = async (token: string) => {
-    try {
-      return await requestFn(token);
-    } catch (error) {
-      // Ensure error is properly formatted with status code if it's a fetch error
-      if (error instanceof Error && 'status' in error) {
-        const status = (error as any).status;
-        error.message = `Spotify API error (${status}): ${error.message}`;
-      }
-      throw error;
-    }
-  };
-
   try {
-    if (typeof accessToken !== 'string') {
-      console.error('Invalid access token type:', typeof accessToken);
-      throw new Error('Invalid access token type');
-    }
+    const accessToken = await getValidToken(userId, 'spotify');
     
     if (!accessToken) {
       console.error('Access token is empty');
@@ -40,9 +61,13 @@ async function handleSpotifyRequest<T>(
     }
 
     console.log('Making Spotify API request with token:', accessToken.slice(0, 10) + '...');
-    return await makeRequest(accessToken);
+    return await requestFn(accessToken);
   } catch (error) {
     console.error('Request failed:', error);
+    if (error instanceof Error && 'status' in error) {
+      const status = (error as any).status;
+      error.message = `Spotify API error (${status}): ${error.message}`;
+    }
     throw error;
   }
 }
@@ -202,7 +227,7 @@ export async function refreshSpotifyToken(
 }
 
 export async function getSpotifyPlaylists(accessToken: string, userId: string) {
-  return handleSpotifyRequest(accessToken, async (token) => {
+  return handleSpotifyRequest(userId, async (token) => {
     const response = await fetch('https://api.spotify.com/v1/me/playlists', {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -315,7 +340,7 @@ export async function getSpotifyAlbumDetails(
   albumId: string,
   accessToken: string
 ) {
-  return handleSpotifyRequest(accessToken, async (token) => {
+  return handleSpotifyRequest(userId, async (token) => {
     const [albumResponse, tracksResponse] = await Promise.all([
       fetch(`https://api.spotify.com/v1/albums/${albumId}`, {
         headers: {
@@ -371,13 +396,13 @@ export async function getSpotifyAlbumDetails(
 
 export async function getSpotifyPlaylistDetails(
   playlistId: string,
-  accessToken: string
+  userId: string
 ) {
   if (!playlistId) {
     throw new Error('Playlist ID is required');
   }
 
-  return handleSpotifyRequest(accessToken, async (token) => {
+  return handleSpotifyRequest(userId, async (token) => {
     console.log('Fetching Spotify playlist:', playlistId);
     const response = await fetch(
       `https://api.spotify.com/v1/playlists/${playlistId}`,

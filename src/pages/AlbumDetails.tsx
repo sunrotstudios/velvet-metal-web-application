@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { LoadingState } from '@/components/ui/loading-state';
 import { getSpotifyAlbumDetails } from '@/lib/api/spotify';
 import { AlbumTrack, DetailedAlbum } from '@/lib/types';
 import { formatDuration } from '@/lib/utils';
@@ -58,10 +59,8 @@ export default function AlbumDetails() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold">Loading album...</h2>
-        </div>
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <LoadingState text="Loading album..." />
       </div>
     );
   }

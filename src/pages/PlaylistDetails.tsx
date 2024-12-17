@@ -12,6 +12,7 @@ import { getServiceAuth } from '@/lib/services/streaming-auth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { TransferPlaylistModal } from '@/components/TransferPlaylistModal';
 import { useState } from 'react';
+import { LoadingState } from '@/components/ui/loading-state';
 
 export default function PlaylistDetails() {
   const { id } = useParams<{ id: string }>();
@@ -88,7 +89,15 @@ export default function PlaylistDetails() {
     );
   }
 
-  if (isLoading || !playlist) {
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <LoadingState text="Loading playlist..." />
+      </div>
+    );
+  }
+
+  if (!playlist) {
     return (
       <div className="flex h-full items-center justify-center">
         <LoadingSpinner size="lg" />

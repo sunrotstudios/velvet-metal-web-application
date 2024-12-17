@@ -4,6 +4,7 @@ import { PlaylistCard } from '@/components/Library/PlaylistCard';
 import { LibrarySkeleton } from '@/components/LibrarySkeleton';
 import { TransferPlaylistModal } from '@/components/TransferPlaylistModal';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { LoadingState } from '@/components/ui/loading-state';
 import { Tabs } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -231,6 +232,14 @@ export default function Library() {
     return <LibrarySkeleton />;
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <LoadingState text="Loading your library..." />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full flex-col">
       {/* Fixed Header Section */}
@@ -258,9 +267,7 @@ export default function Library() {
 
             {/* Scrollable Content Area */}
             <div className="h-[calc(100vh-12rem)] overflow-y-auto">
-              {isLoading ? (
-                <LoadingSpinner centered />
-              ) : isError ? (
+              {isError ? (
                 <div className="text-center text-red-500">
                   An error occurred while loading your library. Please try again.
                 </div>

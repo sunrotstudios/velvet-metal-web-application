@@ -50,8 +50,6 @@ export async function unauthorizeSpotify(userId: string) {
   try {
     console.log('Removing Spotify authorization...');
     await removeServiceAuth(userId, 'spotify');
-    localStorage.removeItem('spotify_access_token');
-    localStorage.removeItem('spotify_refresh_token');
     console.log('Spotify authorization removed successfully');
   } catch (error) {
     console.error('Failed to remove Spotify authorization:', error);
@@ -94,16 +92,12 @@ export async function handleSpotifyCallback(code: string, userId: string) {
     const data = await response.json();
     console.log('Received Spotify tokens');
 
-    // Save tokens
+    // Save tokens only in Supabase
     await saveServiceAuth(userId, 'spotify', {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
       expiresAt: new Date(Date.now() + data.expires_in * 1000),
     });
-
-    // Store tokens in localStorage for easy access
-    localStorage.setItem('spotify_access_token', data.access_token);
-    localStorage.setItem('spotify_refresh_token', data.refresh_token);
 
     console.log('Spotify authorization completed successfully');
     return data;
@@ -149,12 +143,6 @@ export async function refreshSpotifyToken(userId: string, refreshToken: string) 
       refreshToken: data.refresh_token || refreshToken, // Use old refresh token if new one not provided
       expiresAt: new Date(Date.now() + data.expires_in * 1000),
     });
-
-    // Update localStorage
-    localStorage.setItem('spotify_access_token', data.access_token);
-    if (data.refresh_token) {
-      localStorage.setItem('spotify_refresh_token', data.refresh_token);
-    }
 
     console.log('Spotify token refresh completed successfully');
     return data;
