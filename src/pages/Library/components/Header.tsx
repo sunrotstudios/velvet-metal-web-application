@@ -23,7 +23,8 @@ export const Header = ({ activeService, onRefresh }: HeaderProps) => {
           {activeService === 'spotify' ? 'Spotify' : 'Apple Music'}
         </p>
       </div>
-      <div className="flex items-center gap-2">
+      {/* Refresh button temporarily hidden until fully developed */}
+      {/* <div className="flex items-center gap-2">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -39,7 +40,7 @@ export const Header = ({ activeService, onRefresh }: HeaderProps) => {
             <TooltipContent>Refresh Library</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      </div>
+      </div> */}
     </div>
   );
 };

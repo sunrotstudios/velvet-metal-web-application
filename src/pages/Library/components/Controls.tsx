@@ -48,31 +48,120 @@ export const Controls = ({
   onAlbumTypeChange,
 }: ControlsProps) => {
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="grid gap-4 md:grid-cols-[1fr_auto_auto]">
-        {/* Left Section: Tabs and Service Selection */}
-        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
-          <TabsList className="inline-flex h-9 items-center justify-center rounded-lg p-1 text-muted-foreground">
-            <TabsTrigger
-              value="albums"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+    <div className="flex flex-col">
+      {/* Mobile Controls */}
+      <div className="flex flex-col space-y-2 md:hidden">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search..."
+            className="h-10 pl-9 w-full bg-background border-none shadow-none focus-visible:ring-0"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {/* Tabs */}
+        <div className="flex items-center justify-between bg-muted/40 rounded-lg p-1">
+          <TabsList className="h-9 w-full bg-transparent">
+            <TabsTrigger 
+              value="albums" 
+              className="flex-1 data-[state=active]:bg-background rounded-md"
             >
               <LibraryIcon className="mr-2 h-4 w-4" />
               Albums
             </TabsTrigger>
-            <TabsTrigger
-              value="playlists"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            <TabsTrigger 
+              value="playlists" 
+              className="flex-1 data-[state=active]:bg-background rounded-md"
             >
               <ListMusic className="mr-2 h-4 w-4" />
               Playlists
             </TabsTrigger>
           </TabsList>
+        </div>
 
-          <Select
-            value={activeService}
-            onValueChange={(value: ServiceType) => setActiveService(value)}
-          >
+        {/* Controls Row */}
+        <div className="flex gap-2">
+          <Select value={activeService} onValueChange={(value: ServiceType) => setActiveService(value)}>
+            <SelectTrigger className="h-9 flex-1 bg-muted/40 border-none">
+              <SelectValue placeholder="Select Service" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="spotify">Spotify</SelectItem>
+              <SelectItem value="apple-music">Apple Music</SelectItem>
+              <SelectItem value="tidal">Tidal</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="h-9 w-[110px] bg-muted/40 border-none">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+              <SelectItem value="artist-asc">Artist (A-Z)</SelectItem>
+              <SelectItem value="artist-desc">Artist (Z-A)</SelectItem>
+              <SelectItem value="recent">Recent</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="flex h-9 rounded-md bg-muted/40 p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('grid')}
+              className="h-7 w-7"
+              aria-label="Grid View"
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('list')}
+              className="h-7 w-7"
+              aria-label="List View"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Album Type Filter (Only show when Albums tab is active) */}
+        {activeTab === 'albums' && (
+          <Select value={albumTypeFilter} onValueChange={onAlbumTypeChange}>
+            <SelectTrigger className="h-9 w-full bg-muted/40 border-none">
+              <SelectValue placeholder="Filter by Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="album">Albums Only</SelectItem>
+              <SelectItem value="single">Singles Only</SelectItem>
+              <SelectItem value="ep">EPs Only</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      {/* Desktop Controls */}
+      <div className="hidden md:grid gap-4 grid-cols-[1fr_auto_auto]">
+        {/* Left Section */}
+        <div className="flex items-center space-x-4">
+          <TabsList className="h-9">
+            <TabsTrigger value="albums">
+              <LibraryIcon className="mr-2 h-4 w-4" />
+              Albums
+            </TabsTrigger>
+            <TabsTrigger value="playlists">
+              <ListMusic className="mr-2 h-4 w-4" />
+              Playlists
+            </TabsTrigger>
+          </TabsList>
+
+          <Select value={activeService} onValueChange={(value: ServiceType) => setActiveService(value)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Service" />
             </SelectTrigger>
@@ -109,10 +198,10 @@ export const Controls = ({
           />
         </div>
 
-        {/* Right Section: Sort and View Controls */}
+        {/* Right Section */}
         <div className="flex items-center gap-2">
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="h-9 w-[130px]">
+            <SelectTrigger className="w-[130px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>

@@ -66,14 +66,14 @@ export const AlbumCard = ({ album, viewMode }: AlbumCardProps) => {
       >
         <CardContent className={cn(
           "p-4",
-          viewMode === 'list' && "px-6 py-3"
+          viewMode === 'list' && "px-4 sm:px-6 py-3"
         )}>
           <div
             className={cn(
               'flex',
               viewMode === 'grid'
                 ? 'flex-col space-y-2'
-                : 'flex-row items-center gap-6'
+                : 'flex-row items-center gap-2 sm:gap-6'
             )}
           >
             {/* Album Artwork */}
@@ -82,7 +82,7 @@ export const AlbumCard = ({ album, viewMode }: AlbumCardProps) => {
                 'group relative overflow-hidden rounded-xl',
                 viewMode === 'grid'
                   ? 'aspect-square w-full'
-                  : 'h-[72px] w-[72px] flex-shrink-0'
+                  : 'h-[50px] w-[50px] sm:h-[72px] sm:w-[72px] flex-shrink-0'
               )}
             >
               {album.image_url ? (
@@ -92,11 +92,10 @@ export const AlbumCard = ({ album, viewMode }: AlbumCardProps) => {
                   className="h-full w-full object-cover transition-all group-hover:scale-105"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-muted">
-                  {/* <Music className="h-12 w-12 text-muted-foreground" /> */}
-                </div>
+                <div className="flex h-full w-full items-center justify-center bg-muted" />
               )}
-              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+              {/* Hide overlay controls on mobile */}
+              <div className="absolute inset-0 hidden sm:flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                 <Button
                   size="icon"
                   variant="ghost"
@@ -122,39 +121,64 @@ export const AlbumCard = ({ album, viewMode }: AlbumCardProps) => {
             {viewMode === 'grid' ? (
               <div className="flex flex-col min-w-0">
                 <h3 className="line-clamp-1 text-sm font-medium">{album.name}</h3>
-                <p className="line-clamp-1 text-xs sm:text-sm text-muted-foreground">
+                <p className="line-clamp-1 text-xs text-muted-foreground">
                   {album.artist_name}
                 </p>
+                {/* Mobile actions for grid view */}
+                <div className="flex items-center gap-2 mt-2 sm:hidden">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 flex-1 text-xs"
+                    onClick={handleTransferClick}
+                  >
+                    Transfer
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 w-7"
+                    onClick={handlePlayClick}
+                  >
+                    <Play className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             ) : (
-              <div className="flex flex-1 items-center gap-6">
+              <div className="flex flex-1 items-center gap-2 sm:gap-6">
                 {/* Title and Artist */}
                 <div className="flex-1 min-w-0">
                   <h3 className="line-clamp-1 text-sm font-medium">{album.name}</h3>
-                  <p className="line-clamp-1 text-sm text-muted-foreground">
+                  <p className="line-clamp-1 text-xs sm:text-sm text-muted-foreground">
                     {album.artist_name}
                   </p>
                 </div>
 
-                {/* Album Type */}
-                <div className="w-24 flex-shrink-0 hidden md:block">
+                {/* Mobile Actions for list view */}
+                <div className="flex items-center gap-1 sm:hidden">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    onClick={handleTransferClick}
+                  >
+                    <ArrowLeftRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+
+                {/* Desktop-only info */}
+                <div className="hidden sm:block w-24 flex-shrink-0">
                   <span className="text-sm capitalize px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
                     {album.album_type}
                   </span>
                 </div>
-
-                {/* Track Count */}
-                <div className="w-24 flex-shrink-0 text-sm text-muted-foreground hidden md:block">
+                <div className="hidden sm:block w-24 flex-shrink-0 text-sm text-muted-foreground">
                   {album.tracks_count}
                 </div>
-
-                {/* Release Year */}
-                <div className="w-20 flex-shrink-0 text-sm text-muted-foreground hidden md:block">
+                <div className="hidden sm:block w-20 flex-shrink-0 text-sm text-muted-foreground">
                   {releaseYear}
                 </div>
-
-                {/* Service Icon */}
-                <div className="w-24 flex-shrink-0 text-sm text-muted-foreground capitalize hidden md:block">
+                <div className="hidden sm:block w-24 flex-shrink-0 text-sm text-muted-foreground capitalize">
                   {album.service === 'apple-music' ? 'Apple Music' : 'Spotify'}
                 </div>
               </div>

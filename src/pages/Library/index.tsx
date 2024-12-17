@@ -3,7 +3,6 @@ import { AlbumCard } from '@/components/Library/AlbumCard';
 import { PlaylistCard } from '@/components/Library/PlaylistCard';
 import { LibrarySkeleton } from '@/components/LibrarySkeleton';
 import { TransferPlaylistModal } from '@/components/TransferPlaylistModal';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Tabs } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
@@ -106,7 +105,7 @@ export default function Library() {
         sampleAlbum: data.albums?.[0],
         samplePlaylist: data.playlists?.[0],
       });
-      
+
       const processed = {
         albums: Array.isArray(data.albums)
           ? data.albums.map((album) => ({
@@ -140,14 +139,14 @@ export default function Library() {
           : [],
         lastSynced: data.lastSynced,
       };
-      
+
       console.log('Processed data:', {
         albumsCount: processed.albums.length,
         playlistsCount: processed.playlists.length,
         sampleAlbum: processed.albums[0],
         samplePlaylist: processed.playlists[0],
       });
-      
+
       return processed;
     },
   });
@@ -218,7 +217,9 @@ export default function Library() {
     }
   };
 
-  const handleAlbumTypeChange = (albumType: 'all' | 'album' | 'single' | 'ep') => {
+  const handleAlbumTypeChange = (
+    albumType: 'all' | 'album' | 'single' | 'ep'
+  ) => {
     setAlbumTypeFilter(albumType);
     toast.info(`Showing ${albumType} albums`);
   };
@@ -244,12 +245,19 @@ export default function Library() {
     <div className="flex h-full flex-col">
       {/* Fixed Header Section */}
       <div className="flex-none">
-        <div className="p-8 pb-2">
-          <Header activeService={activeService} onRefresh={handleManualRefresh} />
+        <div className="p-4 sm:p-8 pb-2">
+          <Header
+            activeService={activeService}
+            onRefresh={handleManualRefresh}
+          />
         </div>
 
-        <div className="px-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="px-4 sm:px-8 pb-2">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-0"
+          >
             <Controls
               activeService={activeService}
               setActiveService={setActiveService}
@@ -266,13 +274,14 @@ export default function Library() {
             />
 
             {/* Scrollable Content Area */}
-            <div className="h-[calc(100vh-12rem)] overflow-y-auto">
+            <div className="h-[calc(100vh-13rem)] sm:h-[calc(100vh-12rem)] overflow-y-auto scrollbar-hide">
               {isError ? (
                 <div className="text-center text-red-500">
-                  An error occurred while loading your library. Please try again.
+                  An error occurred while loading your library. Please try
+                  again.
                 </div>
               ) : (
-                <>
+                <div className="pt-2">
                   <AlbumsTab
                     isLoading={isLoading}
                     isError={isError}
@@ -289,7 +298,7 @@ export default function Library() {
                     ItemComponent={MemoizedPlaylistCard}
                     onTransfer={handleTransfer}
                   />
-                </>
+                </div>
               )}
             </div>
           </Tabs>
