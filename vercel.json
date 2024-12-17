@@ -1,4 +1,13 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "routes": [
+    {
+      "src": "/spotify/callback",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
   "cleanUrls": true
 }

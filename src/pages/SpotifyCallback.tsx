@@ -15,13 +15,30 @@ export default function SpotifyCallback() {
   const queryClient = useQueryClient();
   const processedCode = useRef<string | null>(null);
 
+  console.log('SpotifyCallback mounted', {
+    code: searchParams.get('code'),
+    error: searchParams.get('error'),
+    user,
+    authLoading,
+    url: window.location.href
+  });
+
   useEffect(() => {
     const code = searchParams.get('code');
     const error = searchParams.get('error');
     const callbackUrl = sessionStorage.getItem('auth_callback_url') || '/';
 
+    console.log('SpotifyCallback useEffect running', {
+      code,
+      error,
+      callbackUrl,
+      authLoading,
+      user
+    });
+
     // Wait for auth to load
     if (authLoading) {
+      console.log('Auth still loading, waiting...');
       return;
     }
 
