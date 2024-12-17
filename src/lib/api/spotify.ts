@@ -288,3 +288,42 @@ export async function getSpotifyAlbumDetails(
     })),
   };
 }
+
+export async function getSpotifyPlaylistDetails(
+  playlistId: string,
+  accessToken: string
+) {
+  return handleSpotifyRequest(accessToken, async (token) => {
+    const response = await fetch(
+      `https://api.spotify.com/v1/playlists/${playlistId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch playlist details');
+    }
+
+    const data = await response.json();
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      images: data.images,
+      owner: data.owner,
+      tracks: data.tracks.items.map((item: any) => ({
+        id: item.track.id,
+        name: item.track.name,
+        artists: item.track.artists,
+        album: item.track.album,
+        duration_ms: item.track.duration_ms,
+        added_at: item.added_at,
+      })),
+      followers: data.followers,
+      total_tracks: data.tracks.total,
+    };
+  });
+}
