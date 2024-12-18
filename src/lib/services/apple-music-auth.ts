@@ -1,6 +1,6 @@
-import { saveServiceAuth, removeServiceAuth } from './streaming-auth';
-import { syncAppleMusicLibrary } from './apple-music-library';
 import { toast } from 'sonner';
+import { syncAppleMusicLibrary } from './apple-music-library';
+import { removeServiceAuth, saveServiceAuth } from './streaming-auth';
 
 declare global {
   interface Window {
@@ -15,16 +15,18 @@ export async function initializeAppleMusic() {
     try {
       console.log('Loading MusicKit.js...');
       await loadMusicKitScript();
-      
+
       if (!window.MusicKit) {
         throw new Error('MusicKit not found on window object');
       }
 
       console.log('Configuring MusicKit...');
       const developerToken = import.meta.env.VITE_APPLE_DEVELOPER_TOKEN;
-      
+
       if (!developerToken) {
-        throw new Error('Apple Music developer token not found in environment variables');
+        throw new Error(
+          'Apple Music developer token not found in environment variables'
+        );
       }
 
       musicKit = await window.MusicKit.configure({
@@ -34,7 +36,7 @@ export async function initializeAppleMusic() {
           build: '1.0.0',
         },
       });
-      
+
       console.log('MusicKit configured successfully');
       return musicKit;
     } catch (error) {
@@ -47,7 +49,11 @@ export async function initializeAppleMusic() {
 
 async function loadMusicKitScript(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (document.querySelector('script[src="https://js-cdn.music.apple.com/musickit/v3/musickit.js"]')) {
+    if (
+      document.querySelector(
+        'script[src="https://js-cdn.music.apple.com/musickit/v3/musickit.js"]'
+      )
+    ) {
       console.log('MusicKit.js script already loaded');
       resolve();
       return;
@@ -79,7 +85,7 @@ export async function authorizeAppleMusic(userId: string) {
     }
 
     const musicUserToken = await music.authorize();
-    
+
     // Save the authorization
     await saveServiceAuth(userId, 'apple-music', {
       accessToken: musicUserToken,
@@ -87,11 +93,11 @@ export async function authorizeAppleMusic(userId: string) {
 
     // Start library sync in the background
     toast.promise(syncAppleMusicLibrary(userId), {
-      loading: 'Syncing Apple Music library...',
+      loading: 'Syncing Apple Music Library...',
       success: 'Library sync complete!',
       error: 'Failed to sync library',
     });
-    
+
     console.log('Apple Music authorization complete');
     return musicUserToken;
   } catch (error) {
@@ -101,15 +107,18 @@ export async function authorizeAppleMusic(userId: string) {
 }
 
 export async function unauthorizeAppleMusic(userId: string) {
-  console.log('Starting Apple Music unauthorized...', { userId, hasMusicKit: !!musicKit });
-  
+  console.log('Starting Apple Music unauthorized...', {
+    userId,
+    hasMusicKit: !!musicKit,
+  });
+
   if (musicKit) {
     try {
       console.log('Calling MusicKit unauthorized...');
       await musicKit.unauthorize();
       console.log('MusicKit unauthorized successful');
       musicKit = null;
-      
+
       console.log('Removing service auth from database...');
       await removeServiceAuth(userId, 'apple-music');
       console.log('Service auth removed successfully');
