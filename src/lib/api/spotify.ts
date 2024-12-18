@@ -95,27 +95,28 @@ export async function getSpotifyToken(code: string): Promise<SpotifyAuth> {
     });
 
     console.log('Token response status:', response.status);
-    const responseText = await response.text();
     
     if (!response.ok) {
-      console.error('Token request failed:', responseText);
-      throw new Error(`Failed to get Spotify token: ${responseText}`);
+      const errorText = await response.text();
+      console.error('Token request failed:', errorText);
+      throw new Error(`Failed to get Spotify token: ${response.status} ${errorText}`);
     }
 
-    try {
-      const data = JSON.parse(responseText);
-      console.log('Token response parsed successfully');
-      return {
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token,
-        expiresIn: data.expires_in,
-      };
-    } catch (parseError) {
-      console.error('Failed to parse token response:', parseError);
-      throw new Error(`Invalid token response: ${responseText}`);
+    const data = await response.json();
+    console.log('Token response parsed successfully');
+
+    if (!data.access_token) {
+      console.error('Missing access token in response:', data);
+      throw new Error('Invalid token response from Spotify');
     }
+
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresIn: data.expires_in,
+    };
   } catch (error) {
-    console.error('Token request error:', error);
+    console.error('Failed to get Spotify token:', error);
     throw error;
   }
 }
@@ -221,30 +222,28 @@ export async function getSpotifyPlaylists(accessToken: string, userId: string) {
     }
 
     const data = await response.json();
-    const now = new Date().toISOString();
     
+    if (!Array.isArray(data?.items)) {
+      console.error('Invalid playlist response:', data);
+      throw new Error('Invalid playlist response from Spotify');
+    }
+
     return data.items.map((item: any) => ({
-      id: crypto.randomUUID(),
-      user_id: userId,
       playlist_id: item.id,
-      name: item.name,
-      description: item.description,
-      artwork: item.images[0] ? {
+      name: item.name || 'Untitled Playlist',
+      description: item.description || '',
+      artwork: item.images?.[0] ? {
         url: item.images[0].url,
-        height: item.images[0].height,
-        width: item.images[0].width,
-      } : undefined,
-      tracks_count: item.tracks.total,
-      owner: {
-        id: item.owner.id,
-        display_name: item.owner.display_name,
-      },
-      service: 'spotify' as const,
-      is_public: item.public,
-      external_url: item.external_urls?.spotify,
-      synced_at: now,
-      created_at: now,
-      updated_at: now,
+        height: item.images[0].height || null,
+        width: item.images[0].width || null,
+      } : null,
+      tracks_count: item.tracks?.total || 0,
+      owner: item.owner ? {
+        id: item.owner.id || null,
+        display_name: item.owner.display_name || null,
+      } : null,
+      is_public: Boolean(item.public),
+      external_url: item.external_urls?.spotify || null
     }));
   });
 }
@@ -257,10 +256,22 @@ export async function getSpotifyAlbums(accessToken: string) {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to get Spotify albums');
+    const errorText = await response.text();
+    console.error('Failed to get Spotify albums:', {
+      status: response.status,
+      error: errorText,
+    });
+    throw new Error(`Failed to get Spotify albums: ${response.status}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  
+  if (!data?.items || !Array.isArray(data.items)) {
+    console.error('Invalid album response:', data);
+    throw new Error('Invalid album response from Spotify');
+  }
+
+  return data;
 }
 
 export async function getMoreSpotifyAlbums(
@@ -274,10 +285,22 @@ export async function getMoreSpotifyAlbums(
   });
 
   if (!response.ok) {
-    throw new Error('Failed to get more Spotify albums');
+    const errorText = await response.text();
+    console.error('Failed to get more Spotify albums:', {
+      status: response.status,
+      error: errorText,
+    });
+    throw new Error(`Failed to get more Spotify albums: ${response.status}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  
+  if (!data?.items || !Array.isArray(data.items)) {
+    console.error('Invalid album response:', data);
+    throw new Error('Invalid album response from Spotify');
+  }
+
+  return data;
 }
 
 export async function getAllSpotifyAlbums(
@@ -285,29 +308,51 @@ export async function getAllSpotifyAlbums(
   accessToken: string,
   onProgress?: (current: number, total: number) => void
 ) {
-  let allAlbums = [];
-  let nextUrl = null;
-  let total = 0;
-  let current = 0;
+  try {
+    let allAlbums = [];
+    let nextUrl = null;
+    let total = 0;
+    let current = 0;
 
-  // Get first page
-  const firstPage = await getSpotifyAlbums(accessToken);
-  allAlbums = [...firstPage.items];
-  nextUrl = firstPage.next;
-  total = firstPage.total;
-  current = allAlbums.length;
-  onProgress?.(current, total);
+    // Get first page
+    const firstPage = await getSpotifyAlbums(accessToken);
+    if (firstPage.items) {
+      allAlbums = [...firstPage.items];
+      nextUrl = firstPage.next;
+      total = firstPage.total || 0;
+      current = allAlbums.length;
+      onProgress?.(current, total);
+    }
 
-  // Get remaining pages
-  while (nextUrl) {
-    const nextPage = await getMoreSpotifyAlbums(nextUrl, accessToken);
-    allAlbums = [...allAlbums, ...nextPage.items];
-    nextUrl = nextPage.next;
-    current = allAlbums.length;
-    onProgress?.(current, total);
+    // Get remaining pages
+    while (nextUrl) {
+      const nextPage = await getMoreSpotifyAlbums(nextUrl, accessToken);
+      if (nextPage.items) {
+        allAlbums = [...allAlbums, ...nextPage.items];
+        nextUrl = nextPage.next;
+        current = allAlbums.length;
+        onProgress?.(current, total);
+      }
+    }
+
+    // Process albums
+    return allAlbums.map((item: any) => {
+      const album = item.album || item;
+      return {
+        album_id: album?.id,
+        name: album?.name || 'Untitled Album',
+        artist_name: album?.artists?.map((artist: any) => artist.name || 'Unknown Artist').join(', ') || 'Unknown Artist',
+        image_url: album?.images?.[0]?.url || null,
+        release_date: album?.release_date || null,
+        tracks_count: album?.total_tracks || 0,
+        external_url: album?.external_urls?.spotify || null,
+        album_type: album?.album_type?.toLowerCase() || 'album'
+      };
+    });
+  } catch (error) {
+    console.error('Failed to get all Spotify albums:', error);
+    throw error;
   }
-
-  return allAlbums;
 }
 
 export async function getSpotifyAlbumDetails(

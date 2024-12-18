@@ -17,21 +17,21 @@ export async function syncSpotifyLibrary(
     const { error: albumError } = await supabase.from('user_albums').upsert(
       albums.map((album: any) => {
         // First check Spotify's album_type
-        let albumType = album.album.album_type?.toLowerCase();
+        let albumType = album.album_type?.toLowerCase();
         
         // If it's not one of our valid types, determine based on our rules
         if (!['album', 'single', 'ep'].includes(albumType)) {
-          albumType = album.album.name?.toLowerCase().includes(' ep') || album.album.name?.toLowerCase().endsWith(' ep')
+          albumType = album.name?.toLowerCase().includes(' ep') || album.name?.toLowerCase().endsWith(' ep')
             ? 'ep'
-            : album.album.total_tracks <= 6
+            : album.tracks_count <= 6
             ? 'ep'
             : 'album';
         }
         
         console.log('Album type detection:', {
-          name: album.album.name,
-          spotifyType: album.album.album_type,
-          trackCount: album.album.total_tracks,
+          name: album.name,
+          spotifyType: album.album_type,
+          trackCount: album.tracks_count,
           finalType: albumType
         });
         
@@ -39,15 +39,13 @@ export async function syncSpotifyLibrary(
           id: globalThis.crypto.randomUUID(),
           user_id: userId,
           service: 'spotify',
-          album_id: album.album.id,
-          name: album.album.name,
-          artist_name: album.album.artists
-            .map((artist: any) => artist.name)
-            .join(', '),
-          image_url: album.album.images?.[0]?.url || null,
-          release_date: album.album.release_date,
-          tracks_count: album.album.total_tracks,
-          external_url: album.album.external_urls?.spotify || null,
+          album_id: album.album_id,
+          name: album.name,
+          artist_name: album.artist_name,
+          image_url: album.image_url,
+          release_date: album.release_date,
+          tracks_count: album.tracks_count,
+          external_url: album.external_url,
           synced_at: new Date().toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -65,19 +63,19 @@ export async function syncSpotifyLibrary(
     const { error: playlistError } = await supabase
       .from('user_playlists')
       .upsert(
-        playlists.items.map((playlist: any) => ({
+        playlists.map((playlist: any) => ({
           id: globalThis.crypto.randomUUID(),
           user_id: userId,
           service: 'spotify',
-          playlist_id: playlist.id,
+          playlist_id: playlist.playlist_id,
           name: playlist.name,
           description: playlist.description || '',
-          image_url: playlist.images?.[0]?.url || null,
-          tracks_count: playlist.tracks.total,
+          image_url: playlist.artwork?.url || null,
+          tracks_count: playlist.tracks_count || 0,
           owner_id: playlist.owner?.id || null,
           owner_name: playlist.owner?.display_name || null,
-          is_public: playlist.public || false,
-          external_url: playlist.external_urls?.spotify || null,
+          is_public: playlist.is_public,
+          external_url: playlist.external_url,
           synced_at: new Date().toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

@@ -60,21 +60,19 @@ export default function SpotifyCallback() {
           code,
         });
 
-        const { access_token, refresh_token, expires_in } =
-          await getSpotifyToken(code);
-
+        const tokenResponse = await getSpotifyToken(code);
         console.log('Got Spotify token:', {
-          access_token_length: access_token.length,
-          has_refresh_token: !!refresh_token,
-          expires_in,
+          has_access_token: !!tokenResponse.accessToken,
+          has_refresh_token: !!tokenResponse.refreshToken,
+          expires_in: tokenResponse.expiresIn,
         });
 
         const expiresAt = new Date();
-        expiresAt.setSeconds(expiresAt.getSeconds() + expires_in);
+        expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expiresIn);
 
         await saveServiceAuth(user.id, 'spotify', {
-          accessToken: access_token,
-          refreshToken: refresh_token,
+          accessToken: tokenResponse.accessToken,
+          refreshToken: tokenResponse.refreshToken,
           expiresAt,
         });
 
@@ -82,7 +80,7 @@ export default function SpotifyCallback() {
         await queryClient.invalidateQueries(['userServices']);
 
         // Start library sync in the background
-        toast.promise(syncSpotifyLibrary(user.id, access_token), {
+        toast.promise(syncSpotifyLibrary(user.id, tokenResponse.accessToken), {
           loading: 'Syncing Spotify library...',
           success: 'Library sync complete!',
           error: 'Failed to sync library',
@@ -101,9 +99,8 @@ export default function SpotifyCallback() {
       }
     };
 
-    // Connect immediately when we have a code
     connectSpotify();
-  }, [user, authLoading, searchParams, navigate, queryClient]);
+  }, [searchParams, navigate, user, authLoading, queryClient]);
 
   if (authLoading) {
     return (
@@ -126,18 +123,15 @@ export default function SpotifyCallback() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-accent/10 p-4">
+    <div className="container flex items-center justify-center min-h-screen py-10">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center text-lg font-semibold">
-          Connecting to Spotify
+        <CardHeader>
+          <h2 className="text-2xl font-bold text-center">Connecting to Spotify</h2>
         </CardHeader>
-        <CardContent className="flex items-center justify-center p-6">
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="text-sm text-muted-foreground">
-              Please wait while we connect your Spotify account...
-            </p>
-          </div>
+        <CardContent>
+          <p className="text-center text-muted-foreground">
+            Please wait while we connect your Spotify account...
+          </p>
         </CardContent>
       </Card>
     </div>
