@@ -64,7 +64,7 @@ export default function PlaylistDetails() {
   if (isLoading || !playlist) {
     return (
       <div className="flex h-full items-center justify-center">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner size="lg" centered label="Loading playlist" />
       </div>
     );
   }

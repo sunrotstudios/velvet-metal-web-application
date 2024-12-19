@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { getSpotifyAlbumDetails } from '@/lib/api/spotify';
 import { AlbumTrack, DetailedAlbum } from '@/lib/types';
 import { formatDuration } from '@/lib/utils';
@@ -48,9 +49,7 @@ export default function AlbumDetails() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold">Loading album...</h2>
-        </div>
+        <LoadingSpinner size="lg" centered label="Loading album" />
       </div>
     );
   }

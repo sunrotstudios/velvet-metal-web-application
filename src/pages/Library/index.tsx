@@ -267,7 +267,7 @@ export default function Library() {
             {/* Scrollable Content Area */}
             <div className="h-[calc(100vh-12rem)] overflow-y-auto">
               {isLoading ? (
-                <LoadingSpinner centered />
+                <LoadingSpinner centered label="Loading your library" />
               ) : isError ? (
                 <div className="text-center text-red-500">
                   An error occurred while loading your library. Please try again.
