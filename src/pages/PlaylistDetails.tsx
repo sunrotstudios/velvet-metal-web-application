@@ -72,25 +72,25 @@ export default function PlaylistDetails() {
     );
   }
 
-  // Check if tracks exist
-  // if (!playlist.tracks) {
-  //   return (
-  //     <div className="flex h-full items-center justify-center">
-  //       <div className="text-center">
-  //         <h2 className="text-2xl font-semibold text-red-500">
-  //           No tracks found
-  //         </h2>
-  //         <p className="mt-2 text-muted-foreground">
-  //           This playlist appears to be empty
-  //         </p>
-  //         <Button variant="ghost" className="mt-4" onClick={() => navigate(-1)}>
-  //           <ArrowLeft className="mr-2 h-4 w-4" />
-  //           Go back
-  //         </Button>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  Check if tracks exist
+  if (!playlist.tracks) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-red-500">
+            No tracks found
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            This playlist appears to be empty
+          </p>
+          <Button variant="ghost" className="mt-4" onClick={() => navigate(-1)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Go back
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
