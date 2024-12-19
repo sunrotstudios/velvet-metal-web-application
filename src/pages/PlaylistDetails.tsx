@@ -6,17 +6,21 @@ import { formatDuration } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Clock, Play, Plus } from 'lucide-react';
 import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth-context';
 import { getServiceAuth } from '@/lib/services/streaming-auth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { TransferPlaylistModal } from '@/components/TransferPlaylistModal';
 import { useState } from 'react';
+import { usePlaylistDetails } from '@/lib/hooks/usePlaylistQueries';
 
 export default function PlaylistDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const location = useLocation();
+  const service = location.state?.service as 'spotify' | 'apple-music' | undefined;
 
   useEffect(() => {
     if (!user) {
@@ -29,38 +33,7 @@ export default function PlaylistDetails() {
     data: playlist,
     isLoading,
     error,
-  } = useQuery<DetailedPlaylist>({
-    queryKey: ['playlistDetails', id, user?.id],
-    queryFn: async () => {
-      if (!id) {
-        console.error('No playlist ID provided');
-        throw new Error('No playlist ID provided');
-      }
-      if (!user) {
-        console.error('No user found');
-        throw new Error('No user found');
-      }
-      
-      console.log('Getting Spotify auth for user:', user.id);
-      const auth = await getServiceAuth(user.id, 'spotify');
-      
-      if (!auth) {
-        console.error('Spotify not connected');
-        throw new Error('Spotify not connected');
-      }
-      
-      if (!auth.accessToken) {
-        console.error('No access token found in auth');
-        throw new Error('No access token found');
-      }
-      
-      console.log('Fetching playlist details for:', id);
-      return getSpotifyPlaylistDetails(id, auth.accessToken, user?.id);
-    },
-    enabled: !!id && !!user,
-  });
-
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  } = usePlaylistDetails(id, user?.id, service);
 
   const handleTransfer = () => {
     if (playlist) {

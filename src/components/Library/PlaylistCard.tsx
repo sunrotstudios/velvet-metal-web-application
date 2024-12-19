@@ -4,6 +4,8 @@ import { NormalizedPlaylist, ViewMode } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Play, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { usePrefetchPlaylist } from '@/lib/hooks/usePlaylistQueries';
+import { useAuth } from '@/contexts/auth-context';
 
 interface PlaylistCardProps {
   playlist: NormalizedPlaylist;
@@ -21,6 +23,8 @@ export const PlaylistCard = ({
   onSelect,
 }: PlaylistCardProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { prefetchPlaylist } = usePrefetchPlaylist();
 
   if (!playlist) {
     return null;
@@ -30,7 +34,15 @@ export const PlaylistCard = ({
     if (isSelectionMode && onSelect) {
       onSelect(playlist);
     } else {
-      navigate(`/playlist/${playlist.playlist_id}`);
+      navigate(`/playlist/${playlist.playlist_id}`, {
+        state: { service: playlist.service }
+      });
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (user && !isSelectionMode) {
+      prefetchPlaylist(playlist, user.id);
     }
   };
 
@@ -47,6 +59,7 @@ export const PlaylistCard = ({
       tabIndex={0}
       aria-label={`Playlist: ${playlist.name}`}
       onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
     >
       <div
         className={cn(

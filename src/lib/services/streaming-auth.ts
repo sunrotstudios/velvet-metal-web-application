@@ -6,6 +6,7 @@ interface ServiceTokens {
   accessToken: string;
   refreshToken?: string;
   expiresAt?: Date;
+  musicUserToken?: string; // For Apple Music
 }
 
 export async function saveServiceAuth(
@@ -15,23 +16,22 @@ export async function saveServiceAuth(
 ) {
   try {
     console.log('Saving service auth...', { userId, service });
-    
+
     // Use upsert to handle both insert and update
-    const { error } = await supabase
-      .from('user_services')
-      .upsert(
-        {
-          user_id: userId,
-          service,
-          access_token: tokens.accessToken,
-          refresh_token: tokens.refreshToken,
-          token_expires_at: tokens.expiresAt?.toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'user_id,service',
-        }
-      );
+    const { error } = await supabase.from('user_services').upsert(
+      {
+        user_id: userId,
+        service,
+        access_token: tokens.accessToken,
+        refresh_token: tokens.refreshToken,
+        token_expires_at: tokens.expiresAt?.toISOString(),
+        music_user_token: tokens.musicUserToken, // Add music user token
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: 'user_id,service',
+      }
+    );
 
     if (error) {
       console.error('Error saving service auth:', error);
@@ -50,8 +50,6 @@ export async function getServiceAuth(
   service: ServiceType
 ): Promise<ServiceTokens | null> {
   try {
-    console.log('Getting service auth...', { userId, service });
-    
     const { data, error } = await supabase
       .from('user_services')
       .select('*')
@@ -60,35 +58,51 @@ export async function getServiceAuth(
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        console.log('No service auth found');
-        return null;
-      }
       console.error('Error getting service auth:', error);
-      throw error;
-    }
-
-    if (!data?.access_token) {
-      console.log('No access token found in service auth');
       return null;
     }
 
-    console.log('Service auth retrieved successfully');
+    if (!data) {
+      console.log(`No ${service} auth found for user ${userId}`);
+      return null;
+    }
+
+    // For Apple Music, we need both the developer token and music_user_token
+    if (service === 'apple-music') {
+      const musicUserToken = data.music_user_token;
+      
+      if (!musicUserToken) {
+        console.error(`Missing Apple Music user token for user ${userId}`);
+        return null;
+      }
+
+      return {
+        accessToken: data.access_token || '', // Use stored access token if available
+        musicUserToken: musicUserToken,
+        refreshToken: data.refresh_token || null,
+        expiresAt: data.token_expires_at ? new Date(data.token_expires_at) : undefined,
+      };
+    }
+
+    // For other services
     return {
-      accessToken: String(data.access_token),
-      refreshToken: data.refresh_token ? String(data.refresh_token) : undefined,
-      expiresAt: data.token_expires_at ? new Date(data.token_expires_at) : undefined,
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresAt: data.token_expires_at
+        ? new Date(data.token_expires_at)
+        : undefined,
+      musicUserToken: data.music_user_token,
     };
   } catch (error) {
     console.error('Failed to get service auth:', error);
-    throw error;
+    return null;
   }
 }
 
 export async function removeServiceAuth(userId: string, service: ServiceType) {
   try {
     console.log('Removing service auth...', { userId, service });
-    
+
     const { error } = await supabase
       .from('user_services')
       .delete()
@@ -110,7 +124,7 @@ export async function removeServiceAuth(userId: string, service: ServiceType) {
 export async function getUserServices(userId: string): Promise<ServiceType[]> {
   try {
     console.log('Getting user services...', { userId });
-    
+
     const { data, error } = await supabase
       .from('user_services')
       .select('service')
@@ -122,7 +136,7 @@ export async function getUserServices(userId: string): Promise<ServiceType[]> {
     }
 
     console.log('User services retrieved successfully:', data);
-    return data.map(row => row.service as ServiceType);
+    return data.map((row) => row.service as ServiceType);
   } catch (error) {
     console.error('Failed to get user services:', error);
     throw error;
@@ -135,7 +149,7 @@ export async function isServiceConnected(
 ): Promise<boolean> {
   try {
     console.log('Checking service connection...', { userId, service });
-    
+
     const { data, error } = await supabase
       .from('user_services')
       .select('id')

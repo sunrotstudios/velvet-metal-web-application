@@ -8,6 +8,7 @@ import { ArrowLeftRight } from 'lucide-react';
 import { useState } from 'react';
 import { AlbumTransferModal } from '../AlbumTransferModal';
 import { useAuth } from '@/contexts/auth-context';
+import { usePrefetchAlbum } from '@/lib/hooks/useAlbumQueries';
 
 interface AlbumCardProps {
   album: {
@@ -28,8 +29,8 @@ interface AlbumCardProps {
 export const AlbumCard = ({ album, viewMode }: AlbumCardProps) => {
   const navigate = useNavigate();
   const releaseYear = album.release_date?.split('-')[0];
-
   const { user } = useAuth();
+  const { prefetchAlbum } = usePrefetchAlbum();
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   const handleClick = () => {
@@ -38,7 +39,19 @@ export const AlbumCard = ({ album, viewMode }: AlbumCardProps) => {
       return;
     }
 
-    navigate(`/album/${album.album_id}`);
+    if (user?.id) {
+      prefetchAlbum(album.album_id, user.id, album.service);
+    }
+
+    navigate(`/album/${album.album_id}`, {
+      state: { service: album.service }
+    });
+  };
+
+  const handleMouseEnter = () => {
+    if (user && album.album_id) {
+      prefetchAlbum(album.album_id, user.id);
+    }
   };
 
   const handlePlayClick = (e: React.MouseEvent) => {
@@ -63,6 +76,7 @@ export const AlbumCard = ({ album, viewMode }: AlbumCardProps) => {
           viewMode === 'list' && "hover:bg-accent/5"
         )}
         onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
       >
         <CardContent className={cn(
           "p-4",
