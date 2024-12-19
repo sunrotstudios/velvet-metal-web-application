@@ -72,7 +72,6 @@ export default function PlaylistDetails() {
     );
   }
 
-  Check if tracks exist
   if (!playlist.tracks) {
     return (
       <div className="flex h-full items-center justify-center">
