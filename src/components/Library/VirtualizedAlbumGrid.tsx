@@ -40,17 +40,9 @@ const VirtualizedGrid = ({
     const { items, ItemComponent, columnCount } = data;
     const index = rowIndex * columnCount + columnIndex;
 
-    console.log('Cell rendering:', {
-      columnIndex,
-      rowIndex,
-      index,
-      itemsLength: items.length,
-    });
-
     if (index >= items.length) return null;
 
     const item = items[index];
-    console.log('Cell item:', item);
 
     // Adjust the cell style to account for gaps
     const adjustedStyle = {

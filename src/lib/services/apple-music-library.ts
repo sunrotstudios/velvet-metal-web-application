@@ -2,13 +2,19 @@ import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import { initializeAppleMusic } from './apple-music-auth';
 
-async function getPlaylistTrackCount(music: any, playlistId: string): Promise<number> {
+async function getPlaylistTrackCount(
+  music: any,
+  playlistId: string
+): Promise<number> {
   try {
     console.log('Fetching track count for playlist:', playlistId);
-    const response = await music.api.music(`/v1/me/library/playlists/${playlistId}/tracks`, {
-      limit: 1, // We only need the total count
-    });
-    
+    const response = await music.api.music(
+      `/v1/me/library/playlists/${playlistId}/tracks`,
+      {
+        limit: 1, // We only need the total count
+      }
+    );
+
     const total = response?.data?.meta?.total || 0;
     console.log('Track count response:', { playlistId, total, response });
     return total;
@@ -50,14 +56,14 @@ async function syncAppleMusicPlaylists(
     // Transform playlists to our format and filter out invalid ones
     const transformedPlaylists = await Promise.all(
       allPlaylists
-        .filter(playlist => {
+        .filter((playlist) => {
           if (!playlist.id || !playlist.attributes?.name) {
             console.warn('Invalid playlist data:', playlist);
             return false;
           }
           return true;
         })
-        .map(async playlist => {
+        .map(async (playlist) => {
           // Get track count for this playlist
           const trackCount = await getPlaylistTrackCount(
             music,
@@ -77,7 +83,9 @@ async function syncAppleMusicPlaylists(
             playlist_id: playlist.id,
             name: playlist.attributes.name || 'Untitled Playlist',
             description: playlist.attributes.description?.standard || null,
-            image_url: playlist.attributes.artwork?.url?.replace('{w}x{h}', '300x300') || null,
+            image_url:
+              playlist.attributes.artwork?.url?.replace('{w}x{h}', '300x300') ||
+              null,
             tracks_count: trackCount,
             external_url: null,
             synced_at: new Date().toISOString(),

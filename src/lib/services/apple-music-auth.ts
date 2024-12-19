@@ -86,9 +86,10 @@ export async function authorizeAppleMusic(userId: string) {
 
     const musicUserToken = await music.authorize();
 
-    // Save the authorization
+    // Save the authorization with the correct token structure
     await saveServiceAuth(userId, 'apple-music', {
-      accessToken: musicUserToken,
+      accessToken: import.meta.env.VITE_APPLE_DEVELOPER_TOKEN || '',
+      musicUserToken: musicUserToken,
     });
 
     // Start library sync in the background
