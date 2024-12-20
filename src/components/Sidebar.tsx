@@ -3,6 +3,10 @@ import { cn } from '@/lib/utils';
 import { History, Home, Library, Radio, Settings } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
+interface SidebarProps {
+  onClose?: () => void;
+}
+
 const routes = [
   {
     path: '/home',
@@ -31,8 +35,14 @@ const routes = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onClose }: SidebarProps) {
   const location = useLocation();
+
+  const handleNavigation = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
 
   return (
     <div className="pb-12 w-64">
@@ -51,6 +61,7 @@ export function Sidebar() {
                 className={cn('w-full justify-start', {
                   'bg-secondary': location.pathname === route.path,
                 })}
+                onClick={handleNavigation}
                 asChild
               >
                 <Link to={route.path}>
