@@ -106,11 +106,17 @@ export default function PlaylistDetails() {
         {/* Playlist Header */}
         <div className="flex items-start gap-8">
           <div className="relative aspect-square w-48 overflow-hidden rounded-lg">
-            <img
-              src={playlist.artwork.url}
-              alt={playlist.name}
-              className="h-full w-full object-cover"
-            />
+            {playlist.artwork?.url ? (
+              <img
+                src={playlist.artwork.url}
+                alt={playlist.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full bg-muted flex items-center justify-center">
+                <Play className="h-12 w-12 text-muted-foreground" />
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col justify-end space-y-4">
@@ -164,40 +170,43 @@ export default function PlaylistDetails() {
         </div>
       </div>
 
-      {/* Tracks List */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
-        <div className="space-y-4">
-          <div className="sticky top-0 z-10 bg-background grid grid-cols-[auto_1fr_1fr_auto] items-center gap-4 px-4 py-2 text-sm text-muted-foreground">
-            <span className="w-8">#</span>
-            <span>Title</span>
-            <span>Album</span>
-            <Clock className="h-4 w-4" />
-          </div>
-          <div className="space-y-1">
-            {playlist.tracks?.map((item, index) => (
-              <div
-                key={item.id}
-                className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-4 rounded-md px-4 py-2 hover:bg-accent cursor-pointer"
+      {/* Track List */}
+      <div className="flex-1 overflow-y-auto">
+        <table className="w-full">
+          <thead className="sticky top-0 bg-background">
+            <tr>
+              <th className="w-12 px-4 py-2 text-left">#</th>
+              <th className="px-4 py-2 text-left">Title</th>
+              <th className="px-4 py-2 text-left">Artist</th>
+              <th className="px-4 py-2 text-left">Album</th>
+              <th className="w-24 px-4 py-2 text-left">
+                <Clock className="h-4 w-4" />
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {(playlist.tracks || []).map((track, index) => (
+              <tr
+                key={track.id || index}
+                className="group hover:bg-muted/50"
               >
-                <span className="w-8 text-sm text-muted-foreground">
+                <td className="px-4 py-2 text-muted-foreground">
                   {index + 1}
-                </span>
-                <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {item.artist.name}
-                  </p>
-                </div>
-                <span className="text-sm text-muted-foreground truncate">
-                  {item.album?.name}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {formatDuration(item.duration_ms)}
-                </span>
-              </div>
+                </td>
+                <td className="px-4 py-2">{track.name}</td>
+                <td className="px-4 py-2">
+                  {playlist.service === 'spotify' 
+                    ? track.artists.map(a => a.name).join(', ')
+                    : track.artist.name}
+                </td>
+                <td className="px-4 py-2">{track.album?.name}</td>
+                <td className="px-4 py-2 text-muted-foreground">
+                  {formatDuration(track.duration_ms)}
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
 
       {playlist && (

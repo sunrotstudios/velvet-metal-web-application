@@ -506,7 +506,41 @@ export async function getSpotifyPlaylistDetails(
       }
 
       const data = await response.json();
-      return data;
+      
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        owner: data.owner,
+        service: 'spotify' as const,
+        artwork: data.images?.[0] ? {
+          url: data.images[0].url,
+          width: data.images[0].width,
+          height: data.images[0].height,
+        } : undefined,
+        tracks: data.tracks?.items?.map((item: any) => ({
+          id: item.track.id,
+          name: item.track.name,
+          artist: {
+            id: item.track.artists[0].id,
+            name: item.track.artists[0].name,
+          },
+          artists: item.track.artists.map((artist: any) => ({
+            id: artist.id,
+            name: artist.name,
+          })),
+          album: {
+            id: item.track.album.id,
+            name: item.track.album.name,
+          },
+          duration_ms: item.track.duration_ms,
+          added_at: item.added_at,
+        })) || [],
+        total_tracks: data.tracks?.total || 0,
+        collaborative: data.collaborative,
+        public: data.public,
+        type: 'playlist',
+      };
     },
     userId
   );
