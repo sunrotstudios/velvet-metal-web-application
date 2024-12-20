@@ -14,31 +14,31 @@ export function MobileHome() {
 
   return (
     <div className="h-full w-full overflow-auto">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="sticky top-0 bg-background p-6 text-center z-10"
-      >
-        <h1 className="text-3xl font-bold tracking-tight text-primary">
-          Welcome
-          {user?.user_metadata?.display_name
-            ? `, ${user.user_metadata.display_name}`
-            : ''}
-          ! 👋
-        </h1>
-      </motion.div>
+      <div className="flex min-h-full flex-col items-center justify-center px-4 py-12">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-3xl text-center mb-6"
+        >
+          <h1 className="text-4xl font-bold tracking-tight text-primary">
+            Welcome
+            {user?.user_metadata?.display_name
+              ? `, ${user.user_metadata.display_name}`
+              : ''}
+            ! 👋
+          </h1>
+        </motion.div>
 
-      {/* Content */}
-      <div className="px-4 pb-24">
         {/* Services Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
+          className="w-full max-w-4xl rounded-xl bg-card shadow-lg"
         >
-          <div className="rounded-xl bg-card p-6 shadow-lg">
+          <div className="p-6">
             <div className="mb-6 text-center">
               <h2 className="text-2xl font-bold">
                 Connect Your Music Services
@@ -62,8 +62,8 @@ export function MobileHome() {
           </div>
         </motion.div>
 
-        {/* Quick Stats or Recent Activity */}
-        <div className="mt-8 space-y-4">
+        {/* Additional Info Section */}
+        <div className="w-full max-w-4xl mt-6 space-y-4 px-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
