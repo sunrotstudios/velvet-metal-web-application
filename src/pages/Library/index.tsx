@@ -5,6 +5,7 @@ import { LibrarySkeleton } from '@/components/LibrarySkeleton';
 import { TransferPlaylistModal } from '@/components/TransferPlaylistModal';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Tabs } from '@/components/ui/tabs';
+import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { useAuth } from '@/contexts/auth-context';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useFilters } from '@/hooks/useFilters';
@@ -15,10 +16,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { memo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { AlbumsTab } from './components/AlbumsTab';
+import { MobileLibrary } from './components/MobileLibrary';
 import { Controls } from './components/Controls';
 import { Header } from './components/Header';
 import { PlaylistsTab } from './components/PlaylistsTab';
+import { AlbumsTab } from './components/AlbumsTab';
 
 export default function Library() {
   const navigate = useNavigate();
@@ -213,93 +215,119 @@ export default function Library() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Fixed Header Section */}
-      <div className="flex-none">
-        <div className="p-8 pb-2">
-          <Header
-            activeService={activeService}
-            onRefresh={handleManualRefresh}
-          />
-        </div>
-
-        <div className="px-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <Controls
-              activeService={activeService}
-              setActiveService={setActiveService}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              onExport={() => setIsExportOpen(true)}
-              activeTab={activeTab}
-              albumTypeFilter={albumTypeFilter}
-              onAlbumTypeChange={handleAlbumTypeChange}
-              isSelectionMode={isSelectionMode}
-              onToggleSelection={handleToggleSelection}
-            />
-
-            {/* Scrollable Content Area */}
-            <div className="h-[calc(100vh-12rem)] overflow-y-auto">
-              {isLoading ? (
-                <LoadingSpinner centered label="Loading your library" />
-              ) : isError ? (
-                <div className="text-center text-red-500">
-                  An error occurred while loading your library. Please try
-                  again.
-                </div>
-              ) : (
-                <>
-                  <AlbumsTab
-                    ref={albumsTabRef}
-                    isLoading={isLoading}
-                    isError={isError}
-                    albums={data?.albums || []}
-                    filteredAlbums={filteredAlbums}
-                    viewMode={viewMode}
-                    ItemComponent={MemoizedAlbumCard}
-                    isSelectionMode={isSelectionMode}
-                  />
-
-                  <PlaylistsTab
-                    ref={playlistsTabRef}
-                    playlists={filteredPlaylists}
-                    isLoading={isLoading}
-                    viewMode={viewMode}
-                    onTransfer={handleTransfer}
-                    isSelectionMode={isSelectionMode}
-                  />
-                </>
-              )}
-            </div>
-          </Tabs>
-        </div>
-      </div>
-
-      <ExportLibraryDialog
-        open={isExportOpen}
-        onOpenChange={setIsExportOpen}
-        albums={data?.albums || []}
-        playlists={data?.playlists || []}
-        service={activeService}
-      />
-
-      {selectedPlaylist && (
-        <TransferPlaylistModal
-          open={isTransferModalOpen}
-          onOpenChange={setIsTransferModalOpen}
-          sourceService={activeService}
-          playlist={selectedPlaylist}
-          userId={user!.id}
-          onTransferComplete={() => {
-            setSelectedPlaylist(null);
-            queryClient.invalidateQueries(['storedLibrary']);
-          }}
+    <ResponsiveContainer
+      mobileContent={
+        <MobileLibrary
+          isLoading={isLoading}
+          isError={isError}
+          albums={filteredAlbums}
+          playlists={filteredPlaylists}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          activeService={activeService}
+          setActiveService={setActiveService}
+          onTransfer={handleTransfer}
+          isSelectionMode={isSelectionMode}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          albumTypeFilter={albumTypeFilter}
+          setAlbumTypeFilter={setAlbumTypeFilter}
         />
-      )}
-    </div>
+      }
+    >
+      <div className="flex h-full flex-col">
+        {/* Fixed Header Section */}
+        <div className="flex-none">
+          <div className="p-8 pb-2">
+            <Header
+              activeService={activeService}
+              onRefresh={handleManualRefresh}
+            />
+          </div>
+
+          <div className="px-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <Controls
+                activeService={activeService}
+                setActiveService={setActiveService}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                onExport={() => setIsExportOpen(true)}
+                activeTab={activeTab}
+                albumTypeFilter={albumTypeFilter}
+                onAlbumTypeChange={handleAlbumTypeChange}
+                isSelectionMode={isSelectionMode}
+                onToggleSelection={handleToggleSelection}
+              />
+
+              {/* Scrollable Content Area */}
+              <div className="h-[calc(100vh-12rem)] overflow-y-auto">
+                {isLoading ? (
+                  <LoadingSpinner centered label="Loading your library" />
+                ) : isError ? (
+                  <div className="text-center text-red-500">
+                    An error occurred while loading your library. Please try
+                    again.
+                  </div>
+                ) : (
+                  <>
+                    {activeTab === 'albums' && (
+                      <AlbumsTab
+                        ref={albumsTabRef}
+                        isLoading={isLoading}
+                        isError={isError}
+                        albums={data?.albums || []}
+                        filteredAlbums={filteredAlbums}
+                        viewMode={viewMode}
+                        ItemComponent={MemoizedAlbumCard}
+                        isSelectionMode={isSelectionMode}
+                      />
+                    )}
+                    {activeTab === 'playlists' && (
+                      <PlaylistsTab
+                        ref={playlistsTabRef}
+                        playlists={filteredPlaylists}
+                        isLoading={isLoading}
+                        viewMode={viewMode}
+                        onTransfer={handleTransfer}
+                        isSelectionMode={isSelectionMode}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            </Tabs>
+          </div>
+        </div>
+
+        <ExportLibraryDialog
+          open={isExportOpen}
+          onOpenChange={setIsExportOpen}
+          albums={data?.albums || []}
+          playlists={data?.playlists || []}
+          service={activeService}
+        />
+
+        {selectedPlaylist && (
+          <TransferPlaylistModal
+            open={isTransferModalOpen}
+            onOpenChange={setIsTransferModalOpen}
+            sourceService={activeService}
+            playlist={selectedPlaylist}
+            userId={user!.id}
+            onTransferComplete={() => {
+              setSelectedPlaylist(null);
+              queryClient.invalidateQueries(['storedLibrary']);
+            }}
+          />
+        )}
+      </div>
+    </ResponsiveContainer>
   );
 }
