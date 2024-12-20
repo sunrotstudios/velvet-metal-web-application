@@ -16,7 +16,7 @@ const routes = [
   },
   {
     path: '/lastfm',
-    label: 'Last.fm Stats',
+    label: 'Stats',
     icon: Radio,
   },
   {

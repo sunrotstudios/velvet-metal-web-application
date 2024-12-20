@@ -51,8 +51,6 @@ export function RecentTransfers() {
     return null;
   }
 
-  console.log('recentTransfers', recentTransfers);
-
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold tracking-tight">

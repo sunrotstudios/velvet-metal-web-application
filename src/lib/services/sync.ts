@@ -3,11 +3,10 @@ import {
   getAppleMusicLibrary,
 } from '@/lib/api/apple-music';
 import { getAllSpotifyAlbums, getSpotifyPlaylists } from '@/lib/api/spotify';
-import { database } from './database';
-import { storage } from './storage';
 import { ServiceType, SyncProgress } from '@/lib/types';
+import { database } from './database';
 import { normalizeAlbumData, normalizePlaylistData } from './normalizers';
-import { getStoredLibrary } from './storage';
+import { getStoredLibrary, storage } from './storage';
 import { getServiceAuth } from './streaming-auth';
 
 export async function syncLibrary(
@@ -30,9 +29,7 @@ export async function syncLibrary(
     const albums =
       service === 'spotify'
         ? { items: await getAllSpotifyAlbums(userId, auth.accessToken) }
-        : await getAllAppleMusicAlbums(auth.accessToken);
-
-    console.log(`Fetched ${albums.items.length} albums for ${service}`);
+        : await getAllAppleMusicAlbums(auth.musicUserToken || '');
 
     // Update progress after albums are fetched
     onProgress?.({
@@ -43,11 +40,9 @@ export async function syncLibrary(
     });
 
     // Start normalizing albums
-    const normalizedAlbums = albums.items.map(album => 
+    const normalizedAlbums = albums.items.map((album) =>
       normalizeAlbumData(album, service)
     );
-
-    console.log(`Normalized ${normalizedAlbums.length} albums for ${service}`);
 
     // Save albums to database
     await database.saveAlbums(userId, normalizedAlbums);
@@ -62,7 +57,7 @@ export async function syncLibrary(
     const playlists =
       service === 'spotify'
         ? await getSpotifyPlaylists(auth.accessToken)
-        : await getAppleMusicLibrary(auth.accessToken);
+        : await getAppleMusicLibrary(auth.musicUserToken || '');
 
     console.log(`Fetched ${playlists.items.length} playlists for ${service}`);
 
@@ -75,10 +70,12 @@ export async function syncLibrary(
     });
 
     const normalizedPlaylists = playlists.items
-      .map(playlist => normalizePlaylistData(playlist, service))
-      .filter(p => p !== null); // Filter out null playlists
+      .map((playlist) => normalizePlaylistData(playlist, service))
+      .filter((p) => p !== null); // Filter out null playlists
 
-    console.log(`Normalized ${normalizedPlaylists.length} playlists for ${service}`);
+    console.log(
+      `Normalized ${normalizedPlaylists.length} playlists for ${service}`
+    );
 
     // Save to database
     console.log('Saving to database...');
