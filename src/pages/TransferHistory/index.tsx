@@ -25,11 +25,15 @@ interface Transfer {
   error: string | null;
   tracks_transferred: number;
   metadata: {
-    sourcePlaylistId: string;
-    sourcePlaylistName: string;
+    type?: 'playlist' | 'album';
+    sourcePlaylistId?: string;
+    sourcePlaylistName?: string;
     targetPlaylistId?: string;
     targetPlaylistName?: string;
     tracksCount?: number;
+    sourceAlbumId?: string;
+    targetAlbumId?: string;
+    sourceAlbumName?: string;
   };
 }
 
@@ -40,7 +44,7 @@ export default function TransferHistory() {
     queryKey: ['transfers', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      console.log('Fetching transfers for user:', user.id);
+      console.log('Fetching Transfers for User:', user.id);
       const { data, error } = await supabase
         .from('transfers')
         .select('*')
@@ -51,7 +55,7 @@ export default function TransferHistory() {
         console.error('Error fetching transfers:', error);
         throw error;
       }
-      console.log('Fetched transfers data:', data);
+      console.log('Fetched Transfers:', data);
       return data as Transfer[];
     },
     enabled: !!user,
@@ -67,8 +71,8 @@ export default function TransferHistory() {
         <LoadingSpinner centered />
       ) : !transfers?.length ? (
         <p className="text-center text-muted-foreground">
-          No transfers found. Start by transferring a playlist or album from your
-          library!
+          No transfers found. Start by transferring a playlist or album from
+          your library!
         </p>
       ) : (
         <div className="rounded-md border">
@@ -98,12 +102,17 @@ export default function TransferHistory() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span>{transfer.metadata.sourcePlaylistName}</span>
-                      {transfer.metadata.targetPlaylistName && (
-                        <span className="text-sm text-muted-foreground">
-                          → {transfer.metadata.targetPlaylistName}
-                        </span>
-                      )}
+                      <span>
+                        {transfer.metadata.type === 'album'
+                          ? transfer.metadata.sourceAlbumName
+                          : transfer.metadata.sourcePlaylistName}
+                      </span>
+                      {transfer.metadata.type === 'playlist' &&
+                        transfer.metadata.targetPlaylistName && (
+                          <span className="text-sm text-muted-foreground">
+                            → {transfer.metadata.targetPlaylistName}
+                          </span>
+                        )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -119,9 +128,7 @@ export default function TransferHistory() {
                       {transfer.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    {transfer.metadata.tracksCount || transfer.tracks_transferred || 0}
-                  </TableCell>
+                  <TableCell>{transfer.metadata.tracksCount}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span>
@@ -129,14 +136,17 @@ export default function TransferHistory() {
                           addSuffix: true,
                         })}
                       </span>
-                      {transfer.completed_at && (
+                      {/* {transfer.completed_at && (
                         <span className="text-sm text-muted-foreground">
                           Completed{' '}
-                          {formatDistanceToNow(new Date(transfer.completed_at), {
-                            addSuffix: true,
-                          })}
+                          {formatDistanceToNow(
+                            new Date(transfer.completed_at),
+                            {
+                              addSuffix: true,
+                            }
+                          )}
                         </span>
-                      )}
+                      )} */}
                     </div>
                   </TableCell>
                 </TableRow>

@@ -88,21 +88,39 @@ export const Controls = ({
           </Select>
 
           {activeTab === 'albums' ? (
-            <Select value={albumTypeFilter} onValueChange={onAlbumTypeChange}>
-              <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Album Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="album">Album</SelectItem>
-                <SelectItem value="single">Single</SelectItem>
-                <SelectItem value="ep">EP</SelectItem>
-              </SelectContent>
-            </Select>
+            <>
+              <Select value={albumTypeFilter} onValueChange={onAlbumTypeChange}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Album Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="album">Album</SelectItem>
+                  <SelectItem value="single">Single</SelectItem>
+                  <SelectItem value="ep">EP</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="default"
+                className="w-[130px]"
+                onClick={() => {
+                  if (isSelectionMode && onToggleSelection) {
+                    // Clear selection state
+                    onToggleSelection();
+                  } else if (onToggleSelection) {
+                    onToggleSelection();
+                  }
+                }}
+              >
+                {isSelectionMode ? 'Cancel Selection' : 'Select Albums'}
+              </Button>
+            </>
           ) : (
             <Button
               variant="outline"
-              size="sm"
+              size="default"
+              className="w-[130px]"
               onClick={() => {
                 if (isSelectionMode && onToggleSelection) {
                   // Clear selection state

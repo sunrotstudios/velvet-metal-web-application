@@ -1,5 +1,4 @@
-import { z } from 'zod';
-import { getServiceAuth, saveServiceAuth, removeServiceAuth } from '@/lib/services/streaming-auth';
+import { getServiceAuth, saveServiceAuth } from '@/lib/services/streaming-auth';
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
@@ -21,7 +20,11 @@ async function handleSpotifyRequest<T>(
       return await requestFn(token);
     } catch (error) {
       // Check if the error is due to an expired token
-      if (error instanceof Error && 'status' in error && (error as any).status === 401) {
+      if (
+        error instanceof Error &&
+        'status' in error &&
+        (error as any).status === 401
+      ) {
         if (!userId) {
           throw new Error('User ID is required for token refresh');
         }
@@ -36,7 +39,7 @@ async function handleSpotifyRequest<T>(
           // Attempt to refresh the token
           console.log('Token expired, attempting refresh...');
           const newAuth = await refreshSpotifyToken(currentAuth.refreshToken);
-          
+
           // Save the new tokens
           await saveServiceAuth(userId, 'spotify', {
             accessToken: newAuth.accessToken,
@@ -52,7 +55,7 @@ async function handleSpotifyRequest<T>(
           throw new Error('Failed to refresh access token');
         }
       }
-      
+
       // Ensure error is properly formatted with status code if it's a fetch error
       if (error instanceof Error && 'status' in error) {
         const status = (error as any).status;
@@ -67,13 +70,16 @@ async function handleSpotifyRequest<T>(
       console.error('Invalid access token type:', typeof accessToken);
       throw new Error('Invalid access token type');
     }
-    
+
     if (!accessToken) {
       console.error('Access token is empty');
       throw new Error('Access token is required');
     }
 
-    console.log('Making Spotify API request with token:', accessToken.slice(0, 10) + '...');
+    console.log(
+      'Making Spotify API request with token:',
+      accessToken.slice(0, 10) + '...'
+    );
     return await makeRequest(accessToken);
   } catch (error) {
     console.error('Request failed:', error);
@@ -115,7 +121,7 @@ export async function getSpotifyToken(code: string): Promise<SpotifyAuth> {
   });
 
   console.log('Making token request with params:', params.toString());
-  
+
   try {
     const response = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
@@ -129,11 +135,13 @@ export async function getSpotifyToken(code: string): Promise<SpotifyAuth> {
     });
 
     console.log('Token response status:', response.status);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Token request failed:', errorText);
-      throw new Error(`Failed to get Spotify token: ${response.status} ${errorText}`);
+      throw new Error(
+        `Failed to get Spotify token: ${response.status} ${errorText}`
+      );
     }
 
     const data = await response.json();
@@ -199,12 +207,14 @@ export async function refreshSpotifyToken(
         statusText: response.statusText,
         error: errorText,
       });
-      throw new Error(`Failed to refresh token: ${response.status} ${errorText}`);
+      throw new Error(
+        `Failed to refresh token: ${response.status} ${errorText}`
+      );
     }
 
     const responseText = await response.text();
     console.log('Raw response:', responseText);
-    
+
     let data;
     try {
       data = JSON.parse(responseText);
@@ -237,57 +247,70 @@ export async function refreshSpotifyToken(
 }
 
 export async function getSpotifyPlaylists(accessToken: string, userId: string) {
-  return handleSpotifyRequest(accessToken, async (token) => {
-    const response = await fetch('https://api.spotify.com/v1/me/playlists', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Spotify API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorText,
+  return handleSpotifyRequest(
+    accessToken,
+    async (token) => {
+      const response = await fetch('https://api.spotify.com/v1/me/playlists', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
-      throw new Error(`Failed to fetch playlists: ${response.status} ${response.statusText}`);
-    }
 
-    const data = await response.json();
-    
-    if (!Array.isArray(data?.items)) {
-      console.error('Invalid playlist response:', data);
-      throw new Error('Invalid playlist response from Spotify');
-    }
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Spotify API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+        });
+        throw new Error(
+          `Failed to fetch playlists: ${response.status} ${response.statusText}`
+        );
+      }
 
-    return data.items.map((item: any) => ({
-      playlist_id: item.id,
-      name: item.name || 'Untitled Playlist',
-      description: item.description || '',
-      artwork: item.images?.[0] ? {
-        url: item.images[0].url,
-        height: item.images[0].height || null,
-        width: item.images[0].width || null,
-      } : null,
-      tracks_count: item.tracks?.total || 0,
-      owner: item.owner ? {
-        id: item.owner.id || null,
-        display_name: item.owner.display_name || null,
-      } : null,
-      is_public: Boolean(item.public),
-      external_url: item.external_urls?.spotify || null
-    }));
-  }, userId);
+      const data = await response.json();
+
+      if (!Array.isArray(data?.items)) {
+        console.error('Invalid playlist response:', data);
+        throw new Error('Invalid playlist response from Spotify');
+      }
+
+      return data.items.map((item: any) => ({
+        playlist_id: item.id,
+        name: item.name || 'Untitled Playlist',
+        description: item.description || '',
+        artwork: item.images?.[0]
+          ? {
+              url: item.images[0].url,
+              height: item.images[0].height || null,
+              width: item.images[0].width || null,
+            }
+          : null,
+        tracks_count: item.tracks?.total || 0,
+        owner: item.owner
+          ? {
+              id: item.owner.id || null,
+              display_name: item.owner.display_name || null,
+            }
+          : null,
+        is_public: Boolean(item.public),
+        external_url: item.external_urls?.spotify || null,
+      }));
+    },
+    userId
+  );
 }
 
 export async function getSpotifyAlbums(accessToken: string) {
-  const response = await fetch('https://api.spotify.com/v1/me/albums?limit=50', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  const response = await fetch(
+    'https://api.spotify.com/v1/me/albums?limit=50',
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -299,7 +322,7 @@ export async function getSpotifyAlbums(accessToken: string) {
   }
 
   const data = await response.json();
-  
+
   if (!data?.items || !Array.isArray(data.items)) {
     console.error('Invalid album response:', data);
     throw new Error('Invalid album response from Spotify');
@@ -328,7 +351,7 @@ export async function getMoreSpotifyAlbums(
   }
 
   const data = await response.json();
-  
+
   if (!data?.items || !Array.isArray(data.items)) {
     console.error('Invalid album response:', data);
     throw new Error('Invalid album response from Spotify');
@@ -375,12 +398,15 @@ export async function getAllSpotifyAlbums(
       return {
         album_id: album?.id,
         name: album?.name || 'Untitled Album',
-        artist_name: album?.artists?.map((artist: any) => artist.name || 'Unknown Artist').join(', ') || 'Unknown Artist',
+        artist_name:
+          album?.artists
+            ?.map((artist: any) => artist.name || 'Unknown Artist')
+            .join(', ') || 'Unknown Artist',
         image_url: album?.images?.[0]?.url || null,
         release_date: album?.release_date || null,
         tracks_count: album?.total_tracks || 0,
         external_url: album?.external_urls?.spotify || null,
-        album_type: album?.album_type?.toLowerCase() || 'album'
+        album_type: album?.album_type?.toLowerCase() || 'album',
       };
     });
   } catch (error) {
@@ -394,58 +420,64 @@ export async function getSpotifyAlbumDetails(
   albumId: string,
   accessToken: string
 ) {
-  return handleSpotifyRequest(accessToken, async (token) => {
-    const [albumResponse, tracksResponse] = await Promise.all([
-      fetch(`https://api.spotify.com/v1/albums/${albumId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }),
-      fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }),
-    ]);
+  return handleSpotifyRequest(
+    accessToken,
+    async (token) => {
+      const [albumResponse, tracksResponse] = await Promise.all([
+        fetch(`https://api.spotify.com/v1/albums/${albumId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+        fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+      ]);
 
-    if (!albumResponse.ok || !tracksResponse.ok) {
-      const error = new Error(`Failed to get Spotify album details: ${albumResponse.status}`);
-      (error as any).status = albumResponse.status;
-      throw error;
-    }
+      if (!albumResponse.ok || !tracksResponse.ok) {
+        const error = new Error(
+          `Failed to get Spotify album details: ${albumResponse.status}`
+        );
+        (error as any).status = albumResponse.status;
+        throw error;
+      }
 
-    const [album, tracks] = await Promise.all([
-      albumResponse.json(),
-      tracksResponse.json(),
-    ]);
+      const [album, tracks] = await Promise.all([
+        albumResponse.json(),
+        tracksResponse.json(),
+      ]);
 
-    return {
-      id: album.id,
-      name: album.name,
-      artists: album.artists.map((artist: any) => ({
-        id: artist.id,
-        name: artist.name,
-      })),
-      releaseDate: album.release_date,
-      totalTracks: album.total_tracks,
-      artwork: {
-        url: album.images[0]?.url,
-        width: album.images[0]?.width,
-        height: album.images[0]?.height,
-      },
-      tracks: tracks.items.map((track: any) => ({
-        id: track.id,
-        name: track.name,
-        trackNumber: track.track_number,
-        durationMs: track.duration_ms,
-        artists: track.artists.map((artist: any) => ({
+      return {
+        id: album.id,
+        name: album.name,
+        artists: album.artists.map((artist: any) => ({
           id: artist.id,
           name: artist.name,
         })),
-        previewUrl: track.preview_url,
-      })),
-    };
-  }, userId);
+        releaseDate: album.release_date,
+        totalTracks: album.total_tracks,
+        artwork: {
+          url: album.images[0]?.url,
+          width: album.images[0]?.width,
+          height: album.images[0]?.height,
+        },
+        tracks: tracks.items.map((track: any) => ({
+          id: track.id,
+          name: track.name,
+          trackNumber: track.track_number,
+          durationMs: track.duration_ms,
+          artists: track.artists.map((artist: any) => ({
+            id: artist.id,
+            name: artist.name,
+          })),
+          previewUrl: track.preview_url,
+        })),
+      };
+    },
+    userId
+  );
 }
 
 export async function getSpotifyPlaylistDetails(
@@ -474,8 +506,108 @@ export async function getSpotifyPlaylistDetails(
       }
 
       const data = await response.json();
-      return data;
+      
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        owner: data.owner,
+        service: 'spotify' as const,
+        artwork: data.images?.[0] ? {
+          url: data.images[0].url,
+          width: data.images[0].width,
+          height: data.images[0].height,
+        } : undefined,
+        tracks: data.tracks?.items?.map((item: any) => ({
+          id: item.track.id,
+          name: item.track.name,
+          artist: {
+            id: item.track.artists[0].id,
+            name: item.track.artists[0].name,
+          },
+          artists: item.track.artists.map((artist: any) => ({
+            id: artist.id,
+            name: artist.name,
+          })),
+          album: {
+            id: item.track.album.id,
+            name: item.track.album.name,
+          },
+          duration_ms: item.track.duration_ms,
+          added_at: item.added_at,
+        })) || [],
+        total_tracks: data.tracks?.total || 0,
+        collaborative: data.collaborative,
+        public: data.public,
+        type: 'playlist',
+      };
     },
     userId
   );
+}
+
+export async function searchSpotifyAlbum(
+  query: string,
+  token: string
+): Promise<SearchResult | null> {
+  try {
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(
+        query
+      )}&type=album&limit=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to search Spotify album:', errorText);
+      throw new Error('Failed to search Spotify album');
+    }
+
+    const data = await response.json();
+    const albums = data.albums.items;
+
+    if (albums.length === 0) {
+      return null;
+    }
+
+    return {
+      id: albums[0].id,
+      name: albums[0].name,
+      artist: albums[0].artists[0].name,
+      type: 'album',
+    };
+  } catch (error) {
+    console.error('Error searching Spotify album:', error);
+    throw error;
+  }
+}
+
+export async function addSpotifyAlbumToLibrary(
+  albumId: string,
+  token: string
+): Promise<void> {
+  try {
+    const response = await fetch(`https://api.spotify.com/v1/me/albums`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids: [albumId] }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to add album to Spotify library:', errorText);
+      throw new Error('Failed to add album to Spotify library');
+    }
+  } catch (error) {
+    console.error('Error adding album to Spotify library:', error);
+    throw error;
+  }
 }

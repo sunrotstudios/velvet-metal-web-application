@@ -40,7 +40,9 @@ export function MultiStepRegistration() {
     email: '',
     password: '',
   });
-  const [syncProgress, setSyncProgress] = useState<Record<ServiceType, SyncProgress>>({});
+  const [syncProgress, setSyncProgress] = useState<
+    Record<ServiceType, SyncProgress>
+  >({});
 
   // Effect to handle registration completion
   useEffect(() => {
@@ -137,22 +139,28 @@ export function MultiStepRegistration() {
     try {
       setLoading(true);
       const connectedServices = await getUserServices(user.id);
-      console.log('Connected services:', connectedServices);
 
       // Initialize progress for each service
-      const initialProgress = connectedServices.reduce((acc, service) => ({
-        ...acc,
-        [service]: { phase: 'albums' as const, current: 0, total: 100, service }
-      }), {} as Record<ServiceType, SyncProgress>);
+      const initialProgress = connectedServices.reduce(
+        (acc, service) => ({
+          ...acc,
+          [service]: {
+            phase: 'albums' as const,
+            current: 0,
+            total: 100,
+            service,
+          },
+        }),
+        {} as Record<ServiceType, SyncProgress>
+      );
       setSyncProgress(initialProgress);
 
       // Sync libraries for connected services
       const syncPromises = connectedServices.map((service) =>
         syncLibrary(user.id, service, (progress) => {
-          console.log(`${service} progress:`, progress);
-          setSyncProgress(prev => ({
+          setSyncProgress((prev) => ({
             ...prev,
-            [service]: progress
+            [service]: progress,
           }));
         })
       );

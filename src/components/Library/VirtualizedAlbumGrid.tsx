@@ -7,6 +7,9 @@ interface VirtualizedGridProps {
   items: NormalizedAlbum[];
   viewMode: ViewMode;
   ItemComponent: React.ComponentType<any>;
+  isSelectionMode?: boolean;
+  onSelect?: (album: NormalizedAlbum) => void;
+  selectedItems?: NormalizedAlbum[];
 }
 
 const GRID_COLUMN_COUNTS = {
@@ -26,6 +29,9 @@ const VirtualizedGrid = ({
   items,
   viewMode,
   ItemComponent,
+  isSelectionMode,
+  onSelect,
+  selectedItems = [],
 }: VirtualizedGridProps) => {
   const getColumnCount = useCallback((width: number) => {
     if (width >= 1536) return GRID_COLUMN_COUNTS['2xl'];
@@ -37,12 +43,13 @@ const VirtualizedGrid = ({
   }, []);
 
   const Cell = useCallback(({ columnIndex, rowIndex, style, data }) => {
-    const { items, ItemComponent, columnCount } = data;
+    const { items, ItemComponent, columnCount, isSelectionMode, onSelect, selectedItems } = data;
     const index = rowIndex * columnCount + columnIndex;
 
     if (index >= items.length) return null;
 
     const item = items[index];
+    const isSelected = selectedItems?.some((selected) => selected.id === item.id);
 
     // Adjust the cell style to account for gaps
     const adjustedStyle = {
@@ -56,16 +63,29 @@ const VirtualizedGrid = ({
 
     return (
       <div style={adjustedStyle}>
-        <ItemComponent album={item} viewMode="grid" />
+        <ItemComponent 
+          album={item} 
+          viewMode="grid" 
+          isSelectionMode={isSelectionMode}
+          onSelect={onSelect}
+          isSelected={isSelected}
+        />
       </div>
     );
-  }, []);
+  }, [isSelectionMode, onSelect, selectedItems]);
 
   if (viewMode === 'list') {
     return (
       <div className="grid grid-cols-1 gap-6">
         {items.map((item) => (
-          <ItemComponent key={item.id} album={item} viewMode={viewMode} />
+          <ItemComponent 
+            key={item.id} 
+            album={item} 
+            viewMode={viewMode}
+            isSelectionMode={isSelectionMode}
+            onSelect={onSelect}
+            isSelected={selectedItems.some((selected) => selected.id === item.id)}
+          />
         ))}
       </div>
     );
@@ -99,6 +119,9 @@ const VirtualizedGrid = ({
                 items,
                 ItemComponent,
                 columnCount,
+                isSelectionMode,
+                onSelect,
+                selectedItems,
               }}
               overscanRowCount={2} // Render 2 extra rows for smoother scrolling
             >

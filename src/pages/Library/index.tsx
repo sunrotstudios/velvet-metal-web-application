@@ -12,7 +12,7 @@ import { getStoredLibrary, syncLibrary } from '@/lib/services';
 import { getUserServices } from '@/lib/services/streaming-auth';
 import { Playlist, ServiceType, ViewMode } from '@/lib/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { memo, useState, useRef } from 'react';
+import { memo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AlbumsTab } from './components/AlbumsTab';
@@ -25,6 +25,7 @@ export default function Library() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const playlistsTabRef = useRef(null);
+  const albumsTabRef = useRef(null);
 
   // State management
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -52,37 +53,25 @@ export default function Library() {
   const { data: userServices, isLoading: servicesLoading } = useQuery({
     queryKey: ['userServices', user?.id],
     queryFn: async () => {
-      console.log('Fetching user services for user:', user?.id);
+      console.log('Fetching Services for User:', user?.id);
       if (!user) return [];
       const services = await getUserServices(user.id);
-      console.log('User services:', services);
+      console.log('User Services:', services);
       return services;
     },
     enabled: !!user,
   });
 
   const isServiceConnected = userServices?.includes(activeService);
-  console.log('Service connection status:', {
-    activeService,
-    userServices,
-    isServiceConnected,
-    servicesLoading,
-  });
 
   // Get Stored Library
   const { data, isLoading, isError } = useQuery({
     queryKey: ['storedLibrary', activeService],
     queryFn: async () => {
       try {
-        console.log('Fetching library for service:', activeService);
-        console.log('User ID:', user!.id);
+        console.log('Fetching Library for Service:', activeService);
         const data = await getStoredLibrary(user!.id, activeService);
-        console.log('Raw library data from database:', {
-          albumsCount: data.albums?.length || 0,
-          playlistsCount: data.playlists?.length || 0,
-          sampleAlbum: data.albums?.[0],
-          samplePlaylist: data.playlists?.[0],
-        });
+
         return data;
       } catch (error) {
         console.error('Error fetching library:', error);
@@ -101,13 +90,6 @@ export default function Library() {
     staleTime: 5 * 60 * 1000,
     retry: 1,
     select: (data) => {
-      console.log('Processing library data:', {
-        albumsCount: data.albums?.length || 0,
-        playlistsCount: data.playlists?.length || 0,
-        sampleAlbum: data.albums?.[0],
-        samplePlaylist: data.playlists?.[0],
-      });
-      
       const processed = {
         albums: Array.isArray(data.albums)
           ? data.albums.map((album) => ({
@@ -141,14 +123,7 @@ export default function Library() {
           : [],
         lastSynced: data.lastSynced,
       };
-      
-      console.log('Processed data:', {
-        albumsCount: processed.albums.length,
-        playlistsCount: processed.playlists.length,
-        sampleAlbum: processed.albums[0],
-        samplePlaylist: processed.playlists[0],
-      });
-      
+
       return processed;
     },
   });
@@ -160,15 +135,6 @@ export default function Library() {
     sortBy,
     albumTypeFilter
   );
-
-  console.log('Filtered data:', {
-    filteredAlbums,
-    filteredPlaylists,
-    searchQuery: debouncedSearchQuery,
-    sortBy,
-    albumTypeFilter,
-    albumTypes: data?.albums?.map((album) => album.albumType) || [],
-  });
 
   const handleManualRefresh = async () => {
     try {
@@ -219,7 +185,9 @@ export default function Library() {
     }
   };
 
-  const handleAlbumTypeChange = (albumType: 'all' | 'album' | 'single' | 'ep') => {
+  const handleAlbumTypeChange = (
+    albumType: 'all' | 'album' | 'single' | 'ep'
+  ) => {
     setAlbumTypeFilter(albumType);
     toast.info(`Showing ${albumType} albums`);
   };
@@ -231,6 +199,13 @@ export default function Library() {
 
   const handleToggleSelection = () => {
     setIsSelectionMode(!isSelectionMode);
+    if (isSelectionMode) {
+      if (activeTab === 'playlists' && playlistsTabRef.current) {
+        playlistsTabRef.current.deselectAll();
+      } else if (activeTab === 'albums' && albumsTabRef.current) {
+        albumsTabRef.current.deselectAll();
+      }
+    }
   };
 
   if (!isServiceConnected) {
@@ -242,7 +217,10 @@ export default function Library() {
       {/* Fixed Header Section */}
       <div className="flex-none">
         <div className="p-8 pb-2">
-          <Header activeService={activeService} onRefresh={handleManualRefresh} />
+          <Header
+            activeService={activeService}
+            onRefresh={handleManualRefresh}
+          />
         </div>
 
         <div className="px-8">
@@ -270,17 +248,20 @@ export default function Library() {
                 <LoadingSpinner centered label="Loading your library" />
               ) : isError ? (
                 <div className="text-center text-red-500">
-                  An error occurred while loading your library. Please try again.
+                  An error occurred while loading your library. Please try
+                  again.
                 </div>
               ) : (
                 <>
                   <AlbumsTab
+                    ref={albumsTabRef}
                     isLoading={isLoading}
                     isError={isError}
                     albums={data?.albums || []}
                     filteredAlbums={filteredAlbums}
                     viewMode={viewMode}
                     ItemComponent={MemoizedAlbumCard}
+                    isSelectionMode={isSelectionMode}
                   />
 
                   <PlaylistsTab

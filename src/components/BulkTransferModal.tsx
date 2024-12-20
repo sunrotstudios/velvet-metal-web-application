@@ -9,19 +9,20 @@ import {
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { transferPlaylist } from '@/lib/services/transfer';
+import { transferPlaylist, transferAlbum } from '@/lib/services/transfer';
 import { getServiceAuth } from '@/lib/services/streaming-auth';
 import { cn } from '@/lib/utils';
 import { AlertCircle, CheckCircle2, Loader2, Music, Music2, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { ScrollArea } from './ui/scroll-area';
 
 interface TransferProgress {
-  playlistId: string;
+  itemId: string;
   stage: 'fetching' | 'creating' | 'searching' | 'adding' | 'complete' | 'error';
   progress: number;
   message: string;
-  destinationPlaylistName?: string;
+  destinationName?: string;
   error?: string;
 }
 
@@ -29,7 +30,8 @@ interface BulkTransferModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sourceService: 'spotify' | 'apple-music';
-  playlists: any[];
+  items: any[];
+  itemType: 'playlist' | 'album';
   userId: string;
   onTransferComplete?: () => void;
 }
@@ -38,13 +40,14 @@ export function BulkTransferModal({
   open,
   onOpenChange,
   sourceService,
-  playlists,
+  items,
+  itemType,
   userId,
   onTransferComplete,
 }: BulkTransferModalProps) {
   const [isTransferring, setIsTransferring] = useState(false);
   const [progress, setProgress] = useState<Record<string, TransferProgress>>({});
-  const [targetService, setTargetService] = useState<'spotify' | 'apple-music'>(
+  const [destinationService, setDestinationService] = useState<'spotify' | 'apple-music'>(
     sourceService === 'spotify' ? 'apple-music' : 'spotify'
   );
 
@@ -53,7 +56,7 @@ export function BulkTransferModal({
     
     try {
       const sourceTokenData = await getServiceAuth(userId, sourceService);
-      const targetTokenData = await getServiceAuth(userId, targetService);
+      const targetTokenData = await getServiceAuth(userId, destinationService);
 
       if (!sourceTokenData?.accessToken || !targetTokenData?.accessToken) {
         toast.error('Authentication failed. Please reconnect your services.');
@@ -69,45 +72,65 @@ export function BulkTransferModal({
         localStorage.setItem('spotify_access_token', targetTokenData.accessToken);
       }
 
-      // Transfer playlists in parallel with a limit
-      const batchSize = 3; // Process 3 playlists at a time
-      for (let i = 0; i < playlists.length; i += batchSize) {
-        const batch = playlists.slice(i, i + batchSize);
+      // Transfer items in parallel with a limit
+      const batchSize = 3; // Process 3 items at a time
+      for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
         await Promise.all(
-          batch.map(async (playlist) => {
+          batch.map(async (item) => {
             try {
               setProgress((prev) => ({
                 ...prev,
-                [playlist.id]: {
-                  playlistId: playlist.id,
+                [item.id]: {
+                  itemId: item.id,
                   stage: 'fetching',
                   progress: 0,
-                  message: `Starting transfer of "${playlist.name}"...`,
+                  message: `Starting transfer of "${item.name}"...`,
                 },
               }));
 
-              await transferPlaylist({
-                sourceService,
-                targetService,
-                playlist,
-                sourceToken: sourceTokenData.accessToken,
-                targetToken: targetTokenData.accessToken,
-                userId,
-                onProgress: (currentProgress) => {
-                  setProgress((prev) => ({
-                    ...prev,
-                    [playlist.id]: {
-                      ...currentProgress,
-                      playlistId: playlist.id,
-                    },
-                  }));
-                },
-              });
+              if (itemType === 'playlist') {
+                await transferPlaylist({
+                  sourceService,
+                  destinationService,
+                  playlist: item,
+                  sourceToken: sourceTokenData.accessToken,
+                  targetToken: targetTokenData.accessToken,
+                  userId,
+                  onProgress: (currentProgress) => {
+                    setProgress((prev) => ({
+                      ...prev,
+                      [item.id]: {
+                        ...currentProgress,
+                        itemId: item.id,
+                      },
+                    }));
+                  },
+                });
+              } else {
+                await transferAlbum({
+                  sourceService,
+                  destinationService,
+                  album: item,
+                  sourceToken: sourceTokenData.accessToken,
+                  targetToken: targetTokenData.accessToken,
+                  userId,
+                  onProgress: (currentProgress) => {
+                    setProgress((prev) => ({
+                      ...prev,
+                      [item.id]: {
+                        ...currentProgress,
+                        itemId: item.id,
+                      },
+                    }));
+                  },
+                });
+              }
             } catch (error) {
               setProgress((prev) => ({
                 ...prev,
-                [playlist.id]: {
-                  playlistId: playlist.id,
+                [item.id]: {
+                  itemId: item.id,
                   stage: 'error',
                   progress: 0,
                   message: 'Transfer failed',
@@ -119,10 +142,10 @@ export function BulkTransferModal({
         );
       }
 
-      toast.success('All playlists transferred successfully!');
+      toast.success(`All ${itemType}s transferred successfully!`);
       onTransferComplete?.();
     } catch (error) {
-      toast.error('Failed to transfer playlists');
+      toast.error(`Failed to transfer ${itemType}s`);
     } finally {
       setIsTransferring(false);
     }
@@ -133,15 +156,15 @@ export function BulkTransferModal({
   );
 
   const totalProgress =
-    Object.values(progress).reduce((sum, p) => sum + p.progress, 0) / playlists.length;
+    Object.values(progress).reduce((sum, p) => sum + p.progress, 0) / items.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Transfer {playlists.length} Playlists</DialogTitle>
+          <DialogTitle>Transfer {items.length} {itemType === 'playlist' ? 'Playlists' : 'Albums'}</DialogTitle>
           <DialogDescription>
-            Choose where you want to transfer your playlists
+            Choose where you want to transfer your {itemType === 'playlist' ? 'playlists' : 'albums'}
           </DialogDescription>
         </DialogHeader>
 
@@ -149,9 +172,9 @@ export function BulkTransferModal({
           <div className="space-y-4">
             <Label>Destination Service</Label>
             <RadioGroup
-              defaultValue={targetService}
+              defaultValue={destinationService}
               onValueChange={(value: 'spotify' | 'apple-music') =>
-                setTargetService(value)
+                setDestinationService(value)
               }
               className="grid grid-cols-2 gap-4"
             >
@@ -198,74 +221,79 @@ export function BulkTransferModal({
           </div>
 
           <div className="space-y-4">
-            <Label>Selected Playlists</Label>
-            <div className="max-h-[200px] overflow-y-auto space-y-2">
-              {playlists.map((playlist) => (
-                <div
-                  key={playlist.id}
-                  className="flex items-center justify-between p-2 rounded-md bg-accent/50"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Music2 className="h-4 w-4" />
-                    <span className="text-sm font-medium">{playlist.name}</span>
-                  </div>
-                  {progress[playlist.id] && (
-                    <div className="flex items-center space-x-2">
-                      {progress[playlist.id].stage === 'complete' ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      ) : progress[playlist.id].stage === 'error' ? (
-                        <XCircle className="h-4 w-4 text-red-500" />
+            <Label>Selected {itemType === 'playlist' ? 'Playlists' : 'Albums'}</Label>
+            <ScrollArea className="h-[200px] rounded-md border">
+              <div className="grid grid-cols-6 gap-2 p-2">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="group relative overflow-hidden rounded-md"
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden rounded-md">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <div className="flex h-full w-full items-center justify-center bg-muted">
+                          <Music2 className="h-4 w-4 text-muted-foreground" />
+                        </div>
                       )}
-                      <span className="text-xs text-muted-foreground">
-                        {progress[playlist.id].stage === 'complete'
-                          ? 'Complete'
-                          : progress[playlist.id].stage === 'error'
-                          ? 'Failed'
-                          : `${Math.round(progress[playlist.id].progress)}%`}
-                      </span>
+                      {progress[item.id] && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                          {progress[item.id].stage === 'complete' ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : progress[item.id].stage === 'error' ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <XCircle className="h-4 w-4 text-red-500" />
+                              <span className="text-[10px] text-red-400">Failed</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center gap-1">
+                              <Loader2 className="h-4 w-4 animate-spin text-white" />
+                              <span className="text-[10px] text-white">
+                                {progress[item.id].progress.toFixed(0)}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1">
+                      <p className="truncate text-[10px] font-medium text-white">
+                        {item.name}
+                      </p>
+                      <p className="truncate text-[8px] text-white/80">
+                        {item.artist_name || item.owner_name}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
 
-          {isTransferring && (
+          {isTransferring ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm">
-                <span>Overall Progress</span>
-                <span>{Math.round(totalProgress)}%</span>
+              <div className="flex items-center gap-2">
+                <Progress value={totalProgress} className="h-2" />
+                <span className="min-w-[3rem] text-sm text-muted-foreground">
+                  {totalProgress.toFixed(0)}%
+                </span>
               </div>
-              <Progress value={totalProgress} className="h-2" />
+              <p className="text-sm text-muted-foreground">
+                Transferring {items.length} {itemType === 'playlist' ? 'playlists' : 'albums'}...
+              </p>
+            </div>
+          ) : (
+            <div className="flex justify-end">
+              <Button onClick={handleTransfer} disabled={isTransferring}>
+                {isTransferring ? 'Transferring...' : 'Start Transfer'}
+              </Button>
             </div>
           )}
-
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isTransferring}
-            >
-              {allComplete ? 'Close' : 'Cancel'}
-            </Button>
-            {(!allComplete || Object.keys(progress).length === 0) && !isTransferring && (
-              <Button
-                onClick={handleTransfer}
-                disabled={isTransferring}
-              >
-                {isTransferring ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Transferring...
-                  </>
-                ) : (
-                  'Start Transfer'
-                )}
-              </Button>
-            )}
-          </div>
         </div>
       </DialogContent>
     </Dialog>

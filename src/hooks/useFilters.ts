@@ -40,52 +40,29 @@ export const useFilters = (
   }, [playlists]);
 
   const filteredAlbums = useMemo(() => {
-    console.log('Raw albums in useFilters:', albums);
-    
     // Filter out any null or undefined albums
-    const validAlbums = albums.filter(
-      (album): album is NormalizedAlbum => {
-        const isValid = album != null &&
-          typeof album === 'object' &&
-          'name' in album &&
-          'artistName' in album;
-        
-        if (!isValid) {
-          console.log('Invalid album:', album);
-        }
-        return isValid;
+    const validAlbums = albums.filter((album): album is NormalizedAlbum => {
+      const isValid =
+        album != null &&
+        typeof album === 'object' &&
+        'name' in album &&
+        'artistName' in album;
+
+      if (!isValid) {
+        console.log('Invalid album:', album);
       }
-    );
-    
-    console.log('Valid albums:', validAlbums);
+      return isValid;
+    });
+
     let result = validAlbums;
 
     // Apply album type filter
     if (albumTypeFilter && albumTypeFilter !== 'all') {
-      console.log('Applying album type filter:', {
-        albumTypeFilter,
-        currentAlbumTypes: result.map(album => ({
-          name: album.name,
-          type: album.albumType,
-          typeType: typeof album.albumType,
-          matches: album.albumType === albumTypeFilter,
-          stringMatch: String(album.albumType).toLowerCase() === String(albumTypeFilter).toLowerCase()
-        }))
-      });
       result = result.filter((album) => {
         const normalizedAlbumType = String(album.albumType).toLowerCase();
         const normalizedFilterType = String(albumTypeFilter).toLowerCase();
         const matches = normalizedAlbumType === normalizedFilterType;
-        
-        if (!matches) {
-          console.log('Album filtered out:', {
-            name: album.name,
-            albumType: album.albumType,
-            normalizedAlbumType,
-            filterType: albumTypeFilter,
-            normalizedFilterType
-          });
-        }
+
         return matches;
       });
     }
@@ -107,7 +84,6 @@ export const useFilters = (
       result = [...result].sort((a, b) => sortFunction(a, b, key, order));
     }
 
-    console.log('Final filtered albums:', result);
     return result;
   }, [albums, debouncedSearchQuery, sortBy, albumTypeFilter]);
 
