@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { LastFmProvider } from '@/contexts/LastFmContext';
 import AlbumDetails from '@/pages/AlbumDetails';
 import Home from '@/pages/Home';
+import Landing from '@/pages/Landing';
 import LastFmDashboard from '@/pages/LastFmDashboard';
 import Library from '@/pages/Library/index';
 import Login from '@/pages/Login';
@@ -16,7 +17,12 @@ import SpotifyCallback from '@/pages/SpotifyCallback';
 import TransferHistory from '@/pages/TransferHistory';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import {
+  Navigate,
+  Route,
+  BrowserRouter as Router,
+  Routes,
+} from 'react-router-dom';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,17 +44,21 @@ function App() {
           <AuthProvider>
             <LastFmProvider>
               <Routes>
+                <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/spotify/callback" element={<SpotifyCallback />} />
                 <Route element={<ProtectedRoute />}>
                   <Route element={<Layout />}>
-                    <Route path="/" element={<Home />} />
+                    <Route path="/home" element={<Home />} />
                     <Route path="/library" element={<Library />} />
                     <Route path="/album/:id" element={<AlbumDetails />} />
                     <Route path="/playlist/:id" element={<PlaylistDetails />} />
                     <Route path="/settings" element={<Settings />} />
-                    <Route path="/transfer-history" element={<TransferHistory />} />
+                    <Route
+                      path="/transfer-history"
+                      element={<TransferHistory />}
+                    />
                     <Route path="/lastfm" element={<LastFmDashboard />} />
                   </Route>
                 </Route>

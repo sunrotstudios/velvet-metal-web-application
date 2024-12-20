@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 
 const routes = [
   {
-    path: '/',
+    path: '/home',
     label: 'Home',
     icon: Home,
   },
