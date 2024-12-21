@@ -1,21 +1,21 @@
-import React from 'react';
-import { Bar } from 'react-chartjs-2';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useQuery } from '@tanstack/react-query';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
 } from 'chart.js';
+import React from 'react';
+import { Bar } from 'react-chartjs-2';
+import { useLastFm } from '../../contexts/last-fm-context';
 import { lastFmClient } from '../../lib/lastfm';
-import { useLastFm } from '../../contexts/LastFmContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useQuery } from '@tanstack/react-query';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 ChartJS.register(
   CategoryScale,
@@ -53,11 +53,11 @@ export const LastFmStats: React.FC = () => {
   }
 
   const artistData = {
-    labels: topArtists?.map(artist => artist.name) || [],
+    labels: topArtists?.map((artist) => artist.name) || [],
     datasets: [
       {
         label: 'Playcount',
-        data: topArtists?.map(artist => parseInt(artist.playcount)) || [],
+        data: topArtists?.map((artist) => parseInt(artist.playcount)) || [],
         backgroundColor: 'hsl(var(--primary) / 0.5)',
         borderColor: 'hsl(var(--primary))',
         borderWidth: 1,

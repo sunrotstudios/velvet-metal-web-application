@@ -3,6 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/auth-context';
+import { MobileLanding } from '@/pages/Landing/MobileLanding';
+import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -14,10 +17,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth-context';
 import { toast } from 'sonner';
-import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
-import { MobileLanding } from '@/components/Landing/MobileLanding';
 
 const features = [
   {
@@ -113,9 +113,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <ResponsiveContainer
-      mobileContent={<MobileLanding features={features} />}
-    >
+    <ResponsiveContainer mobileContent={<MobileLanding features={features} />}>
       {/* Desktop Layout */}
       <div className="min-h-screen bg-background flex flex-col">
         <main className="flex-1 flex flex-col md:flex-row">
@@ -211,8 +209,8 @@ export default function Landing() {
               <div className="mb-8">
                 <p className="text-muted-foreground text-center">
                   Your all-in-one solution for seamless playlist management and
-                  music discovery. Connect your favorite music platforms and take
-                  control of your music library.
+                  music discovery. Connect your favorite music platforms and
+                  take control of your music library.
                 </p>
               </div>
 
@@ -245,7 +243,9 @@ export default function Landing() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                        <Label htmlFor="confirm-password">
+                          Confirm Password
+                        </Label>
                         <Input
                           id="confirm-password"
                           name="confirm-password"
@@ -254,7 +254,11 @@ export default function Landing() {
                           required
                         />
                       </div>
-                      <Button className="w-full" type="submit" disabled={loading}>
+                      <Button
+                        className="w-full"
+                        type="submit"
+                        disabled={loading}
+                      >
                         {loading ? 'Creating account...' : 'Register'}{' '}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -284,7 +288,11 @@ export default function Landing() {
                           required
                         />
                       </div>
-                      <Button className="w-full" type="submit" disabled={loading}>
+                      <Button
+                        className="w-full"
+                        type="submit"
+                        disabled={loading}
+                      >
                         {loading ? 'Signing in...' : 'Login'}{' '}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>

@@ -1,9 +1,9 @@
 import { ServicesGrid } from '@/components/ServicesGrid';
 import { useAuth } from '@/contexts/auth-context';
 import { getUserServices } from '@/lib/services/streaming-auth';
+import { MobileHome } from '@/pages/Home/MobileHome';
+import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { useQuery } from '@tanstack/react-query';
-import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
-import { MobileHome } from '@/components/Home/MobileHome';
 
 export default function Home() {
   const { user } = useAuth();
@@ -14,9 +14,7 @@ export default function Home() {
   });
 
   return (
-    <ResponsiveContainer
-      mobileContent={<MobileHome />}
-    >
+    <ResponsiveContainer mobileContent={<MobileHome />}>
       {/* Desktop Layout */}
       <div className="flex h-screen flex-col items-center justify-center px-4 py-12">
         {/* Hero Section */}

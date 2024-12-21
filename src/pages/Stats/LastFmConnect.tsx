@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useLastFm } from '../../contexts/LastFmContext';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
+import { useLastFm } from '../../contexts/last-fm-context';
 
 export const LastFmConnect: React.FC = () => {
   const { username, setUsername } = useLastFm();

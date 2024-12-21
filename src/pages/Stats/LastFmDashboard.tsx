@@ -1,9 +1,9 @@
-import React from 'react';
-import { useLastFm } from '../contexts/LastFmContext';
-import { LastFmConnect } from '../components/LastFm/LastFmConnect';
-import { LastFmStats } from '../components/LastFm/LastFmStats';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import React from 'react';
+import { useLastFm } from '../../contexts/last-fm-context';
+import { LastFmConnect } from './LastFmConnect';
+import { LastFmStats } from './LastFmStats';
 
 export const LastFmDashboard: React.FC = () => {
   const { username, setUsername, isLoading } = useLastFm();
@@ -28,21 +28,14 @@ export const LastFmDashboard: React.FC = () => {
               <p className="text-sm text-muted-foreground">Connected as</p>
               <p className="font-medium">{username}</p>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setUsername('')}
-            >
+            <Button variant="outline" onClick={() => setUsername('')}>
               Disconnect
             </Button>
           </div>
         )}
       </div>
-      
-      {!username ? (
-        <LastFmConnect />
-      ) : (
-        <LastFmStats />
-      )}
+
+      {!username ? <LastFmConnect /> : <LastFmStats />}
     </div>
   );
 };
