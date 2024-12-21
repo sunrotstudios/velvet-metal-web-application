@@ -78,23 +78,23 @@ export function ServicesGrid() {
             )}
             onClick={() => !isConnected && handleConnect(service.id)}
           >
-            <CardContent className="flex flex-col items-center justify-center p-6 space-y-4">
+            <CardContent className="flex flex-col items-center justify-center p-3 md:p-6 space-y-2 md:space-y-4">
               <div
                 className={cn(
-                  'p-4 rounded-full',
+                  'p-2 md:p-4 rounded-full',
                   isConnected ? service.color : 'bg-muted'
                 )}
               >
                 <service.icon
                   className={cn(
-                    'w-8 h-8',
+                    'w-6 h-6 md:w-8 md:h-8',
                     isConnected ? 'text-white' : service.textColor
                   )}
                 />
               </div>
               <div className="text-center">
-                <h3 className="font-semibold">{service.name}</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-sm md:text-base font-semibold">{service.name}</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {isConnected ? 'Connected' : 'Click to connect'}
                 </p>
               </div>

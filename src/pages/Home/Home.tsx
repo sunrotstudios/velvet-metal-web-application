@@ -4,6 +4,8 @@ import { MobileHome } from '@/pages/Home/MobileHome';
 import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { ServicesGrid } from '@/shared/services/ServicesGrid';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { Music2, PlusCircle } from 'lucide-react';
 
 export default function Home() {
   const { user } = useAuth();
@@ -16,37 +18,84 @@ export default function Home() {
   return (
     <ResponsiveContainer mobileContent={<MobileHome />}>
       {/* Desktop Layout */}
-      <div className="flex h-screen flex-col items-center justify-center px-4 py-12">
-        {/* Hero Section */}
-        <div className=" max-w-3xl text-center">
-          <h1 className="mb-6 text-5xl font-bold tracking-tight text-primary">
-            Welcome
-            {user?.user_metadata?.display_name
-              ? `, ${user.user_metadata.display_name}`
-              : ''}
-            ! 👋
-          </h1>
-        </div>
+      <div className="min-h-screen bg-background">
+        <div className="container max-w-[1200px] py-12 px-4">
+          {/* Header Section */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-12"
+          >
+            <h1 className="text-4xl font-medium text-primary mb-2">
+              {user?.user_metadata?.display_name
+                ? `Hi ${user.user_metadata.display_name}`
+                : 'Welcome'}
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Manage your music, all in one place
+            </p>
+          </motion.div>
 
-        {/* Services Section */}
-        <div className="w-full max-w-4xl rounded-xl bg-card p-8 shadow-lg">
-          <div className="mb-10 text-center">
-            <h2 className="mb-4 text-3xl font-bold">
-              Connect Your Music Services
-            </h2>
-          </div>
-
-          <div className="px-4">
-            <ServicesGrid />
-          </div>
-
-          {connectedServices && connectedServices.length > 0 && (
-            <div className="mt-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                Connected Services: {connectedServices.length}
-              </p>
+          {/* Quick Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-12"
+          >
+            <h2 className="text-2xl font-medium mb-6">Quick Stats</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-6 rounded-xl bg-card shadow-sm border border-border/50">
+                <div className="text-4xl font-semibold text-primary mb-2">
+                  12h
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Listened this week
+                </div>
+              </div>
+              <div className="p-6 rounded-xl bg-card shadow-sm border border-border/50">
+                <div className="text-4xl font-semibold text-primary mb-2">
+                  Rock
+                </div>
+                <div className="text-sm text-muted-foreground">Top Genre</div>
+              </div>
+              <div className="p-6 rounded-xl bg-card shadow-sm border border-border/50">
+                <div className="text-4xl font-semibold text-primary mb-2">
+                  142
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Unique Tracks
+                </div>
+              </div>
+              <div className="p-6 rounded-xl bg-card shadow-sm border border-border/50">
+                <div className="text-4xl font-semibold text-primary mb-2">
+                  5
+                </div>
+                <div className="text-sm text-muted-foreground">Day Streak</div>
+              </div>
             </div>
-          )}
+          </motion.div>
+
+          {/* Services Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mb-12"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-medium">Connected Services</h2>
+              {connectedServices && (
+                <span className="text-base text-muted-foreground">
+                  {connectedServices.length} connected
+                </span>
+              )}
+            </div>
+            <div>
+              <ServicesGrid />
+            </div>
+          </motion.div>
         </div>
       </div>
     </ResponsiveContainer>
