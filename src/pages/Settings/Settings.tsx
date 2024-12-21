@@ -21,6 +21,7 @@ import {
   User,
 } from 'lucide-react';
 import { MobileSettings } from './MobileSettings';
+import { format } from 'date-fns';
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -59,10 +60,43 @@ export default function Settings() {
         {
           id: 'profile',
           icon: User,
-          title:
-            user.user_metadata?.display_name || user.email || 'Your Account',
-          subtitle: user.email,
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
+          content: (
+            <div className="w-full p-6">
+              <div className="flex items-start gap-6">
+                <div className="rounded-full bg-primary/10 p-4 hidden md:flex">
+                  <User className="h-12 w-12 text-primary" />
+                </div>
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <h3 className="text-xl font-semibold">
+                      {user.user_metadata?.display_name || 'User'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">Member since:</p>
+                      <p className="text-sm">
+                        {format(new Date(user.created_at), 'MMMM d, yyyy')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">Status:</p>
+                      <p className="text-sm">Free Plan</p>
+                    </div>
+                  </div>
+                  <div className="pt-4 flex items-center gap-4">
+                    <Button variant="outline" size="sm">
+                      Edit Profile
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Upgrade Plan
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ),
         },
       ],
     },
@@ -158,10 +192,10 @@ export default function Settings() {
   return (
     <ResponsiveContainer mobileContent={<MobileSettings />}>
       <div className="min-h-screen bg-background">
-        <div className="container max-w-2xl py-8 px-4">
-          <h1 className="text-2xl font-medium mb-8">Settings</h1>
+        <div className="container max-w-[1200px] py-12 px-4">
+          <h1 className="text-2xl font-medium mb-12">Settings</h1>
 
-          <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {settingsSections.map((section, sectionIndex) => (
               <motion.div
                 key={section.title}
@@ -169,7 +203,7 @@ export default function Settings() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: sectionIndex * 0.1 }}
               >
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-2">
                   <section.icon className="h-5 w-5 text-primary" />
                   <h2 className="font-medium">{section.title}</h2>
                 </div>
@@ -184,20 +218,28 @@ export default function Settings() {
                         transition={{
                           delay: sectionIndex * 0.1 + itemIndex * 0.05,
                         }}
-                        className="flex items-center justify-between p-4"
+                        className={`hover:bg-muted/50 transition-colors ${
+                          item.content ? '' : 'flex items-center justify-between p-4'
+                        }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="rounded-full bg-primary/10 p-2">
-                            <item.icon className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{item.title}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {item.subtitle}
-                            </p>
-                          </div>
-                        </div>
-                        {item.action}
+                        {item.content ? (
+                          item.content
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-full bg-primary/10 p-2">
+                                <item.icon className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{item.title}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {item.subtitle}
+                                </p>
+                              </div>
+                            </div>
+                            {item.action}
+                          </>
+                        )}
                       </motion.div>
                     ))}
                   </div>

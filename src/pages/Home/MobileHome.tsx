@@ -33,21 +33,32 @@ export function MobileHome() {
           </p>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Quick Stats */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="grid grid-cols-2 gap-4 mb-8"
+          className="mb-8"
         >
-          <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors">
-            <PlusCircle className="h-6 w-6 mb-2 text-primary" />
-            <span className="text-sm font-medium">Add Service</span>
-          </button>
-          <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors">
-            <Music2 className="h-6 w-6 mb-2 text-primary" />
-            <span className="text-sm font-medium">Browse Music</span>
-          </button>
+          <h2 className="text-xl font-medium mb-4">Quick Stats</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col items-start p-4">
+              <div className="text-3xl font-semibold text-primary mb-1">12h</div>
+              <div className="text-sm text-muted-foreground">Listened this week</div>
+            </div>
+            <div className="flex flex-col items-start p-4">
+              <div className="text-3xl font-semibold text-primary mb-1">Rock</div>
+              <div className="text-sm text-muted-foreground">Top Genre</div>
+            </div>
+            <div className="flex flex-col items-start p-4">
+              <div className="text-3xl font-semibold text-primary mb-1">142</div>
+              <div className="text-sm text-muted-foreground">Unique Tracks</div>
+            </div>
+            <div className="flex flex-col items-start p-4">
+              <div className="text-3xl font-semibold text-primary mb-1">5</div>
+              <div className="text-sm text-muted-foreground">Day Streak</div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Services Section */}
