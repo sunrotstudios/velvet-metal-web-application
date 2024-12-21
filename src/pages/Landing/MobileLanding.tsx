@@ -2,7 +2,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
 import { motion } from 'framer-motion';
@@ -179,6 +185,9 @@ export function MobileLanding({ features }: MobileLandingProps) {
                 side="bottom"
                 className="h-[60vh] focus:outline-none"
               >
+                <SheetHeader>
+                  <SheetTitle className="sr-only">Create an Account</SheetTitle>
+                </SheetHeader>
                 <motion.div
                   drag="y"
                   dragConstraints={{ top: 0, bottom: 0 }}

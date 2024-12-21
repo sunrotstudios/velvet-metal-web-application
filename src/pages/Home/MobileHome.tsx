@@ -3,6 +3,7 @@ import { getUserServices } from '@/lib/services/streaming-auth';
 import { ServicesGrid } from '@/shared/services/ServicesGrid';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { Music2, PlusCircle } from 'lucide-react';
 
 export function MobileHome() {
   const { user } = useAuth();
@@ -13,81 +14,61 @@ export function MobileHome() {
   });
 
   return (
-    <div className="h-full w-full overflow-auto">
-      <div className="flex min-h-full flex-col items-center justify-center px-4 py-12">
-        {/* Hero Section */}
+    <div className="min-h-screen bg-background">
+      <div className="px-4 py-8">
+        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="max-w-3xl text-center mb-6"
+          className="mb-8"
         >
-          <h1 className="text-4xl font-bold tracking-tight text-primary">
-            Welcome
+          <h1 className="text-3xl font-medium text-primary mb-2">
             {user?.user_metadata?.display_name
-              ? `, ${user.user_metadata.display_name}`
-              : ''}
-            ! 👋
+              ? `Hi ${user.user_metadata.display_name}`
+              : 'Welcome'}
           </h1>
+          <p className="text-muted-foreground text-sm">
+            Manage your music, all in one place
+          </p>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="grid grid-cols-2 gap-4 mb-8"
+        >
+          <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors">
+            <PlusCircle className="h-6 w-6 mb-2 text-primary" />
+            <span className="text-sm font-medium">Add Service</span>
+          </button>
+          <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors">
+            <Music2 className="h-6 w-6 mb-2 text-primary" />
+            <span className="text-sm font-medium">Browse Music</span>
+          </button>
         </motion.div>
 
         {/* Services Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-4xl rounded-xl bg-card shadow-lg"
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-8"
         >
-          <div className="p-6">
-            <div className="mb-6 text-center">
-              <h2 className="text-2xl font-bold">
-                Connect Your Music Services
-              </h2>
-            </div>
-
-            <ServicesGrid />
-
-            {connectedServices && connectedServices.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="mt-6 text-center"
-              >
-                <p className="text-sm text-muted-foreground">
-                  Connected Services: {connectedServices.length}
-                </p>
-              </motion.div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-medium">Connected Services</h2>
+            {connectedServices && (
+              <span className="text-sm text-muted-foreground">
+                {connectedServices.length} connected
+              </span>
             )}
           </div>
+          <div className="rounded-xl bg-card shadow-sm border border-border/50">
+            <ServicesGrid />
+          </div>
         </motion.div>
-
-        {/* Additional Info Section */}
-        <div className="w-full max-w-4xl mt-6 space-y-4 px-4">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="p-4 rounded-lg bg-card shadow"
-          >
-            <h3 className="font-semibold mb-2">Quick Start</h3>
-            <p className="text-sm text-muted-foreground">
-              Connect your first music service to start managing your library
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-            className="p-4 rounded-lg bg-card shadow"
-          >
-            <h3 className="font-semibold mb-2">Need Help?</h3>
-            <p className="text-sm text-muted-foreground">
-              Check out our guide on how to get started with Velvet Metal
-            </p>
-          </motion.div>
-        </div>
       </div>
     </div>
   );

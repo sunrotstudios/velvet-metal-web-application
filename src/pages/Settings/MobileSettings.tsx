@@ -3,26 +3,22 @@ import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
 import { useLastFm } from '@/contexts/last-fm-context';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
-import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { ServiceConnection } from '@/shared/services/ServiceConnection';
 import { motion } from 'framer-motion';
 import {
-  Bell,
   ChevronRight,
   Cloud,
   ExternalLink,
   HelpCircle,
   LogOut,
-  Moon,
   Music,
   Music2,
   Radio,
   Trash2,
   User,
 } from 'lucide-react';
-import { MobileSettings } from './MobileSettings';
 
-export default function Settings() {
+export function MobileSettings() {
   const { user, logout } = useAuth();
   const { data: connectedServices } = useConnectedServices();
   const { username: lastFmUsername } = useLastFm();
@@ -81,19 +77,7 @@ export default function Settings() {
         action: <ServiceConnection service={service.type} />,
       })),
     },
-    {
-      title: 'Preferences',
-      icon: Moon,
-      items: [
-        {
-          id: 'notifications',
-          icon: Bell,
-          title: 'Notifications',
-          subtitle: 'Manage your notification preferences',
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
-        },
-      ],
-    },
+
     {
       title: 'Support',
       icon: HelpCircle,
@@ -156,57 +140,52 @@ export default function Settings() {
   ];
 
   return (
-    <ResponsiveContainer mobileContent={<MobileSettings />}>
-      <div className="min-h-screen bg-background">
-        <div className="container max-w-2xl py-8 px-4">
-          <h1 className="text-2xl font-medium mb-8">Settings</h1>
+    <div className="h-full overflow-y-auto bg-background">
+      <div className="divide-y">
+        {settingsSections.map((section, sectionIndex) => (
+          <motion.div
+            key={section.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: sectionIndex * 0.1 }}
+            className="px-4 py-4"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <section.icon className="h-5 w-5 text-primary" />
+              <h2 className="font-medium">{section.title}</h2>
+            </div>
 
-          <div className="space-y-8">
-            {settingsSections.map((section, sectionIndex) => (
-              <motion.div
-                key={section.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: sectionIndex * 0.1 }}
-              >
-                <div className="flex items-center gap-2 mb-4">
-                  <section.icon className="h-5 w-5 text-primary" />
-                  <h2 className="font-medium">{section.title}</h2>
-                </div>
-
-                <Card>
-                  <div className="divide-y">
-                    {section.items.map((item, itemIndex) => (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{
-                          delay: sectionIndex * 0.1 + itemIndex * 0.05,
-                        }}
-                        className="flex items-center justify-between p-4"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="rounded-full bg-primary/10 p-2">
-                            <item.icon className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{item.title}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {item.subtitle}
-                            </p>
-                          </div>
-                        </div>
-                        {item.action}
-                      </motion.div>
-                    ))}
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+            <Card>
+              <div className="divide-y">
+                {section.items.map((item, itemIndex) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      delay: sectionIndex * 0.1 + itemIndex * 0.05,
+                    }}
+                    className="flex items-center justify-between p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-full bg-primary/10 p-2">
+                        <item.icon className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{item.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {item.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    {item.action}
+                  </motion.div>
+                ))}
+              </div>
+            </Card>
+          </motion.div>
+        ))}
       </div>
-    </ResponsiveContainer>
+    </div>
   );
 }
