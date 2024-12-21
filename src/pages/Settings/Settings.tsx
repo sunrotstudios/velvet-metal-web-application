@@ -1,9 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { ServiceConnection } from '@/components/ServiceConnection';
-import { Music, Music2, Radio } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { useLastFm } from '@/contexts/last-fm-context';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
-import { useLastFm } from '@/contexts/LastFmContext';
+import { ServiceConnection } from '@/shared/services/ServiceConnection';
+import { Music, Music2, Radio } from 'lucide-react';
 
 export function Settings() {
   const { user } = useAuth();
@@ -39,7 +39,7 @@ export function Settings() {
   return (
     <div className="container max-w-2xl py-8">
       <h1 className="text-2xl font-semibold mb-6">Settings</h1>
-      
+
       <div className="space-y-6">
         <div>
           <h2 className="text-lg font-medium mb-4">Connected Services</h2>

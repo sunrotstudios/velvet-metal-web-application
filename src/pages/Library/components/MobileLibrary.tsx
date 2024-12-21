@@ -1,5 +1,3 @@
-import { AlbumCard } from '@/components/Library/AlbumCard';
-import { PlaylistCard } from '@/components/Library/PlaylistCard';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import {
@@ -20,6 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Album, Playlist, ServiceType, ViewMode } from '@/lib/types';
 import { LayoutGrid, List, Settings2 } from 'lucide-react';
 import { memo } from 'react';
+import { AlbumCard } from '../components/Albums/AlbumCard';
+import { PlaylistCard } from '../components/Playlists/PlaylistCard';
 
 interface MobileLibraryProps {
   isLoading: boolean;
@@ -167,7 +167,10 @@ export function MobileLibrary({
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto h-[calc(100vh-13rem)]">
-            <TabsContent value="albums" className="m-0 data-[state=active]:h-full">
+            <TabsContent
+              value="albums"
+              className="m-0 data-[state=active]:h-full"
+            >
               {viewMode === 'grid' ? (
                 <div className="p-4 grid grid-cols-2 gap-4">
                   {albums.map((album) => (
@@ -196,7 +199,10 @@ export function MobileLibrary({
               )}
             </TabsContent>
 
-            <TabsContent value="playlists" className="m-0 data-[state=active]:h-full">
+            <TabsContent
+              value="playlists"
+              className="m-0 data-[state=active]:h-full"
+            >
               {viewMode === 'grid' ? (
                 <div className="p-4 grid grid-cols-2 gap-4">
                   {playlists.map((playlist) => (

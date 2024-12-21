@@ -1,4 +1,4 @@
-import blackLogo from '../../public/black-logo.png';
+import blackLogo from '../../../public/black-logo.png';
 
 interface LogoProps {
   className?: string;

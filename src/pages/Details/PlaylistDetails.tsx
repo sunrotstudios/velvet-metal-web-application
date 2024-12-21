@@ -1,14 +1,14 @@
-import { TransferPlaylistModal } from '@/components/TransferPlaylistModal';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useAuth } from '@/contexts/auth-context';
 import { usePlaylistDetails } from '@/lib/hooks/usePlaylistQueries';
 import { formatDuration } from '@/lib/utils';
+import { MobilePlaylistDetails } from '@/pages/Details/MobilePlaylistDetails';
+import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
+import { TransferPlaylistModal } from '@/shared/modals/PlaylistTransferModal';
 import { ArrowLeft, Clock, Play, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
-import { MobilePlaylistDetails } from '@/components/Details/MobilePlaylistDetails';
 
 export default function PlaylistDetails() {
   const { id } = useParams<{ id: string }>();
@@ -196,8 +196,8 @@ export default function PlaylistDetails() {
                     </td>
                     <td className="px-4 py-2">{track.name}</td>
                     <td className="px-4 py-2">
-                      {playlist.service === 'spotify' 
-                        ? track.artists.map(a => a.name).join(', ')
+                      {playlist.service === 'spotify'
+                        ? track.artists.map((a) => a.name).join(', ')
                         : track.artist.name}
                     </td>
                     <td className="px-4 py-2">{track.album?.name}</td>

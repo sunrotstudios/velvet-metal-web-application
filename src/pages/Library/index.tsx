@@ -1,26 +1,26 @@
-import { ExportLibraryDialog } from '@/components/ExportLibraryDialog';
-import { AlbumCard } from '@/components/Library/AlbumCard';
-import { PlaylistCard } from '@/components/Library/PlaylistCard';
-import { LibrarySkeleton } from '@/components/LibrarySkeleton';
-import { TransferPlaylistModal } from '@/components/TransferPlaylistModal';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Tabs } from '@/components/ui/tabs';
-import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { useAuth } from '@/contexts/auth-context';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useFilters } from '@/hooks/useFilters';
 import { getStoredLibrary, syncLibrary } from '@/lib/services';
 import { getUserServices } from '@/lib/services/streaming-auth';
 import { Playlist, ServiceType, ViewMode } from '@/lib/types';
+import { LibrarySkeleton } from '@/pages/Library/components/LibrarySkeleton';
+import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
+import { ExportLibraryDialog } from '@/shared/modals/ExportLibraryDialog';
+import { TransferPlaylistModal } from '@/shared/modals/PlaylistTransferModal';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { memo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { MobileLibrary } from './components/MobileLibrary';
+import { AlbumCard } from './components/Albums/AlbumCard';
+import { AlbumsTab } from './components/AlbumsTab';
 import { Controls } from './components/Controls';
 import { Header } from './components/Header';
+import { MobileLibrary } from './components/MobileLibrary';
+import { PlaylistCard } from './components/Playlists/PlaylistCard';
 import { PlaylistsTab } from './components/PlaylistsTab';
-import { AlbumsTab } from './components/AlbumsTab';
 
 export default function Library() {
   const navigate = useNavigate();

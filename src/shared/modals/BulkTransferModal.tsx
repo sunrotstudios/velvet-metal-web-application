@@ -9,17 +9,23 @@ import {
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { transferPlaylist, transferAlbum } from '@/lib/services/transfer';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { getServiceAuth } from '@/lib/services/streaming-auth';
+import { transferAlbum, transferPlaylist } from '@/lib/services/transfer';
 import { cn } from '@/lib/utils';
-import { AlertCircle, CheckCircle2, Loader2, Music, Music2, XCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, Music, Music2, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ScrollArea } from './ui/scroll-area';
 
 interface TransferProgress {
   itemId: string;
-  stage: 'fetching' | 'creating' | 'searching' | 'adding' | 'complete' | 'error';
+  stage:
+    | 'fetching'
+    | 'creating'
+    | 'searching'
+    | 'adding'
+    | 'complete'
+    | 'error';
   progress: number;
   message: string;
   destinationName?: string;
@@ -46,14 +52,16 @@ export function BulkTransferModal({
   onTransferComplete,
 }: BulkTransferModalProps) {
   const [isTransferring, setIsTransferring] = useState(false);
-  const [progress, setProgress] = useState<Record<string, TransferProgress>>({});
-  const [destinationService, setDestinationService] = useState<'spotify' | 'apple-music'>(
-    sourceService === 'spotify' ? 'apple-music' : 'spotify'
+  const [progress, setProgress] = useState<Record<string, TransferProgress>>(
+    {}
   );
+  const [destinationService, setDestinationService] = useState<
+    'spotify' | 'apple-music'
+  >(sourceService === 'spotify' ? 'apple-music' : 'spotify');
 
   const handleTransfer = async () => {
     setIsTransferring(true);
-    
+
     try {
       const sourceTokenData = await getServiceAuth(userId, sourceService);
       const targetTokenData = await getServiceAuth(userId, destinationService);
@@ -65,11 +73,17 @@ export function BulkTransferModal({
 
       // Store tokens in localStorage for the transfer process
       if (sourceService === 'spotify') {
-        localStorage.setItem('spotify_access_token', sourceTokenData.accessToken);
+        localStorage.setItem(
+          'spotify_access_token',
+          sourceTokenData.accessToken
+        );
         localStorage.setItem('apple_music_token', targetTokenData.accessToken);
       } else {
         localStorage.setItem('apple_music_token', sourceTokenData.accessToken);
-        localStorage.setItem('spotify_access_token', targetTokenData.accessToken);
+        localStorage.setItem(
+          'spotify_access_token',
+          targetTokenData.accessToken
+        );
       }
 
       // Transfer items in parallel with a limit
@@ -134,7 +148,10 @@ export function BulkTransferModal({
                   stage: 'error',
                   progress: 0,
                   message: 'Transfer failed',
-                  error: error instanceof Error ? error.message : 'Unknown error occurred',
+                  error:
+                    error instanceof Error
+                      ? error.message
+                      : 'Unknown error occurred',
                 },
               }));
             }
@@ -151,20 +168,27 @@ export function BulkTransferModal({
     }
   };
 
-  const allComplete = Object.keys(progress).length > 0 && Object.values(progress).every(
-    (p) => p.stage === 'complete' || p.stage === 'error'
-  );
+  const allComplete =
+    Object.keys(progress).length > 0 &&
+    Object.values(progress).every(
+      (p) => p.stage === 'complete' || p.stage === 'error'
+    );
 
   const totalProgress =
-    Object.values(progress).reduce((sum, p) => sum + p.progress, 0) / items.length;
+    Object.values(progress).reduce((sum, p) => sum + p.progress, 0) /
+    items.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Transfer {items.length} {itemType === 'playlist' ? 'Playlists' : 'Albums'}</DialogTitle>
+          <DialogTitle>
+            Transfer {items.length}{' '}
+            {itemType === 'playlist' ? 'Playlists' : 'Albums'}
+          </DialogTitle>
           <DialogDescription>
-            Choose where you want to transfer your {itemType === 'playlist' ? 'playlists' : 'albums'}
+            Choose where you want to transfer your{' '}
+            {itemType === 'playlist' ? 'playlists' : 'albums'}
           </DialogDescription>
         </DialogHeader>
 
@@ -221,7 +245,9 @@ export function BulkTransferModal({
           </div>
 
           <div className="space-y-4">
-            <Label>Selected {itemType === 'playlist' ? 'Playlists' : 'Albums'}</Label>
+            <Label>
+              Selected {itemType === 'playlist' ? 'Playlists' : 'Albums'}
+            </Label>
             <ScrollArea className="h-[200px] rounded-md border">
               <div className="grid grid-cols-6 gap-2 p-2">
                 {items.map((item) => (
@@ -248,7 +274,9 @@ export function BulkTransferModal({
                           ) : progress[item.id].stage === 'error' ? (
                             <div className="flex flex-col items-center gap-0.5">
                               <XCircle className="h-4 w-4 text-red-500" />
-                              <span className="text-[10px] text-red-400">Failed</span>
+                              <span className="text-[10px] text-red-400">
+                                Failed
+                              </span>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center gap-1">
@@ -284,7 +312,8 @@ export function BulkTransferModal({
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Transferring {items.length} {itemType === 'playlist' ? 'playlists' : 'albums'}...
+                Transferring {items.length}{' '}
+                {itemType === 'playlist' ? 'playlists' : 'albums'}...
               </p>
             </div>
           ) : (

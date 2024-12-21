@@ -1,6 +1,6 @@
-import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Sidebar } from '@/shared/layouts/Sidebar';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';

@@ -1,6 +1,6 @@
-import { ServicesGrid } from '@/components/ServicesGrid';
 import { useAuth } from '@/contexts/auth-context';
 import { getUserServices } from '@/lib/services/streaming-auth';
+import { ServicesGrid } from '@/shared/services/ServicesGrid';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 

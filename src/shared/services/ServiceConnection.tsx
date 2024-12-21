@@ -1,22 +1,19 @@
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/auth-context';
+import { useLastFm } from '@/contexts/last-fm-context';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
 import {
   authorizeAppleMusic,
   unauthorizeAppleMusic,
 } from '@/lib/services/apple-music-auth';
+import { authorizeLastFm, unauthorizeLastFm } from '@/lib/services/lastfm-auth';
 import {
   authorizeSpotify,
   unauthorizeSpotify,
 } from '@/lib/services/spotify-auth';
-import {
-  authorizeLastFm,
-  unauthorizeLastFm,
-} from '@/lib/services/lastfm-auth';
 import { ServiceType } from '@/lib/services/streaming-auth';
 import { useState } from 'react';
-import { useLastFm } from '@/contexts/LastFmContext';
 
 interface ServiceConnectionProps {
   service: ServiceType;
@@ -28,10 +25,12 @@ export function ServiceConnection({ service }: ServiceConnectionProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const { data: connectedServices, refetch: refetchConnectedServices } =
     useConnectedServices();
-  const { username: lastFmUsername, setUsername: setLastFmUsername } = useLastFm();
-  const isConnected = service === 'lastfm' 
-    ? !!lastFmUsername 
-    : connectedServices?.includes(service);
+  const { username: lastFmUsername, setUsername: setLastFmUsername } =
+    useLastFm();
+  const isConnected =
+    service === 'lastfm'
+      ? !!lastFmUsername
+      : connectedServices?.includes(service);
 
   const handleConnect = async () => {
     if (!user) {

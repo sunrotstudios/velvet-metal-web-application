@@ -1,5 +1,3 @@
-import { useLastFm } from '@/contexts/LastFmContext';
-
 export async function authorizeLastFm(username: string) {
   localStorage.setItem('lastfm_username', username);
   return true;

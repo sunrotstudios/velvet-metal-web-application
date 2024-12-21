@@ -1,13 +1,13 @@
-import { BulkTransferModal } from '@/components/BulkTransferModal';
-import { PlaylistCard } from '@/components/Library/PlaylistCard';
-import VirtualizedPlaylistGrid from '@/components/Library/VirtualizedPlaylistGrid';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
 import { NormalizedPlaylist, ViewMode } from '@/lib/types';
-import { forwardRef, useImperativeHandle, useState, useEffect } from 'react';
+import { BulkTransferModal } from '@/shared/modals/BulkTransferModal';
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { PlaylistCard } from './Playlists/PlaylistCard';
+import VirtualizedPlaylistGrid from './Playlists/VirtualizedPlaylistGrid';
 
 interface PlaylistsTabProps {
   playlists: NormalizedPlaylist[];

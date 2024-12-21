@@ -1,23 +1,23 @@
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { getSpotifyAlbumDetails } from '@/lib/api/spotify';
-import { AlbumTrack, DetailedAlbum } from '@/lib/types';
+import { useAuth } from '@/contexts/auth-context';
+import { useAlbumDetails } from '@/lib/hooks/useAlbumQueries';
+import { AlbumTrack } from '@/lib/types';
 import { formatDuration } from '@/lib/utils';
+import { MobileAlbumDetails } from '@/pages/Details/MobileAlbumDetails';
+import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { ArrowLeft, Clock, Play, Plus } from 'lucide-react';
 import { useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth-context';
-import { getServiceAuth } from '@/lib/services/streaming-auth';
-import { useAlbumDetails } from '@/lib/hooks/useAlbumQueries';
-import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
-import { MobileAlbumDetails } from '@/components/Details/MobileAlbumDetails';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 export default function AlbumDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const location = useLocation();
-  const service = location.state?.service || (id?.startsWith('l.') ? 'apple-music' : 'spotify');
+  const service =
+    location.state?.service ||
+    (id?.startsWith('l.') ? 'apple-music' : 'spotify');
 
   useEffect(() => {
     if (!user) {
@@ -61,9 +61,7 @@ export default function AlbumDetails() {
   }
 
   return (
-    <ResponsiveContainer
-      mobileContent={<MobileAlbumDetails album={album} />}
-    >
+    <ResponsiveContainer mobileContent={<MobileAlbumDetails album={album} />}>
       {/* Desktop Layout */}
       <div className="flex flex-col h-full">
         <div className="flex flex-col space-y-8 p-8">
@@ -89,7 +87,9 @@ export default function AlbumDetails() {
             <div className="flex flex-col justify-end space-y-4">
               <div>
                 <h1 className="text-4xl font-bold">{album.name}</h1>
-                <p className="text-xl text-muted-foreground">{album.artistName}</p>
+                <p className="text-xl text-muted-foreground">
+                  {album.artistName}
+                </p>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>{new Date(album.releaseDate).getFullYear()}</span>

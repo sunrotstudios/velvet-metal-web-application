@@ -175,95 +175,112 @@ export function MobileLanding({ features }: MobileLandingProps) {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[90vh]">
-                <div className="mt-4 px-2">
-                  <Tabs defaultValue="register" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="register">Register</TabsTrigger>
-                      <TabsTrigger value="login">Login</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="register" className="mt-4">
-                      <Card className="p-6">
-                        <form onSubmit={handleRegister} className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="register-email">Email</Label>
-                            <Input
-                              id="register-email"
-                              name="email"
-                              type="email"
-                              placeholder="Enter your email"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="register-password">Password</Label>
-                            <Input
-                              id="register-password"
-                              name="password"
-                              type="password"
-                              placeholder="Choose a password"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="confirm-password">
-                              Confirm Password
-                            </Label>
-                            <Input
-                              id="confirm-password"
-                              name="confirm-password"
-                              type="password"
-                              placeholder="Confirm your password"
-                              required
-                            />
-                          </div>
-                          <Button
-                            className="w-full"
-                            type="submit"
-                            disabled={loading}
-                          >
-                            {loading ? 'Creating account...' : 'Register'}{' '}
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Button>
-                        </form>
-                      </Card>
-                    </TabsContent>
-                    <TabsContent value="login" className="mt-4">
-                      <Card className="p-6">
-                        <form onSubmit={handleLogin} className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                              id="email"
-                              name="email"
-                              type="email"
-                              placeholder="Enter your email"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                              id="password"
-                              name="password"
-                              type="password"
-                              placeholder="Enter your password"
-                              required
-                            />
-                          </div>
-                          <Button
-                            className="w-full"
-                            type="submit"
-                            disabled={loading}
-                          >
-                            {loading ? 'Signing in...' : 'Login'}{' '}
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Button>
-                        </form>
-                      </Card>
-                    </TabsContent>
-                  </Tabs>
-                </div>
+              <SheetContent
+                side="bottom"
+                className="h-[60vh] focus:outline-none"
+              >
+                <motion.div
+                  drag="y"
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={0.2}
+                  onDragEnd={(event, info) => {
+                    if (info.offset.y > 100) {
+                      setSheetOpen(false);
+                    }
+                  }}
+                  className="h-full"
+                >
+                  <div className="mt-12 px-2">
+                    <Tabs defaultValue="register" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="register">Register</TabsTrigger>
+                        <TabsTrigger value="login">Login</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="register" className="mt-4">
+                        <Card className="p-6">
+                          <form onSubmit={handleRegister} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="register-email">Email</Label>
+                              <Input
+                                id="register-email"
+                                name="email"
+                                type="email"
+                                placeholder="enter your email"
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="register-password">
+                                Password
+                              </Label>
+                              <Input
+                                id="register-password"
+                                name="password"
+                                type="password"
+                                placeholder="choose a password"
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="confirm-password">
+                                Confirm Password
+                              </Label>
+                              <Input
+                                id="confirm-password"
+                                name="confirm-password"
+                                type="password"
+                                placeholder="confirm your password"
+                                required
+                              />
+                            </div>
+                            <Button
+                              className="w-full"
+                              type="submit"
+                              disabled={loading}
+                            >
+                              {loading ? 'Creating account...' : 'Register'}{' '}
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                          </form>
+                        </Card>
+                      </TabsContent>
+                      <TabsContent value="login" className="mt-4">
+                        <Card className="p-6">
+                          <form onSubmit={handleLogin} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="email">Email</Label>
+                              <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="enter your email"
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="password">Password</Label>
+                              <Input
+                                id="password"
+                                name="password"
+                                type="password"
+                                placeholder="enter your password"
+                                required
+                              />
+                            </div>
+                            <Button
+                              className="w-full"
+                              type="submit"
+                              disabled={loading}
+                            >
+                              {loading ? 'Signing in...' : 'Login'}{' '}
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                          </form>
+                        </Card>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                </motion.div>
               </SheetContent>
             </Sheet>
           </motion.div>
@@ -273,13 +290,15 @@ export function MobileLanding({ features }: MobileLandingProps) {
       {/* Footer */}
       <footer className="border-t py-6 px-4">
         <div className="text-center text-sm text-muted-foreground">
-          <p> 2024 Velvet Metal. All rights reserved.</p>
           <div className="mt-2 space-x-4">
             <Link to="/privacy" className="hover:text-primary">
               Privacy
             </Link>
             <Link to="/terms" className="hover:text-primary">
               Terms
+            </Link>
+            <Link to="/terms" className="hover:text-primary">
+              Docs
             </Link>
           </div>
         </div>
