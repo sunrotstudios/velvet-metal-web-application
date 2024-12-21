@@ -330,13 +330,8 @@ export default function Landing() {
                 to="/contact"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                Contact
+                Lush Rust Studios
               </Link>
-            </div>
-            <div className="text-center mt-4">
-              <p className="text-sm text-muted-foreground">
-                {new Date().getFullYear()} Lush Rust Studios
-              </p>
             </div>
           </div>
         </footer>

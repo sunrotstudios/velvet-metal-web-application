@@ -1,4 +1,3 @@
-import Layout from '@/components/Layout';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/auth-context';
 import { LastFmProvider } from '@/contexts/last-fm-context';
@@ -13,6 +12,7 @@ import Library from '@/pages/Library/index';
 import Settings from '@/pages/Settings/Settings';
 import LastFmDashboard from '@/pages/Stats/LastFmDashboard';
 import TransferHistory from '@/pages/TransferHistory';
+import Layout from '@/shared/layouts/Layout';
 import ProtectedRoute from '@/shared/layouts/ProtectedRoute';
 import { ThemeProvider } from '@/shared/layouts/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

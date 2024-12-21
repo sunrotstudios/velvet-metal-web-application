@@ -1,8 +1,8 @@
-import { ServicesGrid } from '@/components/ServicesGrid';
 import { useAuth } from '@/contexts/auth-context';
 import { getUserServices } from '@/lib/services/streaming-auth';
 import { MobileHome } from '@/pages/Home/MobileHome';
 import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
+import { ServicesGrid } from '@/shared/services/ServicesGrid';
 import { useQuery } from '@tanstack/react-query';
 
 export default function Home() {

@@ -1,10 +1,10 @@
-import { MobileAlbumDetails } from '@/components/Details/MobileAlbumDetails';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useAuth } from '@/contexts/auth-context';
 import { useAlbumDetails } from '@/lib/hooks/useAlbumQueries';
 import { AlbumTrack } from '@/lib/types';
 import { formatDuration } from '@/lib/utils';
+import { MobileAlbumDetails } from '@/pages/Details/MobileAlbumDetails';
 import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { ArrowLeft, Clock, Play, Plus } from 'lucide-react';
 import { useEffect } from 'react';

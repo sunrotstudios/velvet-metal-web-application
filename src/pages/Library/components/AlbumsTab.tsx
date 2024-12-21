@@ -1,13 +1,13 @@
-import VirtualizedAlbumGrid from '@/components/Library/VirtualizedAlbumGrid';
-import { AlbumListHeader } from '@/components/Library/AlbumListHeader';
-import { TabsContent } from '@/components/ui/tabs';
-import { NormalizedAlbum, ViewMode } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { BulkTransferModal } from '@/components/BulkTransferModal';
+import { TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
-import { forwardRef, useImperativeHandle, useState, useEffect } from 'react';
+import { NormalizedAlbum, ViewMode } from '@/lib/types';
+import { BulkTransferModal } from '@/shared/modals/BulkTransferModal';
+import { Loader2 } from 'lucide-react';
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { AlbumListHeader } from './Albums/AlbumListHeader';
+import VirtualizedAlbumGrid from './Albums/VirtualizedAlbumGrid';
 
 interface AlbumsTabProps {
   isLoading: boolean;
@@ -24,20 +24,22 @@ interface AlbumsTabHandle {
 }
 
 export const AlbumsTab = forwardRef<AlbumsTabHandle, AlbumsTabProps>(
-  ({
-    isLoading,
-    isError,
-    albums,
-    filteredAlbums,
-    viewMode,
-    ItemComponent,
-    isSelectionMode,
-  }: AlbumsTabProps,
+  (
+    {
+      isLoading,
+      isError,
+      albums,
+      filteredAlbums,
+      viewMode,
+      ItemComponent,
+      isSelectionMode,
+    }: AlbumsTabProps,
     ref
   ) => {
     const { user } = useAuth();
     const [selectedAlbums, setSelectedAlbums] = useState<NormalizedAlbum[]>([]);
-    const [isBulkTransferModalOpen, setIsBulkTransferModalOpen] = useState(false);
+    const [isBulkTransferModalOpen, setIsBulkTransferModalOpen] =
+      useState(false);
 
     useEffect(() => {
       if (!isSelectionMode) {
@@ -101,7 +103,9 @@ export const AlbumsTab = forwardRef<AlbumsTabHandle, AlbumsTabProps>(
                       }}
                       className="h-5 w-5 rounded-sm border-2"
                     />
-                    <span className="text-sm font-medium">Select All ({filteredAlbums.length} albums)</span>
+                    <span className="text-sm font-medium">
+                      Select All ({filteredAlbums.length} albums)
+                    </span>
                   </div>
                   {selectedAlbums.length > 0 && (
                     <div className="flex items-center gap-2">

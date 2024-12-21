@@ -1,8 +1,8 @@
-import { ServiceConnection } from '@/components/ServiceConnection';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
 import { useLastFm } from '@/contexts/last-fm-context';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
+import { ServiceConnection } from '@/shared/services/ServiceConnection';
 import { Music, Music2, Radio } from 'lucide-react';
 
 export function Settings() {

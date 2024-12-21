@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
 import { authorizeAppleMusic } from '@/lib/services/apple-music-auth';
@@ -6,7 +7,6 @@ import { authorizeSpotify } from '@/lib/services/spotify-auth';
 import { ServiceType } from '@/lib/services/streaming-auth';
 import { cn } from '@/lib/utils';
 import { AppleIcon, Music2, Waves } from 'lucide-react';
-import { useToast } from './ui/use-toast';
 
 const services = [
   {

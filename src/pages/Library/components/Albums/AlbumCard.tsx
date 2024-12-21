@@ -1,15 +1,14 @@
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ViewMode } from '@/lib/types';
-import { cn } from '@/lib/utils';
-import { Play } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '../ui/button';
-import { ArrowLeftRight } from 'lucide-react';
-import { useState } from 'react';
-import { AlbumTransferModal } from '../AlbumTransferModal';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/auth-context';
 import { usePrefetchAlbum } from '@/lib/hooks/useAlbumQueries';
-import { Checkbox } from '../ui/checkbox';
+import { ViewMode } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import { AlbumTransferModal } from '@/shared/modals/AlbumTransferModal';
+import { ArrowLeftRight, Play } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface AlbumCardProps {
   album: {
@@ -30,8 +29,8 @@ interface AlbumCardProps {
   isSelected?: boolean;
 }
 
-export const AlbumCard = ({ 
-  album, 
+export const AlbumCard = ({
+  album,
   viewMode,
   isSelectionMode,
   onSelect,
@@ -59,7 +58,7 @@ export const AlbumCard = ({
     }
 
     navigate(`/album/${album.album_id}`, {
-      state: { service: album.service }
+      state: { service: album.service },
     });
   };
 
@@ -82,17 +81,14 @@ export const AlbumCard = ({
     <>
       <Card
         className={cn(
-          "group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-accent cursor-pointer",
-          viewMode === 'list' && "hover:bg-accent/5",
-          isSelected && "bg-accent"
+          'group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-accent cursor-pointer',
+          viewMode === 'list' && 'hover:bg-accent/5',
+          isSelected && 'bg-accent'
         )}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
       >
-        <CardContent className={cn(
-          "p-4",
-          viewMode === 'list' && "px-6 py-3"
-        )}>
+        <CardContent className={cn('p-4', viewMode === 'list' && 'px-6 py-3')}>
           <div
             className={cn(
               'flex',
@@ -157,7 +153,9 @@ export const AlbumCard = ({
             {/* Album Info */}
             {viewMode === 'grid' ? (
               <div className="flex flex-col min-w-0">
-                <h3 className="line-clamp-1 text-sm font-medium">{album.name}</h3>
+                <h3 className="line-clamp-1 text-sm font-medium">
+                  {album.name}
+                </h3>
                 <p className="line-clamp-1 text-xs sm:text-sm text-muted-foreground">
                   {album.artist_name}
                 </p>
@@ -166,7 +164,9 @@ export const AlbumCard = ({
               <div className="flex flex-1 items-center gap-6">
                 {/* Title and Artist */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="line-clamp-1 text-sm font-medium">{album.name}</h3>
+                  <h3 className="line-clamp-1 text-sm font-medium">
+                    {album.name}
+                  </h3>
                   <p className="line-clamp-1 text-sm text-muted-foreground">
                     {album.artist_name}
                   </p>
