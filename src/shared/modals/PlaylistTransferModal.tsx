@@ -10,14 +10,25 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { transferPlaylist } from '@/lib/services/transfer';
-import { getServiceAuth } from '@/lib/services/streaming-auth';
 import { cn } from '@/lib/utils';
-import { AlertCircle, CheckCircle2, Loader2, Music, Music2, XCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Music,
+  Music2,
+  XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 interface TransferProgress {
-  stage: 'fetching' | 'creating' | 'searching' | 'adding' | 'complete' | 'error';
+  stage:
+    | 'fetching'
+    | 'creating'
+    | 'searching'
+    | 'adding'
+    | 'complete'
+    | 'error';
   progress: number; // 0-100
   message: string;
   destinationPlaylistName?: string;
@@ -31,6 +42,17 @@ interface TransferPlaylistModalProps {
   playlist: any;
   userId: string;
   onTransferComplete?: () => void;
+}
+
+function TransferProgress({ progress }: { progress: TransferProgress }) {
+  return (
+    <div className="space-y-4">
+      <Progress value={progress.progress} className="w-full" />
+      <p className="text-center text-sm text-muted-foreground">
+        {progress.message}
+      </p>
+    </div>
+  );
 }
 
 export function TransferPlaylistModal({
@@ -56,57 +78,22 @@ export function TransferPlaylistModal({
     });
 
     try {
-      // Get tokens from the database
-      const sourceTokenData = await getServiceAuth(userId, sourceService);
-      const targetTokenData = await getServiceAuth(userId, targetService);
-
-      if (!sourceTokenData?.accessToken || !targetTokenData?.accessToken) {
-        setProgress({
-          stage: 'error',
-          progress: 0,
-          message: 'Authentication failed',
-          error: 'Missing authentication tokens. Please reconnect your services.',
-        });
-        return;
-      }
-
-      // Store tokens in localStorage for the transfer process
-      if (sourceService === 'spotify') {
-        localStorage.setItem('spotify_access_token', sourceTokenData.accessToken);
-        localStorage.setItem('apple_music_token', targetTokenData.accessToken);
-      } else {
-        localStorage.setItem('apple_music_token', sourceTokenData.accessToken);
-        localStorage.setItem('spotify_access_token', targetTokenData.accessToken);
-      }
-
       const result = await transferPlaylist({
         sourceService,
         targetService,
         playlist,
-        sourceToken: sourceTokenData.accessToken,
-        targetToken: targetTokenData.accessToken,
+        sourceToken: '', // Token will be fetched from database
+        targetToken: '', // Token will be fetched from database
         userId,
         onProgress: (progress) => {
-          if (progress.stage === 'adding' && progress.progress === 100) {
-            setProgress({
-              stage: 'complete',
-              progress: 100,
-              message: 'Transfer complete!',
-            });
-          } else {
-            setProgress(progress);
-          }
+          setProgress(progress);
         },
       });
 
-      // Update progress with the destination playlist name after we have the result
-      setProgress((prev) => prev ? {
-        ...prev,
-        stage: 'complete',
-        progress: 100,
-        message: 'Transfer complete!',
-        destinationPlaylistName: result.name,
-      } : null);
+      // Call onTransferComplete callback if provided
+      if (onTransferComplete) {
+        onTransferComplete();
+      }
 
       setIsTransferring(false);
     } catch (error) {
@@ -115,7 +102,8 @@ export function TransferPlaylistModal({
         stage: 'error',
         progress: 0,
         message: 'Transfer failed',
-        error: error instanceof Error ? error.message : 'An unknown error occurred',
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred',
       });
       setIsTransferring(false);
     }
@@ -134,7 +122,8 @@ export function TransferPlaylistModal({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            Transfer "{playlist.name}" to {targetService === 'apple-music' ? 'Apple Music' : 'Spotify'}
+            Transfer "{playlist.name}" to{' '}
+            {targetService === 'apple-music' ? 'Apple Music' : 'Spotify'}
           </DialogTitle>
           <DialogDescription>
             Choose your transfer settings below
@@ -185,84 +174,14 @@ export function TransferPlaylistModal({
             </div>
           )}
 
-          {progress && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                {progress.stage === 'complete' ? (
-                  <CheckCircle2 className="h-8 w-8 text-green-500 animate-in zoom-in" />
-                ) : progress.stage === 'error' ? (
-                  <XCircle className="h-8 w-8 text-red-500 animate-in zoom-in" />
-                ) : (
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                )}
-                <div className="flex-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground font-medium">
-                      {progress.message}
-                    </span>
-                    {progress.stage !== 'complete' && progress.stage !== 'error' && (
-                      <span className="text-muted-foreground">
-                        {Math.round(progress.progress)}%
-                      </span>
-                    )}
-                  </div>
-                  {progress.stage === 'complete' && progress.destinationPlaylistName && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Created playlist: {progress.destinationPlaylistName}
-                    </p>
-                  )}
-                  {progress.stage === 'error' && progress.error && (
-                    <p className="text-sm text-red-500 mt-1">{progress.error}</p>
-                  )}
-                </div>
-              </div>
-
-              {progress.stage !== 'complete' && progress.stage !== 'error' && (
-                <>
-                  <Progress value={progress.progress} className="h-2" />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={cn('h-2 w-2 rounded-full', {
-                          'bg-primary animate-pulse': progress.stage === 'fetching',
-                          'bg-primary': progress.stage !== 'fetching',
-                        })}
-                      />
-                      Fetching
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={cn('h-2 w-2 rounded-full', {
-                          'bg-primary animate-pulse': progress.stage === 'creating',
-                          'bg-muted': progress.progress < 20,
-                          'bg-primary':
-                            progress.progress >= 20 && progress.stage !== 'creating',
-                        })}
-                      />
-                      Creating
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={cn('h-2 w-2 rounded-full', {
-                          'bg-primary animate-pulse': progress.stage === 'searching',
-                          'bg-muted': progress.progress < 30,
-                          'bg-primary':
-                            progress.progress >= 30 && progress.stage !== 'searching',
-                        })}
-                      />
-                      Processing
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          {progress && <TransferProgress progress={progress} />}
 
           {!progress && (
             <div className="flex items-center gap-2 rounded-md border p-4">
               <AlertCircle className="h-5 w-5 text-yellow-500" />
               <p className="text-sm text-muted-foreground">
-                This process may take a few minutes depending on the playlist size
+                This process may take a few minutes depending on the playlist
+                size
               </p>
             </div>
           )}
@@ -280,9 +199,7 @@ export function TransferPlaylistModal({
                 <Button variant="outline" onClick={handleClose}>
                   Cancel
                 </Button>
-                <Button onClick={handleTransfer}>
-                  Retry
-                </Button>
+                <Button onClick={handleTransfer}>Retry</Button>
               </>
             ) : (
               <>
