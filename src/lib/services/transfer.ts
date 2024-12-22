@@ -9,9 +9,6 @@ import {
 import { addSpotifyAlbumToLibrary, searchSpotifyAlbum } from '../api/spotify';
 import { getServiceAuth, saveServiceAuth } from './streaming-auth';
 
-const APPLE_DEVELOPER_TOKEN =
-  'eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjZLVkRTNjc2NVMifQ.eyJpYXQiOjE3MzE0NTQ2OTEsImV4cCI6MTc0NzAwNjY5MSwiaXNzIjoiRFlXNEFHOTQ0MiJ9.Us6UP86UTEZJtCdyVLlOGGj-hw_pZ4lu4Pk-htEbolgWrph6P_toc9INvLhzVgVlD5ToyiD_m8CssZlPunUGHw';
-
 interface Track {
   name: string;
   artist: string;
@@ -57,9 +54,10 @@ export interface TransferHistoryRecord {
 }
 
 export interface TransferProgress {
-  stage: 'fetching' | 'creating' | 'searching' | 'adding';
+  stage: 'processing' | 'complete';
   progress: number;
   message: string;
+  destinationPlaylistName?: string;
 }
 
 async function delay(ms: number) {
@@ -114,16 +112,17 @@ async function ensureFreshToken(
         'https://api.music.apple.com/v1/me/library/albums',
         {
           headers: {
-            Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+            Authorization: `Bearer ${token}`,
             'Music-User-Token': auth.musicUserToken,
           },
         }
       );
 
       if (!response.ok) {
+        const errorText = await response.text();
         console.error(
           'Apple Music token validation failed:',
-          await response.text()
+          errorText
         );
         throw new Error('Apple Music token validation failed');
       }
@@ -165,19 +164,23 @@ async function retryWithBackoff(
 
 async function createPlaylist(
   service: 'spotify' | 'apple-music',
-  { name, description }: { name: string; description: string },
+  { name, description, imageUrl }: { name: string; description: string; imageUrl?: string },
   token: string,
   userId: string
 ) {
-  const freshToken = await ensureFreshToken(service, token, userId);
+  const auth = await getServiceAuth(userId, service);
+  if (!auth) {
+    throw new Error(`No ${service} authentication found`);
+  }
 
-  console.log(`Creating playlist in ${service}:`, { name, description });
+  console.log(`Creating playlist in ${service}:`, { name, description, imageUrl });
 
   if (service === 'spotify') {
+    // First create the playlist
     const response = await fetch('https://api.spotify.com/v1/me/playlists', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${freshToken}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -195,18 +198,59 @@ async function createPlaylist(
 
     const data = await response.json();
     console.log('Successfully created Spotify playlist:', data);
+
+    // If we have an image URL, upload it to the playlist
+    if (imageUrl) {
+      try {
+        console.log('Fetching image from URL:', imageUrl);
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+          console.error('Failed to fetch image:', await imageResponse.text());
+          return data;
+        }
+
+        const imageBlob = await imageResponse.blob();
+        
+        // Upload the image to Spotify
+        const uploadResponse = await fetch(
+          `https://api.spotify.com/v1/playlists/${data.id}/images`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'image/jpeg',
+            },
+            body: imageBlob,
+          }
+        );
+
+        if (!uploadResponse.ok) {
+          console.error('Failed to upload image:', await uploadResponse.text());
+        } else {
+          console.log('Successfully uploaded playlist image');
+        }
+      } catch (error) {
+        console.error('Error uploading playlist image:', error);
+      }
+    }
+
     return {
       id: data.id,
       name: data.name,
     };
   } else {
+    // For Apple Music we need both the developer token and music user token
+    if (!auth.musicUserToken) {
+      throw new Error('Missing Apple Music user token');
+    }
+
     const response = await fetch(
       'https://api.music.apple.com/v1/me/library/playlists',
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-          'Music-User-Token': token,
+          Authorization: `Bearer ${token}`,
+          'Music-User-Token': auth.musicUserToken,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -221,11 +265,16 @@ async function createPlaylist(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Failed to create Apple Music playlist:', errorText);
-      throw new Error('Failed to create Apple Music playlist');
+      throw new Error(`Failed to create Apple Music playlist: ${errorText}`);
     }
 
     const data = await response.json();
     console.log('Successfully created Apple Music playlist:', data);
+    
+    if (!data.data?.[0]?.id) {
+      throw new Error('Invalid response from Apple Music API');
+    }
+    
     return {
       id: data.data[0].id,
       name: data.data[0].attributes.name,
@@ -243,17 +292,38 @@ export async function transferPlaylist({
   userId,
 }: TransferPlaylistParams) {
   let transfer;
+  let newPlaylist;
 
   try {
-    // Get playlist tracks
+    const sourceAuth = await getServiceAuth(userId, sourceService);
+    const targetAuth = await getServiceAuth(userId, targetService);
+
+    if (!sourceAuth || !targetAuth) {
+      throw new Error('Missing authentication tokens. Please reconnect your services.');
+    }
+
+    onProgress?.({
+      stage: 'processing',
+      progress: 0,
+      message: 'Starting transfer...',
+    });
+
+    // Get playlist details including artwork
+    let imageUrl;
+    if (sourceService === 'apple-music' && playlist.attributes?.artwork?.url) {
+      imageUrl = playlist.attributes.artwork.url
+        .replace('{w}', '640')
+        .replace('{h}', '640');
+      console.log('Found Apple Music playlist artwork:', imageUrl);
+    }
+
     const tracks = await getPlaylistTracks(
       sourceService,
       playlist.playlist_id || playlist.id,
-      sourceToken,
+      sourceAuth.accessToken,
       userId
     );
 
-    // Create transfer record with track count
     transfer = await createTransfer(userId, sourceService, targetService, {
       sourcePlaylistId: playlist.playlist_id || playlist.id,
       sourcePlaylistName: playlist.name || playlist.attributes?.name,
@@ -261,54 +331,43 @@ export async function transferPlaylist({
     });
 
     onProgress?.({
-      stage: 'fetching',
-      progress: 0,
-      message: 'Fetching tracks from source playlist...',
+      stage: 'processing',
+      progress: 30,
+      message: 'Creating playlist...',
     });
 
-    onProgress?.({
-      stage: 'fetching',
-      progress: 20,
-      message: `Found ${tracks.length} tracks`,
-    });
-
-    onProgress?.({
-      stage: 'creating',
-      progress: 25,
-      message: 'Creating new playlist in target service...',
-    });
-
-    const newPlaylist = await createPlaylist(
+    newPlaylist = await createPlaylist(
       targetService,
       {
         name: playlist.name || playlist.attributes?.name,
         description: `Transferred from ${sourceService} using Velvet Metal`,
+        imageUrl,
       },
-      targetToken,
+      targetAuth.accessToken,
       userId
     );
 
     await updateTransferStatus(transfer.id, 'in_progress', undefined);
 
     onProgress?.({
-      stage: 'creating',
-      progress: 30,
-      message: 'Playlist created successfully',
+      stage: 'processing',
+      progress: 50,
+      message: 'Transferring tracks...',
     });
 
-    const transferredTracks = await addTracksToPlaylist(
+    await addTracksToPlaylist(
       targetService,
       newPlaylist.id,
       tracks,
-      targetToken,
+      targetAuth.accessToken,
+      userId,
       (current) => {
-        const searchProgress = (current / tracks.length) * 70;
+        const progress = Math.min(50 + (current / tracks.length) * 50, 99);
         onProgress?.({
-          stage: 'searching',
-          progress: Math.min(30 + searchProgress, 99),
-          message: `Processing tracks (${current}/${tracks.length})`,
+          stage: 'processing',
+          progress,
+          message: 'Transferring tracks...',
         });
-
         updateTransferStatus(transfer.id, 'in_progress', undefined);
       }
     );
@@ -316,16 +375,23 @@ export async function transferPlaylist({
     await updateTransferStatus(transfer.id, 'success', undefined);
 
     onProgress?.({
-      stage: 'adding',
+      stage: 'complete',
       progress: 100,
-      message: 'Transfer complete! You can now close this window.',
+      message: 'Transfer complete!',
     });
 
     return newPlaylist;
   } catch (error: any) {
-    if (transfer) {
-      await updateTransferStatus(transfer.id, 'failed', error.message);
+    console.error('Transfer failed:', error);
+
+    if (transfer?.id) {
+      await updateTransferStatus(
+        transfer.id,
+        'failed',
+        error.message || 'Unknown error occurred'
+      );
     }
+
     throw error;
   }
 }
@@ -374,8 +440,8 @@ async function getPlaylistTracks(
       `https://api.music.apple.com/v1/me/library/playlists/${playlistId}/tracks`,
       {
         headers: {
-          Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-          'Music-User-Token': token,
+          Authorization: `Bearer ${token}`,
+          'Music-User-Token': freshToken,
         },
       }
     );
@@ -407,175 +473,184 @@ async function addTracksToPlaylist(
   playlistId: string,
   tracks: Track[],
   token: string,
+  userId: string,
   onProgress?: (current: number) => void
 ) {
-  const freshToken = await ensureFreshToken(service, token, userId);
+  const auth = await getServiceAuth(userId, service);
+  if (!auth) {
+    throw new Error(`No ${service} authentication found`);
+  }
 
-  console.log(
-    `Starting to add ${tracks.length} tracks to ${service} playlist ${playlistId}`
-  );
+  console.log(`Adding ${tracks.length} tracks to ${service} playlist ${playlistId}`);
+  console.log('Sample of tracks to add:', tracks.slice(0, 3));
 
   if (service === 'spotify') {
-    const trackUris = await Promise.all(
-      tracks.map(async (track, index) => {
-        console.log(`[${index + 1}/${tracks.length}] Searching for track:`, {
-          name: track.name,
-          artist: track.artist,
-          isrc: track.isrc,
-        });
+    // Process tracks in batches of 100 (Spotify API limit)
+    const batchSize = 100;
+    for (let i = 0; i < tracks.length; i += batchSize) {
+      const batch = tracks.slice(i, i + batchSize);
+      
+      // First search for each track to get Spotify URIs
+      const spotifyUris = await Promise.all(
+        batch.map(async (track) => {
+          try {
+            const query = encodeURIComponent(`track:${track.name} artist:${track.artist}`);
+            console.log(`Searching Spotify for: ${track.name} by ${track.artist}`);
+            
+            const searchResponse = await fetch(
+              `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
 
-        const query = track.isrc
-          ? `isrc:${track.isrc}`
-          : `track:${track.name} artist:${track.artist}`;
+            if (!searchResponse.ok) {
+              console.error(`Search failed for track: ${track.name}`, await searchResponse.text());
+              return null;
+            }
 
-        console.log('Search query:', query);
-
-        const response = await fetch(
-          `https://api.spotify.com/v1/search?q=${encodeURIComponent(
-            query
-          )}&type=track&limit=1`,
-          {
-            headers: {
-              Authorization: `Bearer ${freshToken}`,
-            },
+            const data = await searchResponse.json();
+            const uri = data.tracks?.items[0]?.uri;
+            
+            if (uri) {
+              console.log(`✓ Found Spotify track: ${uri} for "${track.name}"`);
+              return uri;
+            } else {
+              console.warn(`✗ No Spotify match found for: ${track.name} by ${track.artist}`);
+              return null;
+            }
+          } catch (error) {
+            console.error(`Error searching for track: ${track.name}`, error);
+            return null;
           }
-        );
+        })
+      );
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Failed to search Spotify track:', errorText);
-          return null;
-        }
+      const validUris = spotifyUris.filter(Boolean);
+      console.log(`Found ${validUris.length}/${batch.length} tracks in this batch`);
 
-        const data = await response.json();
-        const uri = data.tracks.items[0]?.uri;
-        if (uri) {
-          console.log(`✓ Found track: ${uri}`);
-        } else {
-          console.warn(
-            `✗ No match found for: ${track.name} by ${track.artist}`
-          );
-        }
-        return uri;
-      })
-    );
-
-    const validTrackUris = trackUris.filter(Boolean);
-    console.log(
-      `Found ${validTrackUris.length}/${tracks.length} tracks on Spotify`
-    );
-
-    if (validTrackUris.length === 0) {
-      console.warn('No tracks were found to add to the playlist');
-      return;
-    }
-
-    const response = await fetch(
-      `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${freshToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          uris: validTrackUris,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to add tracks to playlist:', errorText);
-      throw new Error('Failed to add tracks to Spotify playlist');
-    }
-
-    console.log('Successfully added tracks to Spotify playlist');
-    return response.json();
-  } else {
-    const trackIds = await Promise.all(
-      tracks.map(async (track, index) => {
-        await delay(1000);
-        return retryWithBackoff(async () => {
-          console.log(`[${index + 1}/${tracks.length}] Searching for track:`, {
-            name: track.name,
-            artist: track.artist,
-            isrc: track.isrc,
-          });
-
-          const query = encodeURIComponent(`${track.name} ${track.artist}`);
+      if (validUris.length > 0) {
+        try {
           const response = await fetch(
-            `https://api.music.apple.com/v1/catalog/us/search?term=${query}&types=songs&limit=1`,
+            `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
             {
+              method: 'POST',
               headers: {
-                Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-                'Music-User-Token': token,
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
               },
+              body: JSON.stringify({
+                uris: validUris,
+              }),
             }
           );
 
           if (!response.ok) {
             const errorText = await response.text();
-            console.error('Failed to search Apple Music track:', errorText);
-            throw new Error(errorText);
+            console.error('Failed to add batch to Spotify playlist:', errorText);
+            throw new Error('Failed to add tracks to Spotify playlist');
           }
 
-          const data = await response.json();
-          const songId = data.results?.songs?.data?.[0]?.id;
-
-          if (songId) {
-            console.log(`✓ Found track: ${songId}`);
-          } else {
-            console.warn(
-              `✗ No match found for: ${track.name} by ${track.artist}`
-            );
-          }
-          return songId;
-        });
-      })
-    );
-
-    const validTrackIds = trackIds.filter(Boolean);
-    console.log(
-      `Found ${validTrackIds.length}/${tracks.length} tracks on Apple Music`
-    );
-
-    if (validTrackIds.length === 0) {
-      console.warn('No tracks were found to add to the playlist');
-      return;
-    }
-
-    return retryWithBackoff(async () => {
-      const response = await fetch(
-        `https://api.music.apple.com/v1/me/library/playlists/${playlistId}/tracks`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-            'Music-User-Token': token,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            data: validTrackIds.map((id) => ({
-              id,
-              type: 'songs',
-            })),
-          }),
+          console.log(`✓ Successfully added ${validUris.length} tracks to Spotify playlist`);
+        } catch (error) {
+          console.error('Error adding tracks to playlist:', error);
+          throw error;
         }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          'Failed to add tracks to Apple Music playlist:',
-          errorText
-        );
-        throw new Error('Failed to add tracks to Apple Music playlist');
       }
 
-      console.log('Successfully added tracks to Apple Music playlist');
-      return { success: true };
-    });
+      onProgress?.(i + batch.length);
+    }
+  } else {
+    // Process tracks in batches for Apple Music
+    const batchSize = 25; // Apple Music allows up to 25 tracks per request
+    for (let i = 0; i < tracks.length; i += batchSize) {
+      const batch = tracks.slice(i, i + batchSize);
+      
+      // Search for each track in the batch
+      const appleMusicTracks = await Promise.all(
+        batch.map(async (track) => {
+          const query = encodeURIComponent(`${track.name} ${track.artist}`);
+          console.log(`Searching Apple Music for: ${track.name} by ${track.artist}`);
+          
+          try {
+            const response = await fetch(
+              `https://api.music.apple.com/v1/catalog/us/search?term=${query}&types=songs&limit=1`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Music-User-Token': auth.musicUserToken,
+                },
+              }
+            );
+
+            if (!response.ok) {
+              console.error(`Search failed for track: ${track.name}`, await response.text());
+              return null;
+            }
+
+            const data = await response.json();
+            const songId = data?.results?.songs?.data?.[0]?.id;
+            
+            if (songId) {
+              console.log(`✓ Found Apple Music track: ${songId} for "${track.name}"`);
+              return {
+                id: songId,
+                type: 'songs',
+              };
+            } else {
+              console.warn(`✗ No Apple Music match found for: ${track.name} by ${track.artist}`);
+              return null;
+            }
+          } catch (error) {
+            console.error(`Error searching for track: ${track.name}`, error);
+            return null;
+          }
+        })
+      );
+
+      const validTracks = appleMusicTracks.filter(Boolean);
+      console.log(`Found ${validTracks.length}/${batch.length} tracks in this batch`);
+
+      if (validTracks.length > 0) {
+        try {
+          // Add the batch of tracks to the playlist
+          const response = await fetch(
+            `https://api.music.apple.com/v1/me/library/playlists/${playlistId}/tracks`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Music-User-Token': auth.musicUserToken,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                data: validTracks,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Failed to add batch to Apple Music playlist:', errorText);
+            throw new Error('Failed to add tracks to Apple Music playlist');
+          }
+
+          console.log(`✓ Successfully added ${validTracks.length} tracks to Apple Music playlist`);
+        } catch (error) {
+          console.error('Error adding tracks to playlist:', error);
+          throw error;
+        }
+      }
+
+      onProgress?.(i + batch.length);
+      
+      // Small delay between batches to avoid rate limiting
+      if (i + batchSize < tracks.length) {
+        await delay(500);
+      }
+    }
   }
 }
 
@@ -590,6 +665,14 @@ export async function transferAlbum({
 }: TransferAlbumParams): Promise<void> {
   let transferId: string;
   try {
+    // Get source and target service tokens
+    const sourceAuth = await getServiceAuth(userId, sourceService);
+    const targetAuth = await getServiceAuth(userId, destinationService);
+
+    if (!sourceAuth || !targetAuth) {
+      throw new Error('Missing authentication tokens. Please reconnect your services.');
+    }
+
     const freshToken = await ensureFreshToken(
       destinationService,
       targetToken,
@@ -597,7 +680,7 @@ export async function transferAlbum({
     );
 
     onProgress?.({
-      stage: 'fetching',
+      stage: 'processing',
       progress: 0,
       message: 'Getting album details...',
     });
@@ -605,7 +688,7 @@ export async function transferAlbum({
     // Get track count from source service
     let trackCount = 0;
     try {
-      const tracks = await getAlbumTracks(sourceService, album.id, sourceToken, userId);
+      const tracks = await getAlbumTracks(sourceService, album.id, sourceAuth.accessToken, userId);
       trackCount = tracks.length;
     } catch (error) {
       console.error('Failed to get track count:', error);
@@ -621,7 +704,7 @@ export async function transferAlbum({
     });
 
     onProgress?.({
-      stage: 'searching',
+      stage: 'processing',
       progress: 25,
       message: 'Searching for album...',
     });
@@ -658,7 +741,7 @@ export async function transferAlbum({
     }
 
     onProgress?.({
-      stage: 'adding',
+      stage: 'processing',
       progress: 50,
       message: 'Adding album to your library...',
     });
@@ -738,7 +821,7 @@ async function getAlbumTracks(
       `https://api.music.apple.com/v1/catalog/us/albums/${albumId}/tracks`,
       {
         headers: {
-          Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+          Authorization: `Bearer ${token}`,
           'Music-User-Token': freshToken,
         },
       }
@@ -851,7 +934,7 @@ async function addTracksToLibrary(
           `https://api.music.apple.com/v1/catalog/us/songs?filter[isrc]=${track.isrc}`,
           {
             headers: {
-              Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+              Authorization: `Bearer ${token}`,
               'Music-User-Token': freshToken,
             },
           }
@@ -870,7 +953,7 @@ async function addTracksToLibrary(
             {
               method: 'POST',
               headers: {
-                Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+                Authorization: `Bearer ${token}`,
                 'Music-User-Token': freshToken,
                 'Content-Type': 'application/json',
               },
@@ -905,7 +988,7 @@ export async function createTransfer(
   sourceService: ServiceType,
   destinationService: ServiceType,
   metadata?: Record<string, any>
-): Promise<string> {
+): Promise<TransferHistoryRecord> {
   const { data, error } = await supabase
     .from('transfers')
     .insert({
@@ -919,30 +1002,52 @@ export async function createTransfer(
     .select()
     .single();
 
-  if (error) throw error;
-  return data.id;
+  if (error) {
+    console.error('Failed to create transfer record:', error);
+    throw error;
+  }
+  
+  if (!data) {
+    throw new Error('Failed to create transfer record: No data returned');
+  }
+
+  return data;
 }
 
 export async function updateTransferStatus(
-  transferId: string,
+  transferId: string | undefined,
   status: Transfer['status'],
   error?: string
 ) {
-  const { data, error: updateError } = await supabase
-    .from('transfers')
-    .update({
-      status,
-      error,
-      ...(status === 'success' || status === 'failed'
-        ? { completed_at: new Date().toISOString() }
-        : {}),
-    })
-    .eq('id', transferId)
-    .select()
-    .single();
+  if (!transferId) {
+    console.error('Cannot update transfer status: No transfer ID provided');
+    return;
+  }
 
-  if (updateError) throw updateError;
-  return data;
+  try {
+    const { data, error: updateError } = await supabase
+      .from('transfers')
+      .update({
+        status,
+        error,
+        ...(status === 'success' || status === 'failed'
+          ? { completed_at: new Date().toISOString() }
+          : {}),
+      })
+      .eq('id', transferId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Failed to update transfer status:', updateError);
+      throw updateError;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error updating transfer status:', error);
+    // Don't throw here to prevent breaking the transfer process
+  }
 }
 
 export async function getRecentTransfers(userId: string) {
