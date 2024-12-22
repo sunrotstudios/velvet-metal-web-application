@@ -18,23 +18,18 @@ export async function syncSpotifyLibrary(
       albums.map((album: any) => {
         // First check Spotify's album_type
         let albumType = album.album_type?.toLowerCase();
-        
+
         // If it's not one of our valid types, determine based on our rules
         if (!['album', 'single', 'ep'].includes(albumType)) {
-          albumType = album.name?.toLowerCase().includes(' ep') || album.name?.toLowerCase().endsWith(' ep')
-            ? 'ep'
-            : album.tracks_count <= 6
-            ? 'ep'
-            : 'album';
+          albumType =
+            album.name?.toLowerCase().includes(' ep') ||
+            album.name?.toLowerCase().endsWith(' ep')
+              ? 'ep'
+              : album.tracks_count <= 6
+              ? 'ep'
+              : 'album';
         }
-        
-        console.log('Album type detection:', {
-          name: album.name,
-          spotifyType: album.album_type,
-          trackCount: album.tracks_count,
-          finalType: albumType
-        });
-        
+
         return {
           id: globalThis.crypto.randomUUID(),
           user_id: userId,
@@ -49,7 +44,7 @@ export async function syncSpotifyLibrary(
           synced_at: new Date().toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          album_type: albumType
+          album_type: albumType,
         };
       })
     );

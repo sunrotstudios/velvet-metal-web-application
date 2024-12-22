@@ -6,14 +6,12 @@ import AlbumDetails from '@/pages/Details/AlbumDetails';
 import PlaylistDetails from '@/pages/Details/PlaylistDetails';
 import Home from '@/pages/Home/Home';
 import Landing from '@/pages/Landing/Landing';
-import Login from '@/pages/Landing/Login';
-import Register from '@/pages/Landing/Register';
 import Library from '@/pages/Library/index';
 import Settings from '@/pages/Settings/Settings';
 import LastFmDashboard from '@/pages/Stats/LastFmDashboard';
 import TransferHistory from '@/pages/TransferHistory';
 import Layout from '@/shared/layouts/Layout';
-import ProtectedRoute from '@/shared/layouts/ProtectedRoute';
+import { ProtectedRoute } from '@/shared/layouts/ProtectedRoute';
 import { ThemeProvider } from '@/shared/layouts/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -45,8 +43,6 @@ function App() {
             <LastFmProvider>
               <Routes>
                 <Route path="/" element={<Landing />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
                 <Route path="/spotify/callback" element={<SpotifyCallback />} />
                 <Route element={<ProtectedRoute />}>
                   <Route element={<Layout />}>
@@ -62,7 +58,7 @@ function App() {
                     <Route path="/lastfm" element={<LastFmDashboard />} />
                   </Route>
                 </Route>
-                <Route path="*" element={<Navigate to="/login" />} />
+                <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </LastFmProvider>
           </AuthProvider>
