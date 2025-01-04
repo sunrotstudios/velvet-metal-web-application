@@ -18,6 +18,7 @@ export default function AlbumDetails() {
   const service =
     location.state?.service ||
     (id?.startsWith('l.') ? 'apple-music' : 'spotify');
+  const previousParams = location.state?.previousParams;
 
   useEffect(() => {
     if (!user) {
@@ -25,6 +26,14 @@ export default function AlbumDetails() {
       navigate('/login', { state: { from: `/album/${id}` } });
     }
   }, [user, id, navigate]);
+
+  useEffect(() => {
+    // Store the current library params in session storage when mounting
+    const currentParams = location.state?.previousParams;
+    if (currentParams) {
+      sessionStorage.setItem('libraryParams', JSON.stringify(currentParams));
+    }
+  }, [location.state]);
 
   const {
     data: album,
@@ -60,6 +69,10 @@ export default function AlbumDetails() {
     return null;
   }
 
+  const handleBack = () => {
+    navigate('/library');
+  };
+
   return (
     <ResponsiveContainer mobileContent={<MobileAlbumDetails album={album} />}>
       {/* Desktop Layout */}
@@ -68,7 +81,7 @@ export default function AlbumDetails() {
           <Button
             variant="ghost"
             className="w-fit gap-2"
-            onClick={() => navigate('/library')}
+            onClick={handleBack}
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Library

@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { NormalizedPlaylist, ViewMode } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Play, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePrefetchPlaylist } from '@/lib/hooks/usePlaylistQueries';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -23,6 +23,7 @@ export const PlaylistCard = ({
   onSelect,
 }: PlaylistCardProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { prefetchPlaylist } = usePrefetchPlaylist();
 
@@ -34,8 +35,14 @@ export const PlaylistCard = ({
     if (isSelectionMode && onSelect) {
       onSelect(playlist);
     } else {
+      // Create an object from current search params
+      const currentParams = Object.fromEntries(searchParams.entries());
+
       navigate(`/playlist/${playlist.playlist_id}`, {
-        state: { service: playlist.service }
+        state: { 
+          service: playlist.service,
+          previousParams: currentParams 
+        }
       });
     }
   };

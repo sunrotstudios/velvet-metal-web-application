@@ -16,10 +16,16 @@ export default function PlaylistDetails() {
   const { user } = useAuth();
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const location = useLocation();
-  const service = location.state?.service as
-    | 'spotify'
-    | 'apple-music'
-    | undefined;
+  const service = location.state?.service as 'spotify' | 'apple-music' | undefined;
+  const previousParams = location.state?.previousParams;
+
+  useEffect(() => {
+    // Store the current library params in session storage when mounting
+    const currentParams = location.state?.previousParams;
+    if (currentParams) {
+      sessionStorage.setItem('libraryParams', JSON.stringify(currentParams));
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (!user) {
@@ -42,6 +48,10 @@ export default function PlaylistDetails() {
     if (playlist) {
       setIsTransferModalOpen(true);
     }
+  };
+
+  const handleBack = () => {
+    navigate('/library');
   };
 
   console.log('Query state:', { playlist, isLoading, error });
@@ -98,7 +108,7 @@ export default function PlaylistDetails() {
             <Button
               variant="ghost"
               className="w-fit gap-2"
-              onClick={() => navigate('/library')}
+              onClick={handleBack}
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Library
