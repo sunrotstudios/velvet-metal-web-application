@@ -2,6 +2,7 @@ import { NormalizedPlaylist, ViewMode } from '@/lib/types';
 import React, { useCallback } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeGrid as Grid } from 'react-window';
+import { motion } from 'framer-motion';
 
 interface VirtualizedPlaylistGridProps {
   items: NormalizedPlaylist[];
@@ -52,7 +53,7 @@ const VirtualizedPlaylistGrid = ({
         top: `${parseFloat(style.top) + GRID_GAP}px`,
         width: `${parseFloat(style.width) - GRID_GAP}px`,
         height: `${parseFloat(style.height) - GRID_GAP}px`,
-        padding: CELL_PADDING,
+        padding: `${CELL_PADDING}px`,
       };
 
       return (
@@ -84,9 +85,12 @@ const VirtualizedPlaylistGrid = ({
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
       style={{
-        height: 'calc(100vh - 100px)',
+        height: 'calc(100vh - 12rem)',
         width: '100%',
         padding: `${GRID_GAP}px 0`,
         minHeight: '300px',
@@ -119,7 +123,7 @@ const VirtualizedPlaylistGrid = ({
           );
         }}
       </AutoSizer>
-    </div>
+    </motion.div>
   );
 };
 

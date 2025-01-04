@@ -121,19 +121,4 @@ export default function SpotifyCallback() {
       </div>
     );
   }
-
-  return (
-    <div className="container flex items-center justify-center min-h-screen py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <h2 className="text-2xl font-bold text-center">Connecting to Spotify</h2>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground">
-            Please wait while we connect your Spotify account...
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
 }

@@ -7,7 +7,6 @@ async function getPlaylistTrackCount(
   playlistId: string
 ): Promise<number> {
   try {
-    console.log('Fetching track count for playlist:', playlistId);
     const response = await music.api.music(
       `/v1/me/library/playlists/${playlistId}/tracks`,
       {
@@ -16,7 +15,6 @@ async function getPlaylistTrackCount(
     );
 
     const total = response?.data?.meta?.total || 0;
-    console.log('Track count response:', { playlistId, total, response });
     return total;
   } catch (error) {
     console.error('Error fetching playlist track count:', error);
@@ -93,8 +91,6 @@ async function syncAppleMusicPlaylists(
         })
     );
 
-    console.log('Transformed playlists:', transformedPlaylists.length);
-
     if (transformedPlaylists.length > 0) {
       // Store in Supabase
       const { error } = await supabase
@@ -126,9 +122,6 @@ export async function syncAppleMusicLibrary(
       throw new Error('Failed to initialize Apple Music');
     }
 
-    console.log('MusicKit instance:', music);
-    console.log('API object:', music.api);
-
     // Fetch all library albums
     const limit = 100;
     let offset = 0;
@@ -136,22 +129,17 @@ export async function syncAppleMusicLibrary(
     let hasMore = true;
 
     while (hasMore) {
-      console.log('Fetching albums with offset:', offset);
       const response = await music.api.music('/v1/me/library/albums', {
         limit,
         offset,
       });
-      console.log('API Response:', response);
 
-      // Check if we have valid data
       if (!response?.data?.data || response.data.data.length === 0) {
-        console.log('No more albums found');
         hasMore = false;
       } else {
         allAlbums = [...allAlbums, ...response.data.data];
         offset += limit;
 
-        // Calculate and report progress
         if (onProgress) {
           const progress = Math.min(50, (allAlbums.length / 1000) * 50);
           onProgress(progress);
@@ -159,11 +147,7 @@ export async function syncAppleMusicLibrary(
       }
     }
 
-    console.log('Total albums found:', allAlbums.length);
-
-    // Transform albums to our format
     const transformedAlbums = allAlbums.map((album) => {
-      console.log('Processing album:', album);
       return {
         id: uuidv4(),
         user_id: userId,

@@ -101,22 +101,47 @@ export async function getServiceAuth(
 
 export async function removeServiceAuth(userId: string, service: ServiceType) {
   try {
-    console.log('Removing service auth...', { userId, service });
+    console.log('Removing service auth and associated data...', { userId, service });
 
-    const { error } = await supabase
+    // Delete albums
+    const { error: albumsError } = await supabase
+      .from('user_albums')
+      .delete()
+      .eq('user_id', userId)
+      .eq('service', service);
+
+    if (albumsError) {
+      console.error('Error removing albums:', albumsError);
+      throw albumsError;
+    }
+
+    // Delete playlists
+    const { error: playlistsError } = await supabase
+      .from('user_playlists')
+      .delete()
+      .eq('user_id', userId)
+      .eq('service', service);
+
+    if (playlistsError) {
+      console.error('Error removing playlists:', playlistsError);
+      throw playlistsError;
+    }
+
+    // Delete service auth
+    const { error: authError } = await supabase
       .from('user_services')
       .delete()
       .eq('user_id', userId)
       .eq('service', service);
 
-    if (error) {
-      console.error('Error removing service auth:', error);
-      throw error;
+    if (authError) {
+      console.error('Error removing service auth:', authError);
+      throw authError;
     }
 
-    console.log('Service auth removed successfully');
+    console.log('Service data removed successfully');
   } catch (error) {
-    console.error('Failed to remove service auth:', error);
+    console.error('Failed to remove service data:', error);
     throw error;
   }
 }

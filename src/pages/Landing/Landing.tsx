@@ -85,6 +85,7 @@ export default function Landing() {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const confirmPassword = formData.get('confirm-password') as string;
+    const username = formData.get('username') as string;
 
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
@@ -93,7 +94,7 @@ export default function Landing() {
     }
 
     try {
-      await register(email, password, email.split('@')[0]); // Using email prefix as display name
+      await register(email, password, username);
       toast.success('Account created successfully');
       navigate('/home');
     } catch (error: any) {
@@ -219,86 +220,98 @@ export default function Landing() {
                   <TabsTrigger value="register">Register</TabsTrigger>
                   <TabsTrigger value="login">Login</TabsTrigger>
                 </TabsList>
-                <TabsContent value="register">
-                  <Card className="p-6 border-border">
-                    <form onSubmit={handleRegister} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="register-email">Email</Label>
-                        <Input
-                          id="register-email"
-                          name="email"
-                          type="email"
-                          placeholder="Enter your email"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="register-password">Password</Label>
-                        <Input
-                          id="register-password"
-                          name="password"
-                          type="password"
-                          placeholder="Choose a password"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm-password">
-                          Confirm Password
-                        </Label>
-                        <Input
-                          id="confirm-password"
-                          name="confirm-password"
-                          type="password"
-                          placeholder="Confirm your password"
-                          required
-                        />
-                      </div>
-                      <Button
-                        className="w-full"
-                        type="submit"
-                        disabled={loading}
-                      >
-                        {loading ? 'Creating account...' : 'Register'}{' '}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </form>
-                  </Card>
-                </TabsContent>
-                <TabsContent value="login">
-                  <Card className="p-6 border-border">
-                    <form onSubmit={handleLogin} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          placeholder="Enter your email"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input
-                          id="password"
-                          name="password"
-                          type="password"
-                          placeholder="Enter your password"
-                          required
-                        />
-                      </div>
-                      <Button
-                        className="w-full"
-                        type="submit"
-                        disabled={loading}
-                      >
-                        {loading ? 'Signing in...' : 'Login'}{' '}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </form>
-                  </Card>
-                </TabsContent>
+                <div className="h-[400px]">
+                  <TabsContent value="register">
+                    <Card className="p-6 border-border h-full">
+                      <form onSubmit={handleRegister} className="space-y-4 h-full">
+                        <div className="space-y-2">
+                          <Label htmlFor="register-email">Email</Label>
+                          <Input
+                            id="register-email"
+                            name="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="username">Username</Label>
+                          <Input
+                            id="username"
+                            name="username"
+                            type="text"
+                            placeholder="Choose a username"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="register-password">Password</Label>
+                          <Input
+                            id="register-password"
+                            name="password"
+                            type="password"
+                            placeholder="Choose a password"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="confirm-password">
+                            Confirm Password
+                          </Label>
+                          <Input
+                            id="confirm-password"
+                            name="confirm-password"
+                            type="password"
+                            placeholder="Confirm your password"
+                            required
+                          />
+                        </div>
+                        <Button
+                          className="w-full"
+                          type="submit"
+                          disabled={loading}
+                        >
+                          {loading ? 'Creating account...' : 'Register'}{' '}
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </form>
+                    </Card>
+                  </TabsContent>
+                  <TabsContent value="login">
+                    <Card className="p-6 border-border h-full">
+                      <form onSubmit={handleLogin} className="space-y-4 h-full">
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="password">Password</Label>
+                          <Input
+                            id="password"
+                            name="password"
+                            type="password"
+                            placeholder="Enter your password"
+                            required
+                          />
+                        </div>
+                        <Button
+                          className="w-full"
+                          type="submit"
+                          disabled={loading}
+                        >
+                          {loading ? 'Signing in...' : 'Login'}{' '}
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </form>
+                    </Card>
+                  </TabsContent>
+                </div>
               </Tabs>
             </motion.div>
           </div>

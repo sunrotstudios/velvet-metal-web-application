@@ -5,7 +5,6 @@ import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { ServicesGrid } from '@/shared/services/ServicesGrid';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Music2, PlusCircle } from 'lucide-react';
 
 export default function Home() {
   const { user } = useAuth();

@@ -74,15 +74,11 @@ export const AlbumsTab = forwardRef<AlbumsTabHandle, AlbumsTabProps>(
 
     return (
       <TabsContent value="albums" className="space-y-6">
-        {isLoading ? (
-          <div className="flex min-h-[400px] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : isError ? (
+        {isError ? (
           <div className="flex justify-center">
             <p className="text-destructive">Failed to load albums</p>
           </div>
-        ) : albums.length === 0 ? (
+        ) : albums.length === 0 && !isLoading ? (
           <div className="flex justify-center">
             <p>No albums available.</p>
           </div>
