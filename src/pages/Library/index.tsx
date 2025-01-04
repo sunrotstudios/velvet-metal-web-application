@@ -21,6 +21,7 @@ import { Header } from './components/Header';
 import { MobileLibrary } from './components/MobileLibrary';
 import { PlaylistCard } from './components/Playlists/PlaylistCard';
 import { PlaylistsTab } from './components/PlaylistsTab';
+import { motion } from 'framer-motion';
 
 export default function Library() {
   const navigate = useNavigate();
@@ -237,17 +238,27 @@ export default function Library() {
         />
       }
     >
-      <div className="flex h-full flex-col">
+      <div className="flex h-screen flex-col bg-background">
         {/* Fixed Header Section */}
         <div className="flex-none">
-          <div className="p-8 pb-2">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-8 pb-2"
+          >
             <Header
               activeService={activeService}
               onRefresh={handleManualRefresh}
             />
-          </div>
+          </motion.div>
 
-          <div className="px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="px-8"
+          >
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <Controls
                 activeService={activeService}
@@ -267,10 +278,13 @@ export default function Library() {
               />
 
               {/* Scrollable Content Area */}
-              <div className="h-[calc(100vh-12rem)] overflow-y-auto">
-                {isLoading ? (
-                  <LoadingSpinner centered label="Loading your library" />
-                ) : isError ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex-1 overflow-y-auto pb-8"
+              >
+                {isError ? (
                   <div className="text-center text-red-500">
                     An error occurred while loading your library. Please try
                     again.
@@ -301,9 +315,9 @@ export default function Library() {
                     )}
                   </>
                 )}
-              </div>
+              </motion.div>
             </Tabs>
-          </div>
+          </motion.div>
         </div>
 
         <ExportLibraryDialog

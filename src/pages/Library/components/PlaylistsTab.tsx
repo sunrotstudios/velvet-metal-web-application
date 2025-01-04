@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Skeleton } from '@/components/ui/skeleton';
 import { TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
 import { NormalizedPlaylist, ViewMode } from '@/lib/types';
@@ -72,9 +72,15 @@ export const PlaylistsTab = forwardRef<PlaylistsTabHandle, PlaylistsTabProps>(
 
     if (isLoading) {
       return (
-        <TabsContent value="playlists" className="mt-0 flex-1">
-          <div className="flex h-[400px] items-center justify-center">
-            <LoadingSpinner size="lg" />
+        <TabsContent value="playlists" className="space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="aspect-square w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            ))}
           </div>
         </TabsContent>
       );
@@ -82,7 +88,7 @@ export const PlaylistsTab = forwardRef<PlaylistsTabHandle, PlaylistsTabProps>(
 
     if (!playlists?.length) {
       return (
-        <TabsContent value="playlists" className="mt-0 flex-1">
+        <TabsContent value="playlists" className="space-y-6">
           <div className="flex h-[400px] items-center justify-center">
             <p className="text-muted-foreground">No playlists found</p>
           </div>
@@ -95,7 +101,7 @@ export const PlaylistsTab = forwardRef<PlaylistsTabHandle, PlaylistsTabProps>(
     );
 
     return (
-      <TabsContent value="playlists" className="flex-1 mt-8">
+      <TabsContent value="playlists" className="space-y-6">
         {isSelectionMode && (
           <div className=" flex flex-col items-center ">
             <div className="flex items-center gap-4">

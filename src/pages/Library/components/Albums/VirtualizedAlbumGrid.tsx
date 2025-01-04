@@ -2,6 +2,7 @@ import { NormalizedAlbum, ViewMode } from '@/lib/types';
 import React, { useCallback } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeGrid as Grid } from 'react-window';
+import { motion } from 'framer-motion'; // Import motion from framer-motion
 
 interface VirtualizedGridProps {
   items: NormalizedAlbum[];
@@ -92,9 +93,12 @@ const VirtualizedGrid = ({
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
       style={{
-        height: 'calc(100vh - 100px)',
+        height: 'calc(100vh - 12rem)',
         width: '100%',
         padding: `${GRID_GAP}px 0`,
         minHeight: '300px',
@@ -130,7 +134,7 @@ const VirtualizedGrid = ({
           );
         }}
       </AutoSizer>
-    </div>
+    </motion.div>
   );
 };
 
