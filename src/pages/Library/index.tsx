@@ -2,7 +2,6 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Tabs } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useFilters } from '@/hooks/useFilters';
 import { getStoredLibrary, syncLibrary } from '@/lib/services';
 import { getUserServices } from '@/lib/services/streaming-auth';
 import { Playlist, ServiceType, ViewMode } from '@/lib/types';
@@ -11,8 +10,8 @@ import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { ExportLibraryDialog } from '@/shared/modals/ExportLibraryDialog';
 import { TransferPlaylistModal } from '@/shared/modals/PlaylistTransferModal';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { memo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { memo, useRef, useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AlbumCard } from './components/Albums/AlbumCard';
 import { AlbumsTab } from './components/AlbumsTab';
@@ -25,25 +24,88 @@ import { motion } from 'framer-motion';
 
 export default function Library() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const playlistsTabRef = useRef(null);
   const albumsTabRef = useRef(null);
 
-  // State management
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [activeService, setActiveService] = useState<ServiceType>('spotify');
-  const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(
-    null
-  );
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  // Store current params in session storage when navigating away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const currentParams = Object.fromEntries(searchParams.entries());
+      sessionStorage.setItem('libraryParams', JSON.stringify(currentParams));
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [searchParams]);
+
+  // Restore params from session storage or location state
+  useEffect(() => {
+    const state = location.state as { previousParams?: Record<string, string> } | null;
+    if (state?.previousParams) {
+      setSearchParams(state.previousParams);
+      navigate(location.pathname, { replace: true, state: {} });
+    } else {
+      const storedParams = sessionStorage.getItem('libraryParams');
+      if (storedParams) {
+        setSearchParams(JSON.parse(storedParams));
+        sessionStorage.removeItem('libraryParams');
+      }
+    }
+  }, [location]);
+
+  // Get filter values from URL params with defaults
+  const activeService = (searchParams.get('service') as ServiceType) || 'spotify';
+  const viewMode = (searchParams.get('view') as ViewMode) || 'grid';
+  const sortBy = searchParams.get('sort') || 'name-asc';
+  const activeTab = (searchParams.get('tab') as 'albums' | 'playlists') || 'albums';
+  const albumTypeFilter = (searchParams.get('albumType') as 'all' | 'album' | 'single' | 'ep') || 'all';
+
+  // Update URL params handlers
+  const setActiveService = (service: ServiceType) => {
+    setSearchParams(prev => {
+      prev.set('service', service);
+      return prev;
+    });
+  };
+
+  const setViewMode = (mode: ViewMode) => {
+    setSearchParams(prev => {
+      prev.set('view', mode);
+      return prev;
+    });
+  };
+
+  const setSortBy = (sort: string) => {
+    setSearchParams(prev => {
+      prev.set('sort', sort);
+      return prev;
+    });
+  };
+
+  const setActiveTab = (tab: 'albums' | 'playlists') => {
+    setSearchParams(prev => {
+      prev.set('tab', tab);
+      return prev;
+    });
+  };
+
+  const setAlbumTypeFilter = (type: 'all' | 'album' | 'single' | 'ep') => {
+    setSearchParams(prev => {
+      prev.set('albumType', type);
+      return prev;
+    });
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<string>('name-asc');
-  const [activeTab, setActiveTab] = useState<'albums' | 'playlists'>('albums');
+  const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const [albumTypeFilter, setAlbumTypeFilter] = useState<
-    'all' | 'album' | 'single' | 'ep'
-  >('all');
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -51,6 +113,34 @@ export default function Library() {
   // Memoized components
   const MemoizedAlbumCard = memo(AlbumCard);
   const MemoizedPlaylistCard = memo(PlaylistCard);
+
+  const filterItems = (items: any[], query: string, sort: string, type?: string) => {
+    let filtered = items;
+
+    // Filter by search query
+    if (query) {
+      filtered = items.filter(item => 
+        item.name.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    // Filter by album type if applicable
+    if (type && type !== 'all') {
+      filtered = filtered.filter(item => item.album_type === type);
+    }
+
+    // Sort items
+    filtered.sort((a, b) => {
+      const [field, direction] = sort.split('-');
+      const aValue = a[field]?.toLowerCase() || '';
+      const bValue = b[field]?.toLowerCase() || '';
+      return direction === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    });
+
+    return filtered;
+  };
 
   // Get user services and check connection
   const { data: userServices, isLoading: servicesLoading } = useQuery({
@@ -131,13 +221,8 @@ export default function Library() {
     },
   });
 
-  const { filteredAlbums, filteredPlaylists } = useFilters(
-    data?.albums || [],
-    data?.playlists || [],
-    debouncedSearchQuery,
-    sortBy,
-    albumTypeFilter
-  );
+  const filteredAlbums = filterItems(data?.albums || [], debouncedSearchQuery, sortBy, albumTypeFilter);
+  const filteredPlaylists = filterItems(data?.playlists || [], debouncedSearchQuery, sortBy);
 
   const handleManualRefresh = async () => {
     try {

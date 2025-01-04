@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { AlbumTransferModal } from '@/shared/modals/AlbumTransferModal';
 import { ArrowLeftRight, Play } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface AlbumCardProps {
   album: {
@@ -37,6 +37,7 @@ export const AlbumCard = ({
   isSelected,
 }: AlbumCardProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const releaseYear = album.release_date?.split('-')[0];
   const { user } = useAuth();
   const { prefetchAlbum } = usePrefetchAlbum();
@@ -57,8 +58,14 @@ export const AlbumCard = ({
       prefetchAlbum(album.album_id, user.id, album.service);
     }
 
+    // Create an object from current search params
+    const currentParams = Object.fromEntries(searchParams.entries());
+
     navigate(`/album/${album.album_id}`, {
-      state: { service: album.service },
+      state: { 
+        service: album.service,
+        previousParams: currentParams 
+      },
     });
   };
 
