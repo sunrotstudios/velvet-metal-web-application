@@ -9,6 +9,7 @@ import Landing from '@/pages/Landing/Landing';
 import Library from '@/pages/Library/index';
 import Settings from '@/pages/Settings/Settings';
 import LastFmDashboard from '@/pages/Stats/LastFmDashboard';
+import Transfer from '@/pages/Transfer';
 import TransferHistory from '@/pages/TransferHistory';
 import Layout from '@/shared/layouts/Layout';
 import { ProtectedRoute } from '@/shared/layouts/ProtectedRoute';
@@ -48,6 +49,7 @@ function App() {
                   <Route element={<Layout />}>
                     <Route path="/home" element={<Home />} />
                     <Route path="/library" element={<Library />} />
+                    <Route path="/transfer" element={<Transfer />} />
                     <Route path="/album/:id" element={<AlbumDetails />} />
                     <Route path="/playlist/:id" element={<PlaylistDetails />} />
                     <Route path="/settings" element={<Settings />} />

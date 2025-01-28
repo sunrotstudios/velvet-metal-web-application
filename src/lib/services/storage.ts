@@ -61,31 +61,64 @@ export async function getStoredLibrary(userId: string, service: string) {
   try {
     console.log('Fetching library from database for:', { userId, service });
 
-    let { data: albums, error: albumsError } = await supabase
-      .from('user_albums')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('service', service);
+    // Fetch albums with pagination
+    let allAlbums: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMoreAlbums = true;
 
-    let { data: playlists, error: playlistsError } = await supabase
-      .from('user_playlists')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('service', service);
+    while (hasMoreAlbums) {
+      const { data: albums, error: albumsError } = await supabase
+        .from('user_albums')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('service', service)
+        .order('name')
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
-    if (albumsError) {
-      console.error('Error fetching albums:', albumsError);
-      albums = [];
+      if (albumsError) {
+        console.error('Error fetching albums:', albumsError);
+        break;
+      }
+
+      if (!albums || albums.length === 0) {
+        hasMoreAlbums = false;
+      } else {
+        allAlbums = [...allAlbums, ...albums];
+        page++;
+      }
     }
 
-    if (playlistsError) {
-      console.error('Error fetching playlists:', playlistsError);
-      playlists = [];
+    // Fetch playlists with pagination
+    let allPlaylists: any[] = [];
+    page = 0;
+    let hasMorePlaylists = true;
+
+    while (hasMorePlaylists) {
+      const { data: playlists, error: playlistsError } = await supabase
+        .from('user_playlists')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('service', service)
+        .order('name')
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      if (playlistsError) {
+        console.error('Error fetching playlists:', playlistsError);
+        break;
+      }
+
+      if (!playlists || playlists.length === 0) {
+        hasMorePlaylists = false;
+      } else {
+        allPlaylists = [...allPlaylists, ...playlists];
+        page++;
+      }
     }
 
     return {
-      albums: albums || [],
-      playlists: playlists || [],
+      albums: allAlbums,
+      playlists: allPlaylists,
       lastSynced: new Date().toISOString(),
     };
   } catch (error) {

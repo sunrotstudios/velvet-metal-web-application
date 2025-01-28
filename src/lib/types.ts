@@ -104,8 +104,7 @@ export interface DetailedAlbum extends NormalizedAlbum {
   tracks: AlbumTrack[];
   totalTracks: number;
   genres: string[];
-  popularity?: number;
-  copyrights?: string[];
+  copyrights: string[];
   label?: string;
   artwork: {
     url: string;

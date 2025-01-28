@@ -42,7 +42,7 @@ export const SearchAndFilter = ({
           <SelectItem value="name-desc">Name (Z-A)</SelectItem>
           <SelectItem value="artist-asc">Artist (A-Z)</SelectItem>
           <SelectItem value="artist-desc">Artist (Z-A)</SelectItem>
-          <SelectItem value="recent">Recently Added</SelectItem>
+          <SelectItem value="recent">Recent</SelectItem>
         </SelectContent>
       </Select>
     </div>

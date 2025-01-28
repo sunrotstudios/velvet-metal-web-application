@@ -31,8 +31,6 @@ interface ControlsProps {
   activeTab: string;
   albumTypeFilter: 'all' | 'album' | 'single' | 'ep';
   onAlbumTypeChange: (type: 'all' | 'album' | 'single' | 'ep') => void;
-  isSelectionMode?: boolean;
-  onToggleSelection?: () => void;
 }
 
 export const Controls = ({
@@ -48,8 +46,6 @@ export const Controls = ({
   activeTab,
   albumTypeFilter,
   onAlbumTypeChange,
-  isSelectionMode,
-  onToggleSelection,
 }: ControlsProps) => {
   return (
     <div className="flex flex-col space-y-4">
@@ -88,51 +84,18 @@ export const Controls = ({
           </Select>
 
           {activeTab === 'albums' ? (
-            <>
-              <Select value={albumTypeFilter} onValueChange={onAlbumTypeChange}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="Album Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="album">Album</SelectItem>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="ep">EP</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="default"
-                className="w-[130px]"
-                onClick={() => {
-                  if (isSelectionMode && onToggleSelection) {
-                    // Clear selection state
-                    onToggleSelection();
-                  } else if (onToggleSelection) {
-                    onToggleSelection();
-                  }
-                }}
-              >
-                {isSelectionMode ? 'Cancel Selection' : 'Select Albums'}
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="outline"
-              size="default"
-              className="w-[130px]"
-              onClick={() => {
-                if (isSelectionMode && onToggleSelection) {
-                  // Clear selection state
-                  onToggleSelection();
-                } else if (onToggleSelection) {
-                  onToggleSelection();
-                }
-              }}
-            >
-              {isSelectionMode ? 'Cancel Selection' : 'Select Playlists'}
-            </Button>
-          )}
+            <Select value={albumTypeFilter} onValueChange={onAlbumTypeChange}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Album Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="album">Album</SelectItem>
+                <SelectItem value="single">Single</SelectItem>
+                <SelectItem value="ep">EP</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : null}
         </div>
 
         {/* Middle Section: Search */}
@@ -157,7 +120,7 @@ export const Controls = ({
               <SelectItem value="name-desc">Name (Z-A)</SelectItem>
               <SelectItem value="artist-asc">Artist (A-Z)</SelectItem>
               <SelectItem value="artist-desc">Artist (Z-A)</SelectItem>
-              <SelectItem value="recent">Recently Added</SelectItem>
+              <SelectItem value="recent">Recent</SelectItem>
             </SelectContent>
           </Select>
 

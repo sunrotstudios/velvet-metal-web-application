@@ -131,9 +131,15 @@ export default function Library() {
 
     // Sort items
     filtered.sort((a, b) => {
+      if (sort === 'recent') {
+        const aDate = a.added_at ? new Date(a.added_at) : new Date(0);
+        const bDate = b.added_at ? new Date(b.added_at) : new Date(0);
+        return bDate.getTime() - aDate.getTime(); // Most recent first
+      }
+
       const [field, direction] = sort.split('-');
-      const aValue = a[field]?.toLowerCase() || '';
-      const bValue = b[field]?.toLowerCase() || '';
+      const aValue = field === 'artist' ? (a.artist_name || '').toLowerCase() : (a[field] || '').toLowerCase();
+      const bValue = field === 'artist' ? (b.artist_name || '').toLowerCase() : (b[field] || '').toLowerCase();
       return direction === 'asc' 
         ? aValue.localeCompare(bValue)
         : bValue.localeCompare(aValue);
