@@ -9,11 +9,13 @@ import { TransferPlaylistModal } from '@/shared/modals/PlaylistTransferModal';
 import { ArrowLeft, Clock, Play, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function PlaylistDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const location = useLocation();
   const service = location.state?.service as 'spotify' | 'apple-music' | undefined;
@@ -194,9 +196,15 @@ export default function PlaylistDetails() {
 
       {/* Transfer Modal */}
       <TransferPlaylistModal
-        isOpen={isTransferModalOpen}
-        onClose={() => setIsTransferModalOpen(false)}
+        open={isTransferModalOpen}
+        onOpenChange={setIsTransferModalOpen}
+        sourceService={service || 'spotify'}
         playlist={playlist}
+        userId={user?.id || ''}
+        onTransferComplete={() => {
+          // Don't close the modal, just update the library data
+          queryClient.invalidateQueries(['storedLibrary']);
+        }}
       />
     </div>
   );

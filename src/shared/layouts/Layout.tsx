@@ -27,9 +27,9 @@ export default function Layout() {
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="flex h-screen bg-black text-white">
       {/* Mobile Header */}
-      <div className="flex md:hidden items-center justify-between p-4 border-b border-white/10">
+      <div className="absolute top-0 left-0 right-0 md:hidden flex items-center justify-between p-4 border-b border-white/10 bg-black z-50">
         <Button
           ref={toggleButtonRef}
           variant="ghost"
@@ -50,12 +50,12 @@ export default function Layout() {
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 h-full">
         {/* Sidebar */}
         <div
           ref={sidebarRef}
           className={cn(
-            'fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-white/10 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0',
+            'fixed inset-y-0 left-0 z-40 w-64 bg-black border-r border-white/10 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 overflow-y-auto',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
@@ -63,7 +63,7 @@ export default function Layout() {
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pt-[60px] md:pt-0">
           <Outlet />
         </main>
       </div>

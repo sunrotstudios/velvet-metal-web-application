@@ -54,10 +54,11 @@ export interface TransferHistoryRecord {
 }
 
 export interface TransferProgress {
-  stage: 'processing' | 'complete';
+  stage: 'fetching' | 'creating' | 'searching' | 'adding' | 'processing' | 'complete' | 'error';
   progress: number;
   message: string;
   destinationPlaylistName?: string;
+  error?: string;
 }
 
 async function delay(ms: number) {
@@ -303,7 +304,7 @@ export async function transferPlaylist({
     }
 
     onProgress?.({
-      stage: 'processing',
+      stage: 'fetching',
       progress: 0,
       message: 'Starting transfer...',
     });
@@ -331,7 +332,7 @@ export async function transferPlaylist({
     });
 
     onProgress?.({
-      stage: 'processing',
+      stage: 'creating',
       progress: 30,
       message: 'Creating playlist...',
     });
@@ -350,7 +351,7 @@ export async function transferPlaylist({
     await updateTransferStatus(transfer.id, 'in_progress', undefined);
 
     onProgress?.({
-      stage: 'processing',
+      stage: 'searching',
       progress: 50,
       message: 'Transferring tracks...',
     });
@@ -364,7 +365,7 @@ export async function transferPlaylist({
       (current) => {
         const progress = Math.min(50 + (current / tracks.length) * 50, 99);
         onProgress?.({
-          stage: 'processing',
+          stage: 'adding',
           progress,
           message: 'Transferring tracks...',
         });
@@ -374,6 +375,7 @@ export async function transferPlaylist({
 
     await updateTransferStatus(transfer.id, 'success', undefined);
 
+    // Ensure we send the complete stage
     onProgress?.({
       stage: 'complete',
       progress: 100,
@@ -680,7 +682,7 @@ export async function transferAlbum({
     );
 
     onProgress?.({
-      stage: 'processing',
+      stage: 'fetching',
       progress: 0,
       message: 'Getting album details...',
     });
@@ -704,7 +706,7 @@ export async function transferAlbum({
     });
 
     onProgress?.({
-      stage: 'processing',
+      stage: 'creating',
       progress: 25,
       message: 'Searching for album...',
     });
@@ -741,7 +743,7 @@ export async function transferAlbum({
     }
 
     onProgress?.({
-      stage: 'processing',
+      stage: 'searching',
       progress: 50,
       message: 'Adding album to your library...',
     });

@@ -119,9 +119,12 @@ export default function Library() {
 
     // Filter by search query
     if (query) {
-      filtered = items.filter(item => 
-        item.name.toLowerCase().includes(query.toLowerCase())
-      );
+      const searchTerm = query.toLowerCase();
+      filtered = items.filter(item => {
+        const nameMatch = item.name.toLowerCase().includes(searchTerm);
+        const artistMatch = (item.artist_name || item.artistName || '').toLowerCase().includes(searchTerm);
+        return nameMatch || artistMatch;
+      });
     }
 
     // Filter by album type if applicable
@@ -138,8 +141,12 @@ export default function Library() {
       }
 
       const [field, direction] = sort.split('-');
-      const aValue = field === 'artist' ? (a.artist_name || '').toLowerCase() : (a[field] || '').toLowerCase();
-      const bValue = field === 'artist' ? (b.artist_name || '').toLowerCase() : (b[field] || '').toLowerCase();
+      const aValue = field === 'artist' 
+        ? (a.artist_name || a.artistName || '').toLowerCase() 
+        : (a[field] || '').toLowerCase();
+      const bValue = field === 'artist' 
+        ? (b.artist_name || b.artistName || '').toLowerCase() 
+        : (b[field] || '').toLowerCase();
       return direction === 'asc' 
         ? aValue.localeCompare(bValue)
         : bValue.localeCompare(aValue);
@@ -428,12 +435,16 @@ export default function Library() {
             {selectedPlaylist && (
               <TransferPlaylistModal
                 open={isTransferModalOpen}
-                onOpenChange={setIsTransferModalOpen}
+                onOpenChange={(open) => {
+                  setIsTransferModalOpen(open);
+                  if (!open) {
+                    setSelectedPlaylist(null);
+                  }
+                }}
                 sourceService={activeService}
                 playlist={selectedPlaylist}
                 userId={user!.id}
                 onTransferComplete={() => {
-                  setSelectedPlaylist(null);
                   queryClient.invalidateQueries(['storedLibrary']);
                 }}
               />

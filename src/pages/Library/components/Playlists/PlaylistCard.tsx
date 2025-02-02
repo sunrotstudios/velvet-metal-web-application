@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { NormalizedPlaylist, ViewMode } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Play, Plus } from 'lucide-react';
+import { ArrowLeftRight } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePrefetchPlaylist } from '@/lib/hooks/usePlaylistQueries';
 import { useAuth } from '@/contexts/auth-context';
@@ -103,21 +103,13 @@ export const PlaylistCard = ({
                   size="icon"
                   variant="ghost"
                   className="h-8 w-8 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
-                  aria-label="Play playlist"
-                >
-                  <Play className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
                   aria-label="Transfer playlist"
                   onClick={(e) => {
                     e.stopPropagation();
                     onTransfer(playlist);
                   }}
                 >
-                  <Plus className="h-4 w-4" />
+                  <ArrowLeftRight className="h-4 w-4" />
                 </Button>
               </div>
             )}
