@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (email: string, password: string, display_name: string) => {
     try {
-      // First sign up the user
+      // Sign up the user
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -93,25 +93,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (signUpError) throw signUpError;
 
-      // If successful, create the profile
+      // Wait for Supabase's auth trigger to create the profile
       if (signUpData.user) {
+        // Wait a moment for the trigger to create the profile
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Update the profile with additional data
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert([
-            {
-              id: signUpData.user.id,
-              display_name,
-              email,
-            },
-          ]);
+          .update({
+            display_name,
+            email,
+          })
+          .eq('id', signUpData.user.id);
 
         if (profileError) {
-          // If profile creation fails, delete the user and throw error
-          await supabase.auth.admin.deleteUser(signUpData.user.id);
           throw profileError;
         }
 
-        navigate('/home');
+        setUser(signUpData.user);
       }
     } catch (error) {
       throw error;

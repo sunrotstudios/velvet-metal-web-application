@@ -44,9 +44,9 @@ export function ServiceConnection({ service }: ServiceConnectionProps) {
     setIsConnecting(true);
     try {
       if (service === 'spotify') {
-        await authorizeSpotify();
+        await authorizeSpotify(user.id);
       } else if (service === 'apple-music') {
-        await authorizeAppleMusic();
+        await authorizeAppleMusic(user.id);
       } else if (service === 'lastfm') {
         const username = prompt('Enter your Last.fm username:');
         if (username) {

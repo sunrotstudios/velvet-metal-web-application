@@ -90,6 +90,7 @@ export async function authorizeAppleMusic(userId: string) {
     await saveServiceAuth(userId, 'apple-music', {
       accessToken: import.meta.env.VITE_APPLE_DEVELOPER_TOKEN || '',
       musicUserToken: musicUserToken,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
     });
 
     // Start library sync in the background
@@ -108,29 +109,24 @@ export async function authorizeAppleMusic(userId: string) {
 }
 
 export async function unauthorizeAppleMusic(userId: string) {
-  console.log('Starting Apple Music unauthorized...', {
-    userId,
-    hasMusicKit: !!musicKit,
-  });
+  try {
+    console.log('Removing Apple Music authorization...');
+    const music = await initializeAppleMusic();
 
-  if (musicKit) {
-    try {
-      console.log('Calling MusicKit unauthorized...');
-      await musicKit.unauthorize();
-      console.log('MusicKit unauthorized successful');
-      musicKit = null;
-
-      console.log('Removing service auth from database...');
-      await removeServiceAuth(userId, 'apple-music');
-      console.log('Service auth removed successfully');
-    } catch (error) {
-      console.error('Failed to unauthorize Apple Music:', error);
-      throw error;
+    if (!music) {
+      throw new Error('Failed to initialize Apple Music');
     }
-  } else {
-    console.log('No MusicKit instance found, just removing service auth...');
+
+    // Revoke Apple Music authorization
+    await music.unauthorize();
+
+    // Remove from database
     await removeServiceAuth(userId, 'apple-music');
-    console.log('Service auth removed successfully');
+
+    console.log('Apple Music authorization removed successfully');
+  } catch (error) {
+    console.error('Failed to remove Apple Music authorization:', error);
+    throw error;
   }
 }
 
