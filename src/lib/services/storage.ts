@@ -31,7 +31,12 @@ export const storage = {
   },
 
   async uploadFile(bucket: string, path: string, file: File) {
-    const { error } = await supabase.storage.from(bucket).upload(path, file);
+    const { error } = await supabase.storage
+      .from(bucket)
+      .upload(path, file, {
+        upsert: true,
+        cacheControl: '3600',
+      });
 
     if (error) throw error;
     return this.getPublicUrl(bucket, path);

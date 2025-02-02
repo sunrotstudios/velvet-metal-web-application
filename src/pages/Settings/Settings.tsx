@@ -22,11 +22,34 @@ import {
 } from 'lucide-react';
 import { MobileSettings } from './MobileSettings';
 import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { EditProfileModal } from '@/components/modals/EditProfileModal';
+import { UpgradePlanModal } from '@/components/modals/UpgradePlanModal';
 
 export default function Settings() {
   const { user, logout } = useAuth();
   const { data: connectedServices } = useConnectedServices();
   const { username: lastFmUsername } = useLastFm();
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isUpgradePlanOpen, setIsUpgradePlanOpen] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (user) {
+      // Fetch profile data
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setProfile(data);
+          }
+        });
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -63,8 +86,18 @@ export default function Settings() {
           content: (
             <div className="w-full">
               <div className="flex items-start gap-6">
-                <div className="rounded-full bg-white/10 p-4 hidden md:flex">
-                  <User className="h-12 w-12 text-white/80" />
+                <div className="rounded-full bg-white/10 hidden md:block w-20 h-20 overflow-hidden">
+                  {user.user_metadata?.avatar_url ? (
+                    <img 
+                      src={user.user_metadata.avatar_url} 
+                      alt="User avatar" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User className="h-12 w-12 text-white/80" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 space-y-4">
                   <div>
@@ -82,7 +115,9 @@ export default function Settings() {
                     </div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-white/60">Status:</p>
-                      <p className="text-sm text-white">Free Plan</p>
+                      <p className="text-sm text-white capitalize">
+                        {profile?.subscription_tier || 'Free'} Plan
+                      </p>
                     </div>
                   </div>
                   <div className="pt-4 flex items-center gap-4">
@@ -90,6 +125,7 @@ export default function Settings() {
                       variant="outline"
                       size="sm"
                       className="bg-white/10 text-white hover:bg-white/20 border-0"
+                      onClick={() => setIsEditProfileOpen(true)}
                     >
                       Edit Profile
                     </Button>
@@ -97,6 +133,7 @@ export default function Settings() {
                       variant="outline"
                       size="sm"
                       className="bg-white/10 text-white hover:bg-white/20 border-0"
+                      onClick={() => setIsUpgradePlanOpen(true)}
                     >
                       Upgrade Plan
                     </Button>
@@ -263,6 +300,14 @@ export default function Settings() {
           </div>
         </div>
       </div>
+      <EditProfileModal 
+        open={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+      />
+      <UpgradePlanModal
+        open={isUpgradePlanOpen}
+        onClose={() => setIsUpgradePlanOpen(false)}
+      />
     </ResponsiveContainer>
   );
 }
