@@ -27,13 +27,15 @@ export default function Layout() {
   }, [sidebarOpen]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <div className="flex md:hidden items-center justify-between p-4 border-b">
+    <div className="min-h-screen bg-black text-white">
+      {/* Mobile Header */}
+      <div className="flex md:hidden items-center justify-between p-4 border-b border-white/10">
         <Button
           ref={toggleButtonRef}
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="text-white hover:bg-white/10"
           aria-label="Toggle menu"
         >
           {sidebarOpen ? (
@@ -42,21 +44,26 @@ export default function Layout() {
             <Menu className="h-5 w-5" />
           )}
         </Button>
-        <h1 className="text-lg font-semibold">Velvet Metal</h1>
+        <div className="text-xl tracking-tighter font-bold">
+          VELVET<span className="text-gray-500">METAL</span>
+        </div>
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
       <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
         <div
           ref={sidebarRef}
           className={cn(
-            'fixed inset-y-0 left-0 z-50 bg-background md:relative md:block h-full',
-            sidebarOpen ? 'block' : 'hidden'
+            'fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-white/10 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0',
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
           <Sidebar onClose={() => setSidebarOpen(false)} />
         </div>
-        <main className="flex-1">
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>

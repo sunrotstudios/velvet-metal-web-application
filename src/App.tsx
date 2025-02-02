@@ -6,6 +6,8 @@ import AlbumDetails from '@/pages/Details/AlbumDetails';
 import PlaylistDetails from '@/pages/Details/PlaylistDetails';
 import Home from '@/pages/Home/Home';
 import Landing from '@/pages/Landing/Landing';
+import Login from '@/pages/Landing/Login';
+import Register from '@/pages/Landing/Register';
 import Library from '@/pages/Library/index';
 import Settings from '@/pages/Settings/Settings';
 import LastFmDashboard from '@/pages/Stats/LastFmDashboard';
@@ -44,6 +46,8 @@ function App() {
             <LastFmProvider>
               <Routes>
                 <Route path="/" element={<Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
                 <Route path="/spotify/callback" element={<SpotifyCallback />} />
                 <Route element={<ProtectedRoute />}>
                   <Route element={<Layout />}>

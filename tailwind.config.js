@@ -11,12 +11,19 @@ export default {
   ],
   theme: {
     extend: {
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+      fontFamily: {
+        sans: ['Polymath Text', 'system-ui', 'sans-serif'],
+        display: ['Polymath Display', 'Polymath Text', 'system-ui', 'sans-serif'],
+        radlush: ['Radlush', 'system-ui', 'sans-serif'],
       },
       colors: {
+        brand: {
+          blue: '#4996df',
+          pink: '#d7066d',
+          purple: '#6a0072',
+          yellow: '#f0d965',
+          orange: '#e0561d',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -57,6 +64,11 @@ export default {
           4: 'hsl(var(--chart-4))',
           5: 'hsl(var(--chart-5))',
         },
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
         'accordion-down': {

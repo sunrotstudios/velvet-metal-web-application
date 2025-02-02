@@ -61,35 +61,43 @@ export default function Settings() {
           id: 'profile',
           icon: User,
           content: (
-            <div className="w-full p-6">
+            <div className="w-full">
               <div className="flex items-start gap-6">
-                <div className="rounded-full bg-primary/10 p-4 hidden md:flex">
-                  <User className="h-12 w-12 text-primary" />
+                <div className="rounded-full bg-white/10 p-4 hidden md:flex">
+                  <User className="h-12 w-12 text-white/80" />
                 </div>
                 <div className="flex-1 space-y-4">
                   <div>
-                    <h3 className="text-xl font-semibold">
+                    <h3 className="text-xl font-medium text-white">
                       {user.user_metadata?.display_name || 'User'}
                     </h3>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="text-sm text-white/60">{user.email}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">Member since:</p>
-                      <p className="text-sm">
+                      <p className="text-sm text-white/60">Member since:</p>
+                      <p className="text-sm text-white">
                         {format(new Date(user.created_at), 'MMMM d, yyyy')}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">Status:</p>
-                      <p className="text-sm">Free Plan</p>
+                      <p className="text-sm text-white/60">Status:</p>
+                      <p className="text-sm text-white">Free Plan</p>
                     </div>
                   </div>
                   <div className="pt-4 flex items-center gap-4">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/10 text-white hover:bg-white/20 border-0"
+                    >
                       Edit Profile
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/10 text-white hover:bg-white/20 border-0"
+                    >
                       Upgrade Plan
                     </Button>
                   </div>
@@ -154,7 +162,7 @@ export default function Settings() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-destructive hover:text-destructive"
+              className="text-white/80 hover:text-white hover:bg-white/10"
               onClick={logout}
             >
               <LogOut className="h-4 w-4" />
@@ -170,7 +178,7 @@ export default function Settings() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-destructive hover:text-destructive"
+              className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
               onClick={() => {
                 if (
                   confirm(
@@ -191,61 +199,67 @@ export default function Settings() {
 
   return (
     <ResponsiveContainer mobileContent={<MobileSettings />}>
-      <div className="min-h-screen bg-background">
-        <div className="container max-w-[1200px] py-12 px-4">
-          <h1 className="text-2xl font-medium mb-12">Settings</h1>
+      <div className="min-h-screen bg-black text-white">
+        {/* Header Section */}
+        <div className="relative">
+          {/* Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent h-[30vh] pointer-events-none" />
+          
+          <div className="relative max-w-[1200px] mx-auto px-6">
+            {/* Title Section */}
+            <div className="pt-16 pb-12">
+              <h1 className="font-polymath text-4xl font-bold tracking-normal text-white mb-4">Settings</h1>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {settingsSections.map((section, sectionIndex) => (
-              <motion.div
-                key={section.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: sectionIndex * 0.1 }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <section.icon className="h-5 w-5 text-primary" />
-                  <h2 className="font-medium">{section.title}</h2>
-                </div>
+            {/* Settings Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {settingsSections.map((section, sectionIndex) => (
+                <motion.div
+                  key={section.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: sectionIndex * 0.1 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <section.icon className="h-5 w-5 text-white/60" />
+                    <h2 className="font-polymath text-xl font-medium text-white">{section.title}</h2>
+                  </div>
 
-                <Card>
-                  <div className="divide-y">
-                    {section.items.map((item, itemIndex) => (
-                      <motion.div
+                  <div className="space-y-2">
+                    {section.items.map((item) => (
+                      <div
                         key={item.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{
-                          delay: sectionIndex * 0.1 + itemIndex * 0.05,
-                        }}
-                        className={`hover:bg-muted/50 transition-colors ${
-                          item.content ? '' : 'flex items-center justify-between p-4'
-                        }`}
+                        className="group rounded-lg border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
                       >
                         {item.content ? (
                           item.content
                         ) : (
-                          <>
-                            <div className="flex items-center gap-3">
-                              <div className="rounded-full bg-primary/10 p-2">
-                                <item.icon className="h-4 w-4 text-primary" />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="rounded-full bg-white/10 p-2">
+                                <item.icon className="h-5 w-5 text-white/80" />
                               </div>
                               <div>
-                                <p className="font-medium">{item.title}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {item.subtitle}
-                                </p>
+                                <h3 className="font-medium text-white group-hover:text-white/90">
+                                  {item.title}
+                                </h3>
+                                {item.subtitle && (
+                                  <p className="text-sm text-white/60 group-hover:text-white/70">
+                                    {item.subtitle}
+                                  </p>
+                                )}
                               </div>
                             </div>
                             {item.action}
-                          </>
+                          </div>
                         )}
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
-                </Card>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

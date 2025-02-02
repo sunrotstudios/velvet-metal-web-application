@@ -329,109 +329,117 @@ export default function Library() {
         />
       }
     >
-      <div className="flex h-screen flex-col bg-background">
-        {/* Fixed Header Section */}
-        <div className="flex-none">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="p-8 pb-2"
-          >
-            <Header
-              activeService={activeService}
-              onRefresh={handleManualRefresh}
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="px-8"
-          >
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <Controls
-                activeService={activeService}
-                setActiveService={setActiveService}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                onExport={() => setIsExportOpen(true)}
-                activeTab={activeTab}
-                albumTypeFilter={albumTypeFilter}
-                onAlbumTypeChange={handleAlbumTypeChange}
-                isSelectionMode={isSelectionMode}
-                onToggleSelection={handleToggleSelection}
-              />
-
-              {/* Scrollable Content Area */}
+      <div className="min-h-screen bg-black text-white">
+        {/* Header Section */}
+        <div className="relative">
+          {/* Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-purple/10 to-transparent h-[70vh] pointer-events-none" />
+          
+          <div className="relative max-w-[1200px] mx-auto px-6">
+            {/* Welcome Section */}
+            <div className="pt-16 pb-12">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex-1 overflow-y-auto pb-8"
+                transition={{ duration: 0.5 }}
               >
-                {isError ? (
-                  <div className="text-center text-red-500">
-                    An error occurred while loading your library. Please try
-                    again.
-                  </div>
-                ) : (
-                  <>
-                    {activeTab === 'albums' && (
-                      <AlbumsTab
-                        ref={albumsTabRef}
-                        isLoading={isLoading}
-                        isError={isError}
-                        albums={data?.albums || []}
-                        filteredAlbums={filteredAlbums}
-                        viewMode={viewMode}
-                        ItemComponent={MemoizedAlbumCard}
-                        isSelectionMode={isSelectionMode}
-                      />
-                    )}
-                    {activeTab === 'playlists' && (
-                      <PlaylistsTab
-                        ref={playlistsTabRef}
-                        playlists={filteredPlaylists}
-                        isLoading={isLoading}
-                        viewMode={viewMode}
-                        onTransfer={handleTransfer}
-                        isSelectionMode={isSelectionMode}
-                      />
-                    )}
-                  </>
-                )}
+                <Header
+                  activeService={activeService}
+                  onRefresh={handleManualRefresh}
+                />
               </motion.div>
-            </Tabs>
-          </motion.div>
+            </div>
+
+            {/* Controls Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mb-8"
+            >
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <Controls
+                  activeService={activeService}
+                  setActiveService={setActiveService}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  onExport={() => setIsExportOpen(true)}
+                  activeTab={activeTab}
+                  albumTypeFilter={albumTypeFilter}
+                  onAlbumTypeChange={handleAlbumTypeChange}
+                  isSelectionMode={isSelectionMode}
+                  onToggleSelection={handleToggleSelection}
+                />
+
+                {/* Content Area */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="mt-6"
+                >
+                  {isError ? (
+                    <div className="text-center text-brand-pink">
+                      An error occurred while loading your library. Please try again.
+                    </div>
+                  ) : (
+                    <>
+                      {activeTab === 'albums' && (
+                        <AlbumsTab
+                          ref={albumsTabRef}
+                          isLoading={isLoading}
+                          isError={isError}
+                          albums={data?.albums || []}
+                          filteredAlbums={filteredAlbums}
+                          viewMode={viewMode}
+                          ItemComponent={MemoizedAlbumCard}
+                          isSelectionMode={isSelectionMode}
+                        />
+                      )}
+                      {activeTab === 'playlists' && (
+                        <PlaylistsTab
+                          ref={playlistsTabRef}
+                          playlists={filteredPlaylists}
+                          isLoading={isLoading}
+                          viewMode={viewMode}
+                          onTransfer={handleTransfer}
+                          isSelectionMode={isSelectionMode}
+                        />
+                      )}
+                    </>
+                  )}
+                </motion.div>
+              </Tabs>
+            </motion.div>
+
+            {/* Modals */}
+            <ExportLibraryDialog
+              open={isExportOpen}
+              onOpenChange={setIsExportOpen}
+              albums={data?.albums || []}
+              playlists={data?.playlists || []}
+              service={activeService}
+            />
+
+            {selectedPlaylist && (
+              <TransferPlaylistModal
+                open={isTransferModalOpen}
+                onOpenChange={setIsTransferModalOpen}
+                sourceService={activeService}
+                playlist={selectedPlaylist}
+                userId={user!.id}
+                onTransferComplete={() => {
+                  setSelectedPlaylist(null);
+                  queryClient.invalidateQueries(['storedLibrary']);
+                }}
+              />
+            )}
+          </div>
         </div>
-
-        <ExportLibraryDialog
-          open={isExportOpen}
-          onOpenChange={setIsExportOpen}
-          albums={data?.albums || []}
-          playlists={data?.playlists || []}
-          service={activeService}
-        />
-
-        {selectedPlaylist && (
-          <TransferPlaylistModal
-            open={isTransferModalOpen}
-            onOpenChange={setIsTransferModalOpen}
-            sourceService={activeService}
-            playlist={selectedPlaylist}
-            userId={user!.id}
-            onTransferComplete={() => {
-              setSelectedPlaylist(null);
-              queryClient.invalidateQueries(['storedLibrary']);
-            }}
-          />
-        )}
       </div>
     </ResponsiveContainer>
   );

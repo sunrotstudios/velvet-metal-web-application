@@ -10,6 +10,7 @@ import {
 export type TransferProgress = {
   current: number;
   total: number;
+  stage: 'processing' | 'matching' | 'adding' | 'complete';
 };
 
 export type TransferLogger = (
@@ -40,15 +41,87 @@ export async function transferLibrary(
 
   if (fromService === 'spotify' && toService === 'apple-music') {
     if (!tokens.apple_music_token) {
-      console.error('Missing Apple Music token');
       throw new Error('Apple Music token is required for this transfer');
     }
-    return await transferSpotifyToAppleMusic(
-      userId,
-      tokens.apple_music_token,
-      onProgress,
-      logger
-    );
+
+    // Create initial transfer record
+    const { data: transfer, error: transferError } = await supabase
+      .from('transfers')
+      .insert([
+        {
+          user_id: userId,
+          source_service: fromService,
+          destination_service: toService,
+          status: 'in_progress',
+          tracksCount: 0,
+          metadata: {
+            total_albums: 0,
+            successful_transfers: 0,
+            failed_transfers: 0,
+          },
+        },
+      ])
+      .select()
+      .single();
+
+    if (transferError) {
+      throw new Error(
+        `Failed to create transfer record: ${transferError.message}`
+      );
+    }
+
+    // Start background transfer
+    (async () => {
+      try {
+        await transferSpotifyToAppleMusic(
+          userId,
+          tokens.apple_music_token,
+          async (progress) => {
+            // Update progress in database
+            await supabase
+              .from('transfers')
+              .update({
+                metadata: {
+                  total_albums: progress.total,
+                  successful_transfers: progress.current,
+                  failed_transfers: 0,
+                },
+                tracksCount: progress.total,
+              })
+              .eq('id', transfer.id);
+
+            // Also call the UI callback
+            onProgress(progress);
+          },
+          logger
+        );
+
+        // Mark as completed
+        await supabase
+          .from('transfers')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', transfer.id);
+      } catch (error) {
+        console.error('Transfer failed:', error);
+
+        // Update transfer status to failed
+        await supabase
+          .from('transfers')
+          .update({
+            status: 'failed',
+            error: error.message,
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', transfer.id);
+
+        throw error;
+      }
+    })().catch(console.error);
+
+    return transfer;
   } else {
     throw new Error('This transfer direction is not yet implemented');
   }
@@ -115,36 +188,12 @@ async function transferSpotifyToAppleMusic(
     'info',
     `Starting transfer of ${allAlbums.length} albums from Spotify to Apple Music`
   );
-  onProgress({ current: 0, total: allAlbums.length });
-
-  // Create a transfer record
-  const { data: transfer, error: transferError } = await supabase
-    .from('transfers')
-    .insert([
-      {
-        user_id: userId,
-        source_service: 'spotify',
-        destination_service: 'apple-music',
-        status: 'in_progress',
-        tracksCount: allAlbums.length,
-        metadata: {
-          total_albums: allAlbums.length,
-          successful_transfers: 0,
-          failed_transfers: 0,
-        },
-      },
-    ])
-    .select()
-    .single();
-
-  if (transferError) {
-    throw new Error(
-      `Failed to create transfer record: ${transferError.message}`
-    );
-  }
+  onProgress({ current: 0, total: allAlbums.length, stage: 'processing' });
 
   let successCount = 0;
   let failureCount = 0;
+  let processedCount = 0;
+  let alreadyInLibraryCount = 0;
   const foundAppleMusicIds: string[] = [];
   const albumsToAdd: { id: string; album: (typeof allAlbums)[0] }[] = [];
 
@@ -153,6 +202,8 @@ async function transferSpotifyToAppleMusic(
     const albumsWithUpc = allAlbums.filter((album) => album.upc);
     const albumsWithoutUpc = allAlbums.filter((album) => !album.upc);
 
+    logger('info', `Found ${albumsWithUpc.length} albums with UPC codes`);
+
     if (albumsWithUpc.length > 0) {
       // Process UPC matches in larger batches
       const batchSize = 50; // Increased batch size for UPC matching
@@ -160,6 +211,12 @@ async function transferSpotifyToAppleMusic(
         const batch = albumsWithUpc.slice(i, i + batchSize);
         const upcs = batch.map((album) => album.upc!);
 
+        logger(
+          'info',
+          `Processing batch ${i / batchSize + 1} of ${Math.ceil(
+            albumsWithUpc.length / batchSize
+          )} (UPC matching)`
+        );
         const upcMatches = await findAlbumsByUPC(upcs, appleMusicToken);
 
         // Get all matched IDs
@@ -176,36 +233,57 @@ async function transferSpotifyToAppleMusic(
 
           // Process results
           batch.forEach((album) => {
+            processedCount++;
             const appleMusicId = upcMatches[album.upc!];
             if (appleMusicId) {
               if (existingAlbums[appleMusicId]) {
-                successCount++;
+                alreadyInLibraryCount++;
                 logger(
                   'info',
-                  `Album "${album.name}" already in library (UPC)`
+                  `✓ "${album.name}" by ${album.artist_name} - Already in library`
                 );
               } else {
                 foundAppleMusicIds.push(appleMusicId);
                 albumsToAdd.push({ id: appleMusicId, album });
+                logger(
+                  'info',
+                  `+ "${album.name}" by ${album.artist_name} - Found via UPC match`
+                );
               }
             } else {
               albumsWithoutUpc.push(album);
+              logger(
+                'info',
+                `? "${album.name}" by ${album.artist_name} - No UPC match, will try search`
+              );
             }
           });
         }
 
         onProgress({
-          current: Math.min(i + batchSize, albumsWithUpc.length),
+          current: processedCount,
           total: allAlbums.length,
+          stage: 'matching',
         });
       }
     }
+
+    logger(
+      'info',
+      `Searching for ${albumsWithoutUpc.length} remaining albums without UPC matches`
+    );
 
     // Process remaining albums with text search in parallel
     if (albumsWithoutUpc.length > 0) {
       const searchBatchSize = 10;
       for (let i = 0; i < albumsWithoutUpc.length; i += searchBatchSize) {
         const batch = albumsWithoutUpc.slice(i, i + searchBatchSize);
+        logger(
+          'info',
+          `Processing search batch ${
+            Math.floor(i / searchBatchSize) + 1
+          } of ${Math.ceil(albumsWithoutUpc.length / searchBatchSize)}`
+        );
 
         // Run searches in parallel
         const searchPromises = batch.map(async (album) => {
@@ -218,14 +296,33 @@ async function transferSpotifyToAppleMusic(
             const appleMusicId = findBestMatchingAlbum(searchResults, album);
 
             if (appleMusicId) {
+              logger(
+                'info',
+                `+ "${album.name}" by ${album.artist_name} - Found via search`
+              );
               return { album, appleMusicId };
+            } else {
+              logger(
+                'error',
+                `✕ "${album.name}" by ${album.artist_name} - Not found in Apple Music`
+              );
+              failureCount++;
             }
           } catch (error) {
+            failureCount++;
             logger(
               'error',
-              `Search failed for "${album.name}": ${(error as Error).message}`
+              `✕ "${album.name}" by ${album.artist_name} - Search failed: ${
+                (error as Error).message
+              }`
             );
           }
+          processedCount++;
+          onProgress({
+            current: processedCount,
+            total: allAlbums.length,
+            stage: 'matching',
+          });
           return null;
         });
 
@@ -244,10 +341,10 @@ async function transferSpotifyToAppleMusic(
 
           validResults.forEach(({ album, appleMusicId }) => {
             if (existingAlbums[appleMusicId]) {
-              successCount++;
+              alreadyInLibraryCount++;
               logger(
                 'info',
-                `Album "${album.name}" already in library (search)`
+                `✓ "${album.name}" by ${album.artist_name} - Already in library`
               );
             } else {
               foundAppleMusicIds.push(appleMusicId);
@@ -255,41 +352,53 @@ async function transferSpotifyToAppleMusic(
             }
           });
         }
+      }
+    }
 
-        failureCount += batch.length - validResults.length;
+    // Add albums to Apple Music library in batches
+    const batchSize = 10;
+    const batches = Math.ceil(albumsToAdd.length / batchSize);
 
+    for (let i = 0; i < batches; i++) {
+      const start = i * batchSize;
+      const end = Math.min(start + batchSize, albumsToAdd.length);
+      const batch = albumsToAdd.slice(start, end);
+
+      try {
         onProgress({
-          current:
-            albumsWithUpc.length +
-            Math.min(i + searchBatchSize, albumsWithoutUpc.length),
-          total: allAlbums.length,
+          current: start,
+          total: albumsToAdd.length,
+          stage: 'adding',
         });
+
+        await addAlbumsToAppleMusicLibrary(
+          batch.map((item) => item.id),
+          appleMusicToken
+        );
+
+        successCount += batch.length;
+      } catch (error) {
+        console.error(
+          `Failed to add batch ${i + 1}/${batches} to library:`,
+          error
+        );
+        failureCount += batch.length;
       }
     }
 
-    // Add all found albums to library in larger batches
-    if (albumsToAdd.length > 0) {
-      const addBatchSize = 50; // Increased batch size for adding to library
-      for (let i = 0; i < albumsToAdd.length; i += addBatchSize) {
-        const batch = albumsToAdd.slice(i, i + addBatchSize);
-        const ids = batch.map((item) => item.id);
+    logger(
+      'success',
+      `Transfer complete! Added ${successCount} albums, ${alreadyInLibraryCount} were already in library, ${failureCount} failed`
+    );
 
-        try {
-          await addAlbumsToAppleMusicLibrary(ids, appleMusicToken);
-          successCount += batch.length;
-          logger('success', `Added ${batch.length} albums to library`);
-        } catch (error) {
-          failureCount += batch.length;
-          logger(
-            'error',
-            `Failed to add batch to library: ${(error as Error).message}`
-          );
-        }
-      }
-    }
+    onProgress({
+      current: allAlbums.length,
+      total: allAlbums.length,
+      stage: 'complete',
+    });
 
-    // Update transfer record
-    const { error: updateError } = await supabase
+    // Update transfer record with success status
+    await supabase
       .from('transfers')
       .update({
         status: 'completed',
@@ -298,20 +407,11 @@ async function transferSpotifyToAppleMusic(
           total_albums: allAlbums.length,
           successful_transfers: successCount,
           failed_transfers: failureCount,
+          already_in_library: alreadyInLibraryCount,
         },
       })
       .eq('id', transfer.id);
 
-    if (updateError) {
-      throw new Error(
-        `Failed to update transfer record: ${updateError.message}`
-      );
-    }
-
-    logger(
-      'success',
-      `Transfer completed: ${successCount} successful, ${failureCount} failed`
-    );
     return { successCount, failureCount };
   } catch (error) {
     // Update transfer record with error

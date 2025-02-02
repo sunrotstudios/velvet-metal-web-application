@@ -84,10 +84,10 @@ export function AlbumTransferModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-black border border-white/10">
         <DialogHeader>
-          <DialogTitle>Transfer Album</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="font-polymath text-2xl text-white">Transfer Album</DialogTitle>
+          <DialogDescription className="text-white/60">
             Transfer "{album?.name}" to another service
           </DialogDescription>
         </DialogHeader>
@@ -96,23 +96,25 @@ export function AlbumTransferModal({
           {!isTransferring ? (
             <>
               <div className="space-y-4">
-                <Label>Transfer to:</Label>
+                <Label className="text-white/80">Transfer to:</Label>
                 <RadioGroup
                   value={targetService}
                   onValueChange={(value: 'spotify' | 'apple-music') =>
                     setTargetService(value)
                   }
+                  className="space-y-3"
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3">
                     <RadioGroupItem
                       value="spotify"
                       id="spotify"
                       disabled={sourceService === 'spotify'}
+                      className="border-white/20 text-white"
                     />
                     <Label
                       htmlFor="spotify"
                       className={cn(
-                        'flex items-center gap-2',
+                        'flex items-center gap-2 text-white cursor-pointer',
                         sourceService === 'spotify' && 'opacity-50'
                       )}
                     >
@@ -120,16 +122,17 @@ export function AlbumTransferModal({
                       Spotify
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3">
                     <RadioGroupItem
                       value="apple-music"
                       id="apple-music"
                       disabled={sourceService === 'apple-music'}
+                      className="border-white/20 text-white"
                     />
                     <Label
                       htmlFor="apple-music"
                       className={cn(
-                        'flex items-center gap-2',
+                        'flex items-center gap-2 text-white cursor-pointer',
                         sourceService === 'apple-music' && 'opacity-50'
                       )}
                     >
@@ -141,7 +144,12 @@ export function AlbumTransferModal({
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={handleTransfer}>Start Transfer</Button>
+                <Button 
+                  onClick={handleTransfer}
+                  className="bg-white/10 text-white hover:bg-white/20 border-0"
+                >
+                  Start Transfer
+                </Button>
               </div>
             </>
           ) : (
@@ -149,17 +157,21 @@ export function AlbumTransferModal({
               <div className="flex items-center gap-2">
                 {progress ? (
                   <>
-                    <Progress value={progress.progress} />
-                    <span className="text-sm text-muted-foreground">
+                    <Progress 
+                      value={progress.progress} 
+                      className="bg-white/5"
+                      indicatorClassName="bg-white"
+                    />
+                    <span className="text-sm text-white/60">
                       {progress.progress.toFixed(0)}%
                     </span>
                   </>
                 ) : (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
                 )}
               </div>
               {progress?.message && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/60">
                   {progress.message}
                 </p>
               )}

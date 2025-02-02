@@ -88,139 +88,116 @@ export default function PlaylistDetails() {
     return null;
   }
 
+  const handlePlayPlaylist = () => {
+    console.log('Play playlist');
+  };
+
+  const totalDuration = playlist.tracks.reduce((acc, track) => acc + track.duration_ms, 0);
+
   return (
-    <>
+    <div className="relative min-h-screen w-full bg-black">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#4996df]/20 to-black/95" />
+      
+      <div className="relative px-6 py-8 md:px-8 lg:px-12">
+        {/* Header Section */}
+        <div className="flex flex-col gap-8 md:flex-row md:items-end md:gap-12">
+          <div className="relative aspect-square w-48 md:w-64 lg:w-72">
+            <img
+              src={playlist.artwork?.url || ''}
+              alt={playlist.name}
+              className="h-full w-full rounded-xl object-cover shadow-2xl"
+            />
+          </div>
+
+          <div className="flex flex-1 flex-col gap-4">
+            <div>
+              <h4 className="font-polymath text-sm uppercase tracking-wider text-white/60">Playlist</h4>
+              <h1 className="font-polymath text-4xl font-medium text-white md:text-5xl lg:text-6xl">
+                {playlist.name}
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-white/60">
+              <span className="font-medium text-white">{playlist.owner?.display_name}</span>
+              <span>•</span>
+              <span>{playlist.total_tracks} tracks</span>
+              <span>•</span>
+              <span className="capitalize">{playlist.service}</span>
+            </div>
+
+            {playlist.description && (
+              <p className="max-w-2xl text-sm text-white/60">{playlist.description}</p>
+            )}
+
+            <div className="flex items-center gap-4">
+              <Button
+                size="lg"
+                className="bg-white/10 text-white hover:bg-white/20"
+                onClick={handlePlayPlaylist}
+              >
+                <Play className="mr-2 h-5 w-5" />
+                Play
+              </Button>
+              <Button
+                size="lg"
+                variant="ghost"
+                className="text-white hover:bg-white/10"
+                onClick={() => setIsTransferModalOpen(true)}
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                Add to Library
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tracks Section */}
+        <div className="mt-12">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="font-polymath text-2xl font-medium text-white">Tracks</h2>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-white/60">
+                {formatDuration(totalDuration)}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            {playlist.tracks.map((track, index) => (
+              <div
+                key={track.id}
+                className="group flex items-center gap-4 rounded-lg px-4 py-2 transition-colors hover:bg-white/5"
+              >
+                <div className="w-8 text-center text-sm text-white/40 group-hover:text-white/60">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="line-clamp-1 text-sm font-medium text-white">
+                      {track.name}
+                    </span>
+                  </div>
+                  {track.artists && (
+                    <div className="line-clamp-1 text-sm text-white/60">
+                      {track.artists.map((a) => a.name).join(', ')}
+                    </div>
+                  )}
+                </div>
+                <div className="w-20 text-right text-sm text-white/60">
+                  {formatDuration(track.duration_ms)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Transfer Modal */}
       <TransferPlaylistModal
         isOpen={isTransferModalOpen}
         onClose={() => setIsTransferModalOpen(false)}
         playlist={playlist}
       />
-      <ResponsiveContainer
-        mobileContent={
-          <MobilePlaylistDetails
-            playlist={playlist}
-            onTransfer={handleTransfer}
-          />
-        }
-      >
-        <div className="flex h-full flex-col overflow-hidden">
-          <div className="flex-none space-y-8 p-8">
-            <Button
-              variant="ghost"
-              className="w-fit gap-2"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Library
-            </Button>
-
-            {/* Playlist Header */}
-            <div className="flex items-start gap-8">
-              <div className="relative aspect-square w-48 overflow-hidden rounded-lg">
-                {playlist.artwork?.url ? (
-                  <img
-                    src={playlist.artwork.url}
-                    alt={playlist.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-muted flex items-center justify-center">
-                    <Play className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col justify-end space-y-4">
-                <div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="font-medium uppercase tracking-wider">
-                      {playlist.service === 'spotify'
-                        ? 'Spotify'
-                        : playlist.service === 'apple-music'
-                        ? 'Apple Music'
-                        : playlist.service}
-                    </span>
-                    <span>•</span>
-                    <span>Playlist</span>
-                  </div>
-                  <h1 className="text-4xl font-bold mt-1">{playlist.name}</h1>
-                  {playlist.description && (
-                    <p className="text-xl text-muted-foreground">
-                      {playlist.description}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {playlist.owner?.display_name && (
-                    <>
-                      <span>By {playlist.owner.display_name}</span>
-                      <span>•</span>
-                    </>
-                  )}
-                  <span>{playlist.total_tracks} songs</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button size="lg" className="gap-2">
-                    <Play className="h-5 w-5" />
-                    Play
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleTransfer();
-                    }}
-                  >
-                    <Plus className="h-5 w-5" />
-                    Transfer
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Track List */}
-          <div className="flex-1 overflow-y-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 bg-background">
-                <tr>
-                  <th className="w-12 px-4 py-2 text-left">#</th>
-                  <th className="px-4 py-2 text-left">Title</th>
-                  <th className="px-4 py-2 text-left">Artist</th>
-                  <th className="px-4 py-2 text-left">Album</th>
-                  <th className="w-24 px-4 py-2 text-left">
-                    <Clock className="h-4 w-4" />
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {(playlist.tracks || []).map((track, index) => (
-                  <tr
-                    key={track.id || index}
-                    className="group hover:bg-muted/50"
-                  >
-                    <td className="px-4 py-2 text-muted-foreground">
-                      {index + 1}
-                    </td>
-                    <td className="px-4 py-2">{track.name}</td>
-                    <td className="px-4 py-2">
-                      {playlist.service === 'spotify'
-                        ? track.artists.map((a) => a.name).join(', ')
-                        : track.artist.name}
-                    </td>
-                    <td className="px-4 py-2">{track.album?.name}</td>
-                    <td className="px-4 py-2 text-muted-foreground">
-                      {formatDuration(track.duration_ms)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </ResponsiveContainer>
-    </>
+    </div>
   );
 }

@@ -97,10 +97,13 @@ export function ServiceConnection({ service }: ServiceConnectionProps) {
 
   return (
     <Button
-      variant={isConnected ? 'outline' : 'default'}
+      variant="outline"
+      size="sm"
+      className={`bg-white/10 text-white hover:bg-white/20 border-0 ${
+        isConnecting ? 'opacity-50 cursor-not-allowed' : ''
+      }`}
       onClick={isConnected ? handleDisconnect : handleConnect}
       disabled={isConnecting}
-      size="sm"
     >
       {isConnected ? 'Disconnect' : 'Connect'}
     </Button>

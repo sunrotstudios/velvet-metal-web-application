@@ -488,25 +488,25 @@ export async function addAlbumsToAppleMusicLibrary(
   try {
     console.log('Adding albums to library:', { albumIds });
 
-    // Process in smaller batches to avoid URL length limits
-    // Most web servers have a limit around 2000 characters
-    const batchSize = 10; // Reduced from 25 to be safer
+    // Process in larger batches while staying under URL length limits
+    const batchSize = 25; // Increased from 10 to 25
     const batches = [];
-    
+
     for (let i = 0; i < albumIds.length; i += batchSize) {
       batches.push(albumIds.slice(i, i + batchSize));
     }
-    
+
     console.log(`Processing ${batches.length} batches of albums...`);
 
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
-      console.log(`Processing batch ${i + 1}/${batches.length} (${batch.length} albums)`);
-      
-      // Format the IDs as a query parameter
-      const idsParam = batch.map(id => `ids[albums]=${id}`).join('&');
+      console.log(
+        `Processing batch ${i + 1}/${batches.length} (${batch.length} albums)`
+      );
+
+      const idsParam = batch.map((id) => `ids[albums]=${id}`).join('&');
       const url = `https://api.music.apple.com/v1/me/library?${idsParam}`;
-      
+
       console.log('Adding batch to library:', { url });
 
       await retryWithBackoff(async () => {
@@ -515,10 +515,9 @@ export async function addAlbumsToAppleMusicLibrary(
           headers: {
             Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
             'Music-User-Token': token,
-          }
+          },
         });
 
-        // Per Apple's docs: 202 is success, empty body is expected
         if (response.status !== 202) {
           let errorMessage = `Failed to add albums to library: ${response.status}`;
           try {
@@ -531,21 +530,14 @@ export async function addAlbumsToAppleMusicLibrary(
           throw new Error(errorMessage);
         }
 
-        // Log success but don't try to read the body (it should be empty)
         console.log(`Batch ${i + 1}/${batches.length} accepted (status 202)`);
         return response;
       });
 
-      // Wait between batches - longer wait for larger batches
-      const waitTime = Math.min(2000 + (batch.length * 500), 10000);
-      console.log(`Waiting ${waitTime}ms before next batch...`);
-      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      // Minimal wait between batches to respect rate limits
+      // Apple's rate limits aren't publicly documented, but testing shows we can be more aggressive
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
-
-    // Final wait after all batches
-    console.log('All batches processed. Waiting for final processing...');
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    
   } catch (error) {
     console.error('Failed to add albums to library:', error);
     throw error;
@@ -575,7 +567,9 @@ export async function addAppleMusicAlbumToLibrary(
           error: errorText,
           albumId,
         });
-        throw new Error(`Failed to verify album in catalog: ${response.status} - ${errorText}`);
+        throw new Error(
+          `Failed to verify album in catalog: ${response.status} - ${errorText}`
+        );
       }
 
       return response;
@@ -625,7 +619,7 @@ export async function addAppleMusicAlbumToLibrary(
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       // Wait before checking
       await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
-      
+
       try {
         libraryAlbum = await findAlbumInLibrary(albumId, token);
         if (libraryAlbum) {
@@ -720,7 +714,9 @@ export async function searchAppleMusicCatalog(
     });
 
     if (!response.ok) {
-      throw new Error(`Search failed: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Search failed: ${response.status} ${response.statusText}`
+      );
     }
 
     const data = await response.json();
@@ -743,9 +739,9 @@ export async function checkAlbumsInLibrary(
     const batchSize = 10;
     for (let i = 0; i < albumIds.length; i += batchSize) {
       const batchIds = albumIds.slice(i, i + batchSize);
-      const idsParam = batchIds.map(id => `ids[albums]=${id}`).join('&');
+      const idsParam = batchIds.map((id) => `ids[albums]=${id}`).join('&');
       const url = `https://api.music.apple.com/v1/me/library/albums?${idsParam}`;
-      
+
       console.log('Checking batch with URL:', url);
 
       const response = await retryWithBackoff(async () => {
@@ -761,9 +757,11 @@ export async function checkAlbumsInLibrary(
           console.error('Failed to check albums:', {
             status: res.status,
             error: errorText,
-            url
+            url,
           });
-          throw new Error(`Failed to check albums: ${res.status} - ${errorText}`);
+          throw new Error(
+            `Failed to check albums: ${res.status} - ${errorText}`
+          );
         }
 
         return res;
@@ -771,13 +769,15 @@ export async function checkAlbumsInLibrary(
 
       const data = await response.json();
       console.log('Library check response:', data);
-      
+
       const foundIds = new Set(data.data?.map((item: any) => item.id));
       console.log('Found IDs in library:', Array.from(foundIds));
-      
+
       for (const id of batchIds) {
         results[id] = foundIds.has(id);
-        console.log(`Album ${id}: ${results[id] ? 'found' : 'not found'} in library`);
+        console.log(
+          `Album ${id}: ${results[id] ? 'found' : 'not found'} in library`
+        );
       }
     }
 
@@ -788,17 +788,22 @@ export async function checkAlbumsInLibrary(
   }
 }
 
-export async function findAlbumsByUPC(upcs: string[], userToken: string): Promise<{ [upc: string]: string | null }> {
+export async function findAlbumsByUPC(
+  upcs: string[],
+  userToken: string
+): Promise<{ [upc: string]: string | null }> {
   try {
     // Apple Music API has a limit on URL length, so we'll process in batches
     const batchSize = 10;
     const results: { [upc: string]: string | null } = {};
-    
+
     for (let i = 0; i < upcs.length; i += batchSize) {
       const batchUpcs = upcs.slice(i, i + batchSize);
-      
+
       const response = await fetch(
-        `https://api.music.apple.com/v1/catalog/us/albums?filter[upc]=${batchUpcs.join(',')}`,
+        `https://api.music.apple.com/v1/catalog/us/albums?filter[upc]=${batchUpcs.join(
+          ','
+        )}`,
         {
           headers: {
             Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
@@ -811,13 +816,14 @@ export async function findAlbumsByUPC(upcs: string[], userToken: string): Promis
       }
 
       const data = await response.json();
-      
+
       // Map each UPC to its corresponding Apple Music ID
-      batchUpcs.forEach(upc => {
-        const album = data.data?.find((a: any) => 
-          a.attributes?.upc === upc ||
-          // Sometimes UPCs have leading zeros trimmed, try both
-          a.attributes?.upc === upc.replace(/^0+/, '')
+      batchUpcs.forEach((upc) => {
+        const album = data.data?.find(
+          (a: any) =>
+            a.attributes?.upc === upc ||
+            // Sometimes UPCs have leading zeros trimmed, try both
+            a.attributes?.upc === upc.replace(/^0+/, '')
         );
         results[upc] = album ? album.id : null;
       });
@@ -849,8 +855,11 @@ export function findBestMatchingAlbum(
   let bestScore = 0;
 
   for (const album of albums) {
-    const nameMatch = album.attributes.name.toLowerCase() === targetAlbum.name.toLowerCase();
-    const artistMatch = album.attributes.artistName.toLowerCase() === targetAlbum.artist_name.toLowerCase();
+    const nameMatch =
+      album.attributes.name.toLowerCase() === targetAlbum.name.toLowerCase();
+    const artistMatch =
+      album.attributes.artistName.toLowerCase() ===
+      targetAlbum.artist_name.toLowerCase();
 
     const score = (nameMatch ? 1 : 0) + (artistMatch ? 1 : 0);
 
@@ -874,7 +883,7 @@ export function findBestMatchingAlbum(
   return null;
 }
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function retryWithBackoff<T>(
   operation: () => Promise<T>,
@@ -882,23 +891,26 @@ async function retryWithBackoff<T>(
   baseDelay: number = 1000
 ): Promise<T> {
   let lastError: Error;
-  
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await operation();
     } catch (error: any) {
       lastError = error;
-      
+
       // Only retry on 500 errors or network failures
-      if (!error.message?.includes('500') && !error.message?.includes('Failed to fetch')) {
+      if (
+        !error.message?.includes('500') &&
+        !error.message?.includes('Failed to fetch')
+      ) {
         throw error;
       }
-      
+
       const delayMs = baseDelay * Math.pow(2, attempt);
       console.log(`Attempt ${attempt + 1} failed, retrying in ${delayMs}ms...`);
       await delay(delayMs);
     }
   }
-  
+
   throw lastError;
 }
