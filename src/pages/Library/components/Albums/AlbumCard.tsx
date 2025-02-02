@@ -88,9 +88,9 @@ export const AlbumCard = ({
     <>
       <Card
         className={cn(
-          'group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-accent cursor-pointer',
-          viewMode === 'list' && 'hover:bg-accent/5',
-          isSelected && 'bg-accent'
+          'group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-white/5 cursor-pointer',
+          viewMode === 'list' && 'hover:bg-white/5',
+          isSelected && 'bg-white/5'
         )}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
@@ -120,8 +120,8 @@ export const AlbumCard = ({
                   className="h-full w-full object-cover transition-all group-hover:scale-105"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-muted">
-                  {/* <Music className="h-12 w-12 text-muted-foreground" /> */}
+                <div className="flex h-full w-full items-center justify-center bg-white/5">
+                  {/* <Music className="h-12 w-12 text-white/40" /> */}
                 </div>
               )}
               {!isSelectionMode && (
@@ -151,7 +151,7 @@ export const AlbumCard = ({
                   <Checkbox
                     checked={isSelected}
                     onCheckedChange={() => onSelect?.(album)}
-                    className="h-5 w-5 rounded-sm bg-white/80 border-2 border-white/80 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    className="h-5 w-5 rounded-sm bg-white/10 border-2 border-white/20 data-[state=checked]:bg-brand-blue data-[state=checked]:border-brand-blue"
                   />
                 </div>
               )}
@@ -160,10 +160,10 @@ export const AlbumCard = ({
             {/* Album Info */}
             {viewMode === 'grid' ? (
               <div className="flex flex-col min-w-0">
-                <h3 className="line-clamp-1 text-sm font-medium">
+                <h3 className="line-clamp-1 text-sm font-medium text-white">
                   {album.name}
                 </h3>
-                <p className="line-clamp-1 text-xs sm:text-sm text-muted-foreground">
+                <p className="line-clamp-1 text-xs sm:text-sm text-white/60">
                   {album.artist_name}
                 </p>
               </div>
@@ -171,28 +171,28 @@ export const AlbumCard = ({
               <div className="flex flex-1 items-center gap-6">
                 {/* Title and Artist */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="line-clamp-1 text-sm font-medium">
+                  <h3 className="line-clamp-1 text-sm font-medium text-white">
                     {album.name}
                   </h3>
-                  <p className="line-clamp-1 text-sm text-muted-foreground">
+                  <p className="line-clamp-1 text-sm text-white/60">
                     {album.artist_name}
                   </p>
                 </div>
 
                 {/* Album Type */}
                 <div className="w-24 flex-shrink-0 hidden md:block">
-                  <span className="text-sm capitalize px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                  <span className="text-sm capitalize px-2 py-0.5 rounded-full bg-white/5 text-white/80 border border-white/10">
                     {album.album_type}
                   </span>
                 </div>
 
                 {/* Track Count */}
-                <div className="w-24 flex-shrink-0 text-sm text-muted-foreground hidden md:block">
-                  {album.tracks_count}
+                <div className="w-24 flex-shrink-0 text-sm text-white/60 hidden md:block">
+                  {album.tracks_count} tracks
                 </div>
 
                 {/* Release Year */}
-                <div className="w-20 flex-shrink-0 text-sm text-muted-foreground hidden md:block">
+                <div className="w-20 flex-shrink-0 text-sm text-white/60 hidden md:block">
                   {releaseYear}
                 </div>
               </div>
@@ -204,10 +204,7 @@ export const AlbumCard = ({
       <AlbumTransferModal
         open={isTransferModalOpen}
         onOpenChange={setIsTransferModalOpen}
-        sourceService={album.service}
         album={album}
-        userId={user!.id}
-        onTransferComplete={() => setIsTransferModalOpen(false)}
       />
     </>
   );

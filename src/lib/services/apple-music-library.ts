@@ -128,6 +128,26 @@ export async function syncAppleMusicLibrary(
     let allAlbums: any[] = [];
     let hasMore = true;
 
+    // First request to check if library has any albums
+    const initialResponse = await music.api.music('/v1/me/library/albums', {
+      limit: 1,
+    });
+
+    if (
+      !initialResponse?.data?.data ||
+      initialResponse.data.data.length === 0
+    ) {
+      console.log('Apple Music library is empty');
+      if (onProgress) {
+        onProgress(100);
+      }
+      return {
+        albums: [],
+        playlists: [],
+      };
+    }
+
+    // Library has albums, proceed with full sync
     while (hasMore) {
       const response = await music.api.music('/v1/me/library/albums', {
         limit,
@@ -147,48 +167,69 @@ export async function syncAppleMusicLibrary(
       }
     }
 
-    const transformedAlbums = allAlbums.map((album) => {
-      return {
-        id: uuidv4(),
-        user_id: userId,
-        service: 'apple-music' as const,
-        album_id: album.id,
-        name: album.attributes.name,
-        artist_name: album.attributes.artistName,
-        image_url: album.attributes.artwork?.url?.replace('{w}x{h}', '300x300'),
-        release_date: album.attributes.releaseDate,
-        tracks_count: album.attributes.trackCount,
-        external_url: null,
-        album_type: 'album', // We can improve this later to detect singles/EPs
-        synced_at: new Date().toISOString(),
-      };
-    });
+    console.log(`Found ${allAlbums.length} albums in Apple Music library`);
 
-    // Store in Supabase in batches
-    const batchSize = 100;
-    for (let i = 0; i < transformedAlbums.length; i += batchSize) {
-      const batch = transformedAlbums.slice(i, i + batchSize);
-      const { error } = await supabase.from('user_albums').upsert(batch, {
-        onConflict: 'user_id,service,album_id',
-      });
+    const transformedAlbums = allAlbums
+      .map((album) => {
+        console.log('Processing album:', album);
 
-      if (error) {
-        throw error;
+        // Ensure we have required fields
+        if (!album.attributes?.name || !album.attributes?.artistName) {
+          console.warn('Album missing required attributes:', {
+            id: album.id,
+            name: album.attributes?.name,
+            artistName: album.attributes?.artistName,
+          });
+          return null;
+        }
+
+        return {
+          id: uuidv4(),
+          user_id: userId,
+          service: 'apple-music' as const,
+          album_id: album.id,
+          name: album.attributes.name.trim() || 'Unknown Album',
+          artist_name: album.attributes.artistName.trim() || 'Unknown Artist',
+          image_url:
+            album.attributes.artwork?.url?.replace('{w}x{h}', '300x300') ||
+            null,
+          release_date: album.attributes.releaseDate || null,
+          tracks_count: album.attributes.trackCount || 0,
+          external_url: null,
+          album_type: 'album',
+          synced_at: new Date().toISOString(),
+          added_at: album.attributes.dateAdded || new Date().toISOString(),
+        };
+      })
+      .filter((album): album is NonNullable<typeof album> => album !== null);
+
+    // Only proceed with database operations if we have albums to store
+    if (transformedAlbums.length > 0) {
+      // Store in Supabase in batches
+      const batchSize = 100;
+      for (let i = 0; i < transformedAlbums.length; i += batchSize) {
+        const batch = transformedAlbums.slice(i, i + batchSize);
+        const { error } = await supabase.from('user_albums').upsert(batch, {
+          onConflict: 'user_id,service,album_id',
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (onProgress) {
+          const insertProgress = Math.min(
+            50,
+            ((i + batchSize) / transformedAlbums.length) * 50
+          );
+          onProgress(50 + insertProgress);
+        }
       }
-
-      // Update progress for the insertion phase
+    } else {
+      console.log('No valid albums to sync');
       if (onProgress) {
-        const insertProgress = Math.min(
-          50,
-          ((i + batchSize) / transformedAlbums.length) * 50
-        );
-        onProgress(insertProgress);
+        onProgress(50);
       }
-    }
-
-    // Set final progress for albums (50%)
-    if (onProgress) {
-      onProgress(50);
     }
 
     // Now sync playlists

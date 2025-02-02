@@ -45,6 +45,8 @@ export async function syncSpotifyLibrary(
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           album_type: albumType,
+          added_at: album.added_at,
+          upc: album.upc,
         };
       })
     );

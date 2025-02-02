@@ -90,7 +90,7 @@ export function MobileLanding({ features }: MobileLandingProps) {
             className="text-center mb-8"
           >
             <div className="mb-6">
-              <h1 className="text-4xl font-bold text-foreground mb-4">
+              <h1 className="font-radlush text-4xl text-foreground mb-4">
                 Velvet Metal
               </h1>
               <div className="w-16 h-1 bg-primary mx-auto" />

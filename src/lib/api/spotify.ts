@@ -394,19 +394,19 @@ export async function getAllSpotifyAlbums(
 
     // Process albums
     return allAlbums.map((item: any) => {
+      console.log('Spotify album response:', item);
       const album = item.album || item;
       return {
         album_id: album?.id,
-        name: album?.name || 'Untitled Album',
-        artist_name:
-          album?.artists
-            ?.map((artist: any) => artist.name || 'Unknown Artist')
-            .join(', ') || 'Unknown Artist',
-        image_url: album?.images?.[0]?.url || null,
-        release_date: album?.release_date || null,
-        tracks_count: album?.total_tracks || 0,
+        name: album?.name,
+        artist_name: album?.artists?.[0]?.name,
+        image_url: album?.images?.[0]?.url,
+        release_date: album?.release_date,
+        tracks_count: album?.total_tracks,
         external_url: album?.external_urls?.spotify || null,
         album_type: album?.album_type?.toLowerCase() || 'album',
+        added_at: item.added_at || null,
+        upc: album?.external_ids?.upc || null,
       };
     });
   } catch (error) {
@@ -463,6 +463,9 @@ export async function getSpotifyAlbumDetails(
           width: album.images[0]?.width,
           height: album.images[0]?.height,
         },
+        genres: album.genres || [],
+        copyrights: album.copyrights?.map((c: any) => c.text) || [],
+        label: album.label,
         tracks: tracks.items.map((track: any) => ({
           id: track.id,
           name: track.name,
@@ -506,36 +509,39 @@ export async function getSpotifyPlaylistDetails(
       }
 
       const data = await response.json();
-      
+
       return {
         id: data.id,
         name: data.name,
         description: data.description,
         owner: data.owner,
         service: 'spotify' as const,
-        artwork: data.images?.[0] ? {
-          url: data.images[0].url,
-          width: data.images[0].width,
-          height: data.images[0].height,
-        } : undefined,
-        tracks: data.tracks?.items?.map((item: any) => ({
-          id: item.track.id,
-          name: item.track.name,
-          artist: {
-            id: item.track.artists[0].id,
-            name: item.track.artists[0].name,
-          },
-          artists: item.track.artists.map((artist: any) => ({
-            id: artist.id,
-            name: artist.name,
-          })),
-          album: {
-            id: item.track.album.id,
-            name: item.track.album.name,
-          },
-          duration_ms: item.track.duration_ms,
-          added_at: item.added_at,
-        })) || [],
+        artwork: data.images?.[0]
+          ? {
+              url: data.images[0].url,
+              width: data.images[0].width,
+              height: data.images[0].height,
+            }
+          : undefined,
+        tracks:
+          data.tracks?.items?.map((item: any) => ({
+            id: item.track.id,
+            name: item.track.name,
+            artist: {
+              id: item.track.artists[0].id,
+              name: item.track.artists[0].name,
+            },
+            artists: item.track.artists.map((artist: any) => ({
+              id: artist.id,
+              name: artist.name,
+            })),
+            album: {
+              id: item.track.album.id,
+              name: item.track.album.name,
+            },
+            duration_ms: item.track.duration_ms,
+            added_at: item.added_at,
+          })) || [],
         total_tracks: data.tracks?.total || 0,
         collaborative: data.collaborative,
         public: data.public,

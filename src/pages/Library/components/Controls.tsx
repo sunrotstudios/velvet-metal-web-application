@@ -31,8 +31,6 @@ interface ControlsProps {
   activeTab: string;
   albumTypeFilter: 'all' | 'album' | 'single' | 'ep';
   onAlbumTypeChange: (type: 'all' | 'album' | 'single' | 'ep') => void;
-  isSelectionMode?: boolean;
-  onToggleSelection?: () => void;
 }
 
 export const Controls = ({
@@ -48,25 +46,23 @@ export const Controls = ({
   activeTab,
   albumTypeFilter,
   onAlbumTypeChange,
-  isSelectionMode,
-  onToggleSelection,
 }: ControlsProps) => {
   return (
     <div className="flex flex-col space-y-4">
       <div className="grid gap-4 md:grid-cols-[1fr_auto_auto]">
         {/* Left Section: Tabs and Service Selection */}
         <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
-          <TabsList className="inline-flex h-9 items-center justify-center rounded-lg p-1 text-muted-foreground">
+          <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-white/5 p-1 text-white">
             <TabsTrigger
               value="albums"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-brand-blue/20 data-[state=active]:text-brand-blue data-[state=active]:shadow-sm"
             >
               <LibraryIcon className="mr-2 h-4 w-4" />
               Albums
             </TabsTrigger>
             <TabsTrigger
               value="playlists"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-5 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-brand-blue/20 data-[state=active]:text-brand-blue data-[state=active]:shadow-sm"
             >
               <ListMusic className="mr-2 h-4 w-4" />
               Playlists
@@ -77,70 +73,37 @@ export const Controls = ({
             value={activeService}
             onValueChange={(value: ServiceType) => setActiveService(value)}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] bg-white/5 border-white/10 text-white">
               <SelectValue placeholder="Select Service" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="spotify">Spotify</SelectItem>
-              <SelectItem value="apple-music">Apple Music</SelectItem>
-              <SelectItem value="tidal">Tidal</SelectItem>
+            <SelectContent className="bg-black/95 border-white/10">
+              <SelectItem value="spotify" className="text-white focus:bg-white/10 focus:text-white">Spotify</SelectItem>
+              <SelectItem value="apple-music" className="text-white focus:bg-white/10 focus:text-white">Apple Music</SelectItem>
+              <SelectItem value="tidal" className="text-white focus:bg-white/10 focus:text-white">Tidal</SelectItem>
             </SelectContent>
           </Select>
 
           {activeTab === 'albums' ? (
-            <>
-              <Select value={albumTypeFilter} onValueChange={onAlbumTypeChange}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="Album Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="album">Album</SelectItem>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="ep">EP</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="default"
-                className="w-[130px]"
-                onClick={() => {
-                  if (isSelectionMode && onToggleSelection) {
-                    // Clear selection state
-                    onToggleSelection();
-                  } else if (onToggleSelection) {
-                    onToggleSelection();
-                  }
-                }}
-              >
-                {isSelectionMode ? 'Cancel Selection' : 'Select Albums'}
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="outline"
-              size="default"
-              className="w-[130px]"
-              onClick={() => {
-                if (isSelectionMode && onToggleSelection) {
-                  // Clear selection state
-                  onToggleSelection();
-                } else if (onToggleSelection) {
-                  onToggleSelection();
-                }
-              }}
-            >
-              {isSelectionMode ? 'Cancel Selection' : 'Select Playlists'}
-            </Button>
-          )}
+            <Select value={albumTypeFilter} onValueChange={onAlbumTypeChange}>
+              <SelectTrigger className="w-[130px] bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Album Type" />
+              </SelectTrigger>
+              <SelectContent className="bg-black/95 border-white/10">
+                <SelectItem value="all" className="text-white focus:bg-white/10 focus:text-white">All Types</SelectItem>
+                <SelectItem value="album" className="text-white focus:bg-white/10 focus:text-white">Album</SelectItem>
+                <SelectItem value="single" className="text-white focus:bg-white/10 focus:text-white">Single</SelectItem>
+                <SelectItem value="ep" className="text-white focus:bg-white/10 focus:text-white">EP</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : null}
         </div>
 
         {/* Middle Section: Search */}
         <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-white/60" />
           <Input
             placeholder="Search..."
-            className="h-9 pl-8"
+            className="h-9 pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/60"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -149,24 +112,24 @@ export const Controls = ({
         {/* Right Section: Sort and View Controls */}
         <div className="flex items-center gap-2">
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="h-9 w-[130px]">
+            <SelectTrigger className="h-9 w-[130px] bg-white/5 border-white/10 text-white">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-              <SelectItem value="artist-asc">Artist (A-Z)</SelectItem>
-              <SelectItem value="artist-desc">Artist (Z-A)</SelectItem>
-              <SelectItem value="recent">Recently Added</SelectItem>
+            <SelectContent className="bg-black/95 border-white/10">
+              <SelectItem value="name-asc" className="text-white focus:bg-white/10 focus:text-white">Name (A-Z)</SelectItem>
+              <SelectItem value="name-desc" className="text-white focus:bg-white/10 focus:text-white">Name (Z-A)</SelectItem>
+              <SelectItem value="artist-asc" className="text-white focus:bg-white/10 focus:text-white">Artist (A-Z)</SelectItem>
+              <SelectItem value="artist-desc" className="text-white focus:bg-white/10 focus:text-white">Artist (Z-A)</SelectItem>
+              <SelectItem value="recent" className="text-white focus:bg-white/10 focus:text-white">Recent</SelectItem>
             </SelectContent>
           </Select>
 
-          <div className="flex h-9 items-center gap-0.5 rounded-md border p-0.5">
+          <div className="flex h-9 items-center gap-0.5 rounded-md border border-white/10 bg-white/5 p-0.5">
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
               size="icon"
               onClick={() => setViewMode('grid')}
-              className="h-7 w-7"
+              className="h-7 w-7 hover:bg-white/10 hover:text-white data-[state=active]:bg-white/10"
               aria-label="Grid View"
             >
               <Grid className="h-4 w-4" />
@@ -175,16 +138,16 @@ export const Controls = ({
               variant={viewMode === 'list' ? 'secondary' : 'ghost'}
               size="icon"
               onClick={() => setViewMode('list')}
-              className="h-7 w-7"
+              className="h-7 w-7 hover:bg-white/10 hover:text-white data-[state=active]:bg-white/10"
               aria-label="List View"
             >
               <List className="h-4 w-4" />
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={onExport}
-              className="h-7 w-7"
+              className="h-7 w-7 hover:bg-white/10 hover:text-white"
               aria-label="Export Library"
             >
               <Download className="h-4 w-4" />

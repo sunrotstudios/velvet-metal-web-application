@@ -61,8 +61,8 @@ export const getAppleMusicLibrary = async (token: string) => {
     'https://api.music.apple.com/v1/me/library/playlists',
     {
       headers: {
-        'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-        'Music-User-Token': token
+        Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+        'Music-User-Token': token,
       },
     }
   );
@@ -84,8 +84,8 @@ export const getAppleMusicLibrary = async (token: string) => {
         `https://api.music.apple.com/v1/me/library/playlists/${catalogId}/tracks`,
         {
           headers: {
-            'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-            'Music-User-Token': token
+            Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+            'Music-User-Token': token,
           },
         }
       );
@@ -125,8 +125,8 @@ export const getAppleMusicAlbums = async (token: string) => {
     'https://api.music.apple.com/v1/me/library/albums',
     {
       headers: {
-        'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-        'Music-User-Token': token
+        Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+        'Music-User-Token': token,
       },
     }
   );
@@ -149,8 +149,8 @@ export const getAllAppleMusicAlbums = async (token: string) => {
       `https://api.music.apple.com/v1/me/library/albums?limit=${limit}&offset=${offset}`,
       {
         headers: {
-          'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-          'Music-User-Token': token
+          Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+          'Music-User-Token': token,
         },
       }
     );
@@ -202,8 +202,8 @@ export const getAppleMusicPlaylistDetails = async (
       `https://api.music.apple.com/v1/me/library/playlists/${playlistId}?include=tracks,artists`,
       {
         headers: {
-          'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-          'Music-User-Token': token
+          Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+          'Music-User-Token': token,
         },
       }
     );
@@ -292,8 +292,8 @@ export const getAppleMusicAlbumDetails = async (
         `https://api.music.apple.com/v1/me/library/albums/${albumId}?include=tracks,artists`,
         {
           headers: {
-            'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-            'Music-User-Token': token
+            Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+            'Music-User-Token': token,
           },
         }
       );
@@ -358,6 +358,7 @@ export const getAppleMusicAlbumDetails = async (
         external_url: null,
         service: 'apple-music' as const,
         album_type: album.attributes.playParams?.kind || 'album',
+        added_at: album.attributes.dateAdded || null,
       };
     } else {
       // For catalog albums, use the catalog endpoint
@@ -365,9 +366,9 @@ export const getAppleMusicAlbumDetails = async (
         `https://api.music.apple.com/v1/catalog/us/albums/${albumId}?include=tracks,artists`,
         {
           headers: {
-            'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+            Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
             'Music-User-Token': token,
-          }
+          },
         }
       );
 
@@ -445,13 +446,12 @@ async function findAlbumInLibrary(
 ): Promise<any> {
   const limit = 100; // Use maximum limit to reduce API calls
   const libraryUrl = `https://api.music.apple.com/v1/me/library/albums?limit=${limit}&offset=${offset}`;
-  console.log('Searching library page:', { catalogId, offset, libraryUrl });
 
   const response = await fetch(libraryUrl, {
     headers: {
-      'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+      Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
       'Music-User-Token': token,
-    }
+    },
   });
 
   if (!response.ok) {
@@ -459,12 +459,12 @@ async function findAlbumInLibrary(
   }
 
   const data = await response.json();
-  console.log(`Checking albums ${offset} to ${offset + limit}`);
 
   // Find the album in this batch
-  const album = data.data?.find((album: any) => 
-    album.attributes?.playParams?.catalogId === catalogId ||
-    album.attributes?.playParams?.id === catalogId
+  const album = data.data?.find(
+    (album: any) =>
+      album.attributes?.playParams?.catalogId === catalogId ||
+      album.attributes?.playParams?.id === catalogId
   );
 
   if (album) {
@@ -479,6 +479,71 @@ async function findAlbumInLibrary(
   return null;
 }
 
+export async function addAlbumsToAppleMusicLibrary(
+  albumIds: string[],
+  token: string
+): Promise<void> {
+  if (!albumIds.length) return;
+
+  try {
+    console.log('Adding albums to library:', { albumIds });
+
+    // Process in larger batches while staying under URL length limits
+    const batchSize = 25; // Increased from 10 to 25
+    const batches = [];
+
+    for (let i = 0; i < albumIds.length; i += batchSize) {
+      batches.push(albumIds.slice(i, i + batchSize));
+    }
+
+    console.log(`Processing ${batches.length} batches of albums...`);
+
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      console.log(
+        `Processing batch ${i + 1}/${batches.length} (${batch.length} albums)`
+      );
+
+      const idsParam = batch.map((id) => `ids[albums]=${id}`).join('&');
+      const url = `https://api.music.apple.com/v1/me/library?${idsParam}`;
+
+      console.log('Adding batch to library:', { url });
+
+      await retryWithBackoff(async () => {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+            'Music-User-Token': token,
+          },
+        });
+
+        if (response.status !== 202) {
+          let errorMessage = `Failed to add albums to library: ${response.status}`;
+          try {
+            const error = await response.text();
+            console.error('Apple Music API error details:', error);
+            errorMessage += ` - ${error}`;
+          } catch (e) {
+            console.error('Failed to parse error response:', e);
+          }
+          throw new Error(errorMessage);
+        }
+
+        console.log(`Batch ${i + 1}/${batches.length} accepted (status 202)`);
+        return response;
+      });
+
+      // Minimal wait between batches to respect rate limits
+      // Apple's rate limits aren't publicly documented, but testing shows we can be more aggressive
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  } catch (error) {
+    console.error('Failed to add albums to library:', error);
+    throw error;
+  }
+}
+
 export async function addAppleMusicAlbumToLibrary(
   albumId: string,
   token: string
@@ -486,71 +551,97 @@ export async function addAppleMusicAlbumToLibrary(
   try {
     // First, verify the album exists in the catalog
     const catalogUrl = `https://api.music.apple.com/v1/catalog/us/albums/${albumId}`;
-    console.log('Verifying album in catalog:', { albumId, catalogUrl });
 
-    const catalogResponse = await fetch(catalogUrl, {
-      headers: {
-        'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-        'Music-User-Token': token,
+    const catalogResponse = await retryWithBackoff(async () => {
+      const response = await fetch(catalogUrl, {
+        headers: {
+          Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+          'Music-User-Token': token,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to verify album in catalog:', {
+          status: response.status,
+          error: errorText,
+          albumId,
+        });
+        throw new Error(
+          `Failed to verify album in catalog: ${response.status} - ${errorText}`
+        );
       }
+
+      return response;
     });
 
-    if (!catalogResponse.ok) {
-      const errorText = await catalogResponse.text();
-      console.error('Failed to verify album in catalog:', {
-        status: catalogResponse.status,
-        error: errorText,
-        albumId
-      });
-      throw new Error('Failed to verify album in catalog');
-    }
-
     const catalogData = await catalogResponse.json();
-    console.log('Catalog response:', catalogData);
 
     // Add to library using query parameters exactly as shown in docs
     const url = `https://api.music.apple.com/v1/me/library?ids[albums]=${albumId}`;
-    console.log('Adding album to library:', { albumId, url });
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-        'Music-User-Token': token,
+    await retryWithBackoff(async () => {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+          'Music-User-Token': token,
+        },
+      });
+
+      // Per Apple's docs: 202 is success, empty body is expected
+      if (response.status !== 202) {
+        const errorText = await response.text();
+        console.error('Failed to add album to Apple Music library:', {
+          status: response.status,
+          error: errorText,
+          albumId,
+          url,
+        });
+        throw new Error(
+          `Failed to add album to Apple Music library: ${response.status} - ${errorText}`
+        );
       }
+
+      return response;
     });
 
-    // Check for 202 Accepted status specifically
-    if (response.status !== 202) {
-      const errorText = await response.text();
-      console.error('Failed to add album to Apple Music library:', {
-        status: response.status,
-        error: errorText,
-        albumId,
-        url
-      });
-      throw new Error(`Failed to add album to Apple Music library: ${response.status}`);
+    console.log('Successfully added album to library (status 202 Accepted)');
+    console.log(
+      'Note: There may be a delay before the album appears in your library'
+    );
+
+    // Implement progressive retry for checking library
+    const maxAttempts = 3;
+    const delays = [5000, 10000, 15000]; // Progressive delays between checks
+    let libraryAlbum = null;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      // Wait before checking
+      await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+
+      try {
+        libraryAlbum = await findAlbumInLibrary(albumId, token);
+        if (libraryAlbum) {
+          console.log('Found album in library on attempt', attempt + 1, {
+            libraryId: libraryAlbum.id,
+            catalogId: albumId,
+            name: libraryAlbum.attributes.name,
+            playParams: libraryAlbum.attributes.playParams,
+          });
+          break;
+        }
+      } catch (error) {
+        console.log('Error checking library on attempt', attempt + 1, error);
+        // Continue to next attempt
+      }
     }
 
-    console.log('Successfully added album to library (status 202 Accepted)');
-    console.log('Note: There may be a delay before the album appears in your library');
-
-    // Wait longer for the addition to process
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    // Search for the album in the library
-    const libraryAlbum = await findAlbumInLibrary(albumId, token);
-
-    if (libraryAlbum) {
-      console.log('Found album in library:', {
-        libraryId: libraryAlbum.id,
-        catalogId: albumId,
-        name: libraryAlbum.attributes.name,
-        playParams: libraryAlbum.attributes.playParams
-      });
-    } else {
-      console.log('Album not found in library after searching all pages');
-      console.log('This is normal - there may be a delay before the album appears');
+    if (!libraryAlbum) {
+      console.log('Album not found in library after multiple attempts');
+      console.log(
+        'This is normal - there may be a longer delay before the album appears'
+      );
     }
   } catch (error) {
     console.error('Error adding album to Apple Music library:', error);
@@ -567,17 +658,13 @@ export async function searchAppleMusicAlbum(
     const searchUrl = `https://api.music.apple.com/v1/catalog/us/search?types=albums&term=${encodeURIComponent(
       `${albumQuery} ${artistQuery}`
     )}`;
-    console.log('Searching Apple Music:', { albumQuery, artistQuery, searchUrl });
 
-    const response = await fetch(
-      searchUrl,
-      {
-        headers: {
-          'Authorization': `Bearer ${APPLE_DEVELOPER_TOKEN}`,
-          'Music-User-Token': token
-        },
-      }
-    );
+    const response = await fetch(searchUrl, {
+      headers: {
+        Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+        'Music-User-Token': token,
+      },
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -586,8 +673,7 @@ export async function searchAppleMusicAlbum(
     }
 
     const data = await response.json();
-    console.log('Search response:', data);
-    
+
     const albums = data.results.albums?.data;
 
     if (!albums || albums.length === 0) {
@@ -596,13 +682,6 @@ export async function searchAppleMusicAlbum(
     }
 
     const album = albums[0];
-    console.log('Found album:', {
-      id: album.id,
-      name: album.attributes.name,
-      artist: album.attributes.artistName,
-      type: album.type,
-      href: album.href
-    });
 
     return {
       id: album.id,
@@ -614,4 +693,224 @@ export async function searchAppleMusicAlbum(
     console.error('Error searching Apple Music album:', error);
     throw error;
   }
+}
+
+export async function searchAppleMusicCatalog(
+  query: string,
+  token: string,
+  types: string[] = ['albums']
+): Promise<any> {
+  const url = new URL('https://api.music.apple.com/v1/catalog/us/search');
+  url.searchParams.append('term', query);
+  url.searchParams.append('types', types.join(','));
+  url.searchParams.append('limit', '10');
+
+  try {
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+        'Music-User-Token': token,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Search failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    console.error('Apple Music search error:', error);
+    throw error;
+  }
+}
+
+export async function checkAlbumsInLibrary(
+  albumIds: string[],
+  token: string
+): Promise<{ [id: string]: boolean }> {
+  try {
+    console.log('Starting library check for albums:', albumIds);
+    const results: { [id: string]: boolean } = {};
+
+    // Process in smaller batches to avoid URL length limits
+    const batchSize = 10;
+    for (let i = 0; i < albumIds.length; i += batchSize) {
+      const batchIds = albumIds.slice(i, i + batchSize);
+      const idsParam = batchIds.map((id) => `ids[albums]=${id}`).join('&');
+      const url = `https://api.music.apple.com/v1/me/library/albums?${idsParam}`;
+
+      console.log('Checking batch with URL:', url);
+
+      const response = await retryWithBackoff(async () => {
+        const res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+            'Music-User-Token': token,
+          },
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Failed to check albums:', {
+            status: res.status,
+            error: errorText,
+            url,
+          });
+          throw new Error(
+            `Failed to check albums: ${res.status} - ${errorText}`
+          );
+        }
+
+        return res;
+      });
+
+      const data = await response.json();
+      console.log('Library check response:', data);
+
+      const foundIds = new Set(data.data?.map((item: any) => item.id));
+      console.log('Found IDs in library:', Array.from(foundIds));
+
+      for (const id of batchIds) {
+        results[id] = foundIds.has(id);
+        console.log(
+          `Album ${id}: ${results[id] ? 'found' : 'not found'} in library`
+        );
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error('Failed to check albums in library:', error);
+    throw error;
+  }
+}
+
+export async function findAlbumsByUPC(
+  upcs: string[],
+  userToken: string
+): Promise<{ [upc: string]: string | null }> {
+  try {
+    // Apple Music API has a limit on URL length, so we'll process in batches
+    const batchSize = 10;
+    const results: { [upc: string]: string | null } = {};
+
+    for (let i = 0; i < upcs.length; i += batchSize) {
+      const batchUpcs = upcs.slice(i, i + batchSize);
+
+      const response = await fetch(
+        `https://api.music.apple.com/v1/catalog/us/albums?filter[upc]=${batchUpcs.join(
+          ','
+        )}`,
+        {
+          headers: {
+            Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Apple Music API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Map each UPC to its corresponding Apple Music ID
+      batchUpcs.forEach((upc) => {
+        const album = data.data?.find(
+          (a: any) =>
+            a.attributes?.upc === upc ||
+            // Sometimes UPCs have leading zeros trimmed, try both
+            a.attributes?.upc === upc.replace(/^0+/, '')
+        );
+        results[upc] = album ? album.id : null;
+      });
+
+      // Add a small delay between batches to avoid rate limiting
+      if (i + batchSize < upcs.length) {
+        await delay(100);
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error('Error finding albums by UPC:', error);
+    throw error;
+  }
+}
+
+export function findBestMatchingAlbum(
+  searchResults: any,
+  targetAlbum: { name: string; artist_name: string }
+): string | null {
+  if (!searchResults?.albums?.data) {
+    console.log('No search results found');
+    return null;
+  }
+
+  const albums = searchResults.albums.data;
+  let bestMatch: any = null;
+  let bestScore = 0;
+
+  for (const album of albums) {
+    const nameMatch =
+      album.attributes.name.toLowerCase() === targetAlbum.name.toLowerCase();
+    const artistMatch =
+      album.attributes.artistName.toLowerCase() ===
+      targetAlbum.artist_name.toLowerCase();
+
+    const score = (nameMatch ? 1 : 0) + (artistMatch ? 1 : 0);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = album;
+    }
+  }
+
+  if (bestMatch && bestScore > 0) {
+    console.log('Found best match:', {
+      id: bestMatch.id,
+      name: bestMatch.attributes.name,
+      artist: bestMatch.attributes.artistName,
+      score: bestScore,
+    });
+    return bestMatch.id;
+  }
+
+  console.log('No suitable match found');
+  return null;
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+
+      // Only retry on 500 errors or network failures
+      if (
+        !error.message?.includes('500') &&
+        !error.message?.includes('Failed to fetch')
+      ) {
+        throw error;
+      }
+
+      const delayMs = baseDelay * Math.pow(2, attempt);
+      console.log(`Attempt ${attempt + 1} failed, retrying in ${delayMs}ms...`);
+      await delay(delayMs);
+    }
+  }
+
+  throw lastError;
 }

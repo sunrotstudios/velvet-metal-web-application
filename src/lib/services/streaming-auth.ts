@@ -70,7 +70,7 @@ export async function getServiceAuth(
     // For Apple Music, we need both the developer token and music_user_token
     if (service === 'apple-music') {
       const musicUserToken = data.music_user_token;
-      
+
       if (!musicUserToken) {
         console.error(`Missing Apple Music user token for user ${userId}`);
         return null;
@@ -80,7 +80,9 @@ export async function getServiceAuth(
         accessToken: data.access_token || '', // Use stored access token if available
         musicUserToken: musicUserToken,
         refreshToken: data.refresh_token || null,
-        expiresAt: data.token_expires_at ? new Date(data.token_expires_at) : undefined,
+        expiresAt: data.token_expires_at
+          ? new Date(data.token_expires_at)
+          : undefined,
       };
     }
 
@@ -101,7 +103,10 @@ export async function getServiceAuth(
 
 export async function removeServiceAuth(userId: string, service: ServiceType) {
   try {
-    console.log('Removing service auth and associated data...', { userId, service });
+    console.log('Removing service auth and associated data...', {
+      userId,
+      service,
+    });
 
     // Delete albums
     const { error: albumsError } = await supabase
@@ -148,8 +153,6 @@ export async function removeServiceAuth(userId: string, service: ServiceType) {
 
 export async function getUserServices(userId: string): Promise<ServiceType[]> {
   try {
-    console.log('Getting user services...', { userId });
-
     const { data, error } = await supabase
       .from('user_services')
       .select('service')
@@ -160,7 +163,6 @@ export async function getUserServices(userId: string): Promise<ServiceType[]> {
       throw error;
     }
 
-    console.log('User services retrieved successfully:', data);
     return data.map((row) => row.service as ServiceType);
   } catch (error) {
     console.error('Failed to get user services:', error);

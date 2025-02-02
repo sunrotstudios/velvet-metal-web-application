@@ -44,9 +44,9 @@ export function ServiceConnection({ service }: ServiceConnectionProps) {
     setIsConnecting(true);
     try {
       if (service === 'spotify') {
-        await authorizeSpotify();
+        await authorizeSpotify(user.id);
       } else if (service === 'apple-music') {
-        await authorizeAppleMusic();
+        await authorizeAppleMusic(user.id);
       } else if (service === 'lastfm') {
         const username = prompt('Enter your Last.fm username:');
         if (username) {
@@ -97,10 +97,13 @@ export function ServiceConnection({ service }: ServiceConnectionProps) {
 
   return (
     <Button
-      variant={isConnected ? 'outline' : 'default'}
+      variant="outline"
+      size="sm"
+      className={`bg-white/10 text-white hover:bg-white/20 border-0 ${
+        isConnecting ? 'opacity-50 cursor-not-allowed' : ''
+      }`}
       onClick={isConnected ? handleDisconnect : handleConnect}
       disabled={isConnecting}
-      size="sm"
     >
       {isConnected ? 'Disconnect' : 'Connect'}
     </Button>
