@@ -394,8 +394,13 @@ export async function getAllSpotifyAlbums(
 
     // Process albums
     return allAlbums.map((item: any) => {
-      console.log('Spotify album response:', item);
       const album = item.album || item;
+      // Ensure album_type matches database constraints
+      let albumType = album?.album_type?.toLowerCase() || 'album';
+      if (!['album', 'single', 'ep'].includes(albumType)) {
+        albumType = 'album'; // Default to 'album' if unknown type
+      }
+      
       return {
         album_id: album?.id,
         name: album?.name,
@@ -404,7 +409,7 @@ export async function getAllSpotifyAlbums(
         release_date: album?.release_date,
         tracks_count: album?.total_tracks,
         external_url: album?.external_urls?.spotify || null,
-        album_type: album?.album_type?.toLowerCase() || 'album',
+        album_type: albumType,
         added_at: item.added_at || null,
         upc: album?.external_ids?.upc || null,
       };

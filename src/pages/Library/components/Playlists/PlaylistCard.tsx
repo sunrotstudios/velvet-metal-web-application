@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { NormalizedPlaylist, ViewMode } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { ArrowLeftRight } from 'lucide-react';
+import { ArrowLeftRight, Play } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePrefetchPlaylist } from '@/lib/hooks/usePlaylistQueries';
 import { useAuth } from '@/contexts/auth-context';
@@ -54,7 +54,7 @@ export const PlaylistCard = ({
   };
 
   // Get artwork URL safely with fallback
-  const artworkUrl = playlist.artwork?.url || '';
+  const artworkUrl = playlist.artwork?.url || playlist.image_url || '';
 
   return (
     <Card

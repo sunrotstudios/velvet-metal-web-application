@@ -24,6 +24,8 @@ import {
   BrowserRouter as Router,
   Routes,
 } from 'react-router-dom';
+import { useEffect } from 'react';
+import { initializeAutoSync, checkAndTriggerSync } from '@/lib/services/library-sync';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +40,21 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  useEffect(() => {
+    // Initialize auto-sync system
+    initializeAutoSync();
+
+    // Initial sync check
+    checkAndTriggerSync();
+
+    // Set up periodic sync check (every 5 minutes)
+    const syncInterval = setInterval(() => {
+      checkAndTriggerSync();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(syncInterval);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
