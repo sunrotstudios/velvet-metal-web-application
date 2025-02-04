@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { lastFmClient, LastFmStats } from '../lib/lastfm';
 import { useQuery } from '@tanstack/react-query';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { lastFmClient, LastFmStats } from '../lib/lastfm';
 
 interface LastFmContextType {
   username: string | null;
@@ -12,10 +12,18 @@ interface LastFmContextType {
 
 const LastFmContext = createContext<LastFmContextType | undefined>(undefined);
 
-export const LastFmProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [username, setUsername] = useState<string | null>(localStorage.getItem('lastfm_username'));
+export const LastFmProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [username, setUsername] = useState<string | null>(
+    localStorage.getItem('lastfm_username')
+  );
 
-  const { data: stats, isLoading, error } = useQuery({
+  const {
+    data: stats,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['lastfm', username],
     queryFn: async () => {
       if (!username) return null;
@@ -40,10 +48,10 @@ export const LastFmProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [username]);
 
   return (
-    <LastFmContext.Provider 
-      value={{ 
-        username, 
-        setUsername, 
+    <LastFmContext.Provider
+      value={{
+        username,
+        setUsername,
         stats: stats || null,
         isLoading,
         error: error ? (error as Error).message : null,

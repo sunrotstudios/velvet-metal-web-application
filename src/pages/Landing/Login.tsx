@@ -39,9 +39,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-black to-black opacity-50" />
-      
+    <div
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: 'url("/images/background.jpg")',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundBlendMode: 'overlay',
+      }}
+    >
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Navigation */}
         <nav className="p-6 flex justify-between items-center">

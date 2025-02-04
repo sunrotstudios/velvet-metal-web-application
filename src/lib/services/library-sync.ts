@@ -462,6 +462,8 @@ async function performSync(userId: string, service: ServiceType, force: boolean 
 
     // Update sync record with success
     console.log(`Sync completed for ${service}. Updating sync record...`);
+    
+    // Update library_syncs table
     await updateLibrarySync(userId, service, {
       sync_status: 'idle',
       error_count: 0,
@@ -469,6 +471,18 @@ async function performSync(userId: string, service: ServiceType, force: boolean 
       next_sync_time: new Date(Date.now() + SYNC_INTERVALS.DEFAULT).toISOString(),
       stats: newStats
     });
+
+    // Update last_library_sync in user_services table
+    const now = new Date().toISOString();
+    const { error: userServiceError } = await supabase
+      .from('user_services')
+      .update({ last_library_sync: now })
+      .eq('user_id', userId)
+      .eq('service', service);
+
+    if (userServiceError) {
+      console.error('Failed to update last_library_sync:', userServiceError);
+    }
 
     console.log(`${service} sync stats:`, {
       albums: {

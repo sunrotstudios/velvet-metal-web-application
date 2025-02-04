@@ -7,7 +7,11 @@ interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, display_name: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    display_name: string
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -52,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) throw error;
-      
+
       // Get user profile after login
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -78,25 +82,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string, display_name: string) => {
+  const register = async (
+    email: string,
+    password: string,
+    display_name: string
+  ) => {
     try {
       // Sign up the user
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            display_name,
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              display_name,
+            },
           },
-        },
-      });
+        });
 
       if (signUpError) throw signUpError;
 
       // Wait for Supabase's auth trigger to create the profile
       if (signUpData.user) {
         // Wait a moment for the trigger to create the profile
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Update the profile with additional data
         const { error: profileError } = await supabase
@@ -122,10 +131,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       // Clear any local storage items
       localStorage.removeItem('velvet-metal-auth');
-      
+
       navigate('/');
     } catch (error) {
       throw error;
