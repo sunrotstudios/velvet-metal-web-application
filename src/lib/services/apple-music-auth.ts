@@ -86,6 +86,16 @@ export async function authorizeAppleMusic(userId: string) {
 
     const musicUserToken = await music.authorize();
 
+    // Try to make a test API call to verify subscription
+    try {
+      await music.api.music('/v1/me/library/albums', { limit: 1 });
+    } catch (error: any) {
+      if (error?.name === 'ACCESS_DENIED' || error?.status === 403) {
+        throw new Error('Your Apple Music subscription appears to have expired. Please renew your subscription to continue using Apple Music features.');
+      }
+      throw error;
+    }
+
     // Save the authorization with the correct token structure
     await saveServiceAuth(userId, 'apple-music', {
       accessToken: import.meta.env.VITE_APPLE_DEVELOPER_TOKEN || '',

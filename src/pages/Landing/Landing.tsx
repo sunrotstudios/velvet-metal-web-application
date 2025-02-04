@@ -2,32 +2,8 @@ import { Button } from '@/components/ui/button';
 import { MobileLanding } from '@/pages/Landing/MobileLanding';
 import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { motion } from 'framer-motion';
-import { Heart, Music, Share2, Shuffle, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const features = [
-  {
-    icon: <Music className="w-5 h-5" />,
-    title: 'Smart Playlists',
-  },
-  {
-    icon: <Share2 className="w-5 h-5" />,
-    title: 'Cross-Platform',
-  },
-  {
-    icon: <Sparkles className="w-5 h-5" />,
-    title: 'Discovery',
-  },
-  {
-    icon: <Shuffle className="w-5 h-5" />,
-    title: 'Smart Shuffle',
-  },
-  {
-    icon: <Heart className="w-5 h-5" />,
-    title: 'Collection',
-  },
-];
 
 function Landing() {
   const navigate = useNavigate();
@@ -55,7 +31,14 @@ function Landing() {
   };
 
   return (
-    <div className="h-screen bg-black text-white overflow-hidden relative">
+    <div
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: 'url("/images/background.jpg")',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fallback color
+        backgroundBlendMode: 'overlay', // This will help text remain readable
+      }}
+    >
       <ResponsiveContainer>
         <div className="h-screen flex items-center justify-center">
           <div className="max-w-[1200px] w-full mx-auto relative z-10">
@@ -65,13 +48,11 @@ function Landing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="font-radlush text-[120px] leading-none mb-8 font-extrabold">
-                Velvet
-                <br />
-                <span className="text-gray-500">Metal</span>
+              <h1 className="font-radlush text-white text-[120px] leading-none mb-8 font-semibold">
+                Velvet Metal
               </h1>
 
-              <p className="text-2xl text-gray-400 max-w-2xl mb-12">
+              <p className="text-2xl text-gray-400 max-w-2xl mb-12 font-degular">
                 Your all-in-one solution for seamless playlist management and
                 music discovery. Connect your favorite music platforms and take
                 control of your library.
@@ -92,30 +73,6 @@ function Landing() {
                 >
                   Sign In
                 </Button>
-              </div>
-
-              <div className="flex gap-16 justify-center">
-                <motion.div
-                  className="flex items-center gap-3"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <Music className="w-5 h-5" />
-                  <span className="text-lg">Smart Playlists</span>
-                </motion.div>
-                <motion.div
-                  className="flex items-center gap-3"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <Share2 className="w-5 h-5" />
-                  <span className="text-lg">Cross-Platform</span>
-                </motion.div>
-                <motion.div
-                  className="flex items-center gap-3"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <Sparkles className="w-5 h-5" />
-                  <span className="text-lg">Discovery</span>
-                </motion.div>
               </div>
             </motion.div>
           </div>

@@ -3,13 +3,15 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/auth-context';
 import { supabase } from '@/lib/supabase';
-import { ServiceConnection } from '@/shared/services/ServiceConnection';
+import { RegisterServiceConnection } from '@/shared/services/RegisterServiceConnection';
+import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { SpotifyIcon, AppleMusicIcon, TidalIcon } from '@/components/icons/service-icons';
 
 type Step = 'account' | 'subscription' | 'services';
 
@@ -24,12 +26,15 @@ interface SubscriptionTier {
 export default function Register() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { register } = useAuth();
+  const { register, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>(() => {
     // If we have a step in the URL, use that
     const stepParam = searchParams.get('step');
-    if (stepParam && ['account', 'subscription', 'services'].includes(stepParam)) {
+    if (
+      stepParam &&
+      ['account', 'subscription', 'services'].includes(stepParam)
+    ) {
       return stepParam as Step;
     }
     return 'account';
@@ -67,6 +72,40 @@ export default function Register() {
       return data;
     },
   });
+
+  const { data: connectedServices, isLoading: isLoadingConnections } = useConnectedServices();
+  console.log('Connected services:', connectedServices, 'Loading:', isLoadingConnections); // Debug log
+
+  // Query sync status for all services
+  const { data: syncStatuses, isLoading: isLoadingSync } = useQuery({
+    queryKey: ['syncStatuses', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('user_services')
+        .select('service, last_library_sync')
+        .eq('user_id', user.id);
+      console.log('Sync statuses:', data); // Debug log
+      return data;
+    },
+    enabled: !!user?.id,
+    refetchInterval: connectedServices?.length ? 2000 : false,
+  });
+
+  // If we have sync status and last_library_sync exists (not undefined), we're done syncing
+  const isAnySyncing = syncStatuses?.some(status => {
+    const syncing = status.last_library_sync === null;
+    console.log('Service:', status.service, 'Last sync:', status.last_library_sync, 'Is syncing:', syncing); // Debug log
+    return syncing;
+  });
+
+  console.log('Final state:', { 
+    isLoadingConnections,
+    isLoadingSync,
+    connectedServices,
+    syncStatuses,
+    isAnySyncing
+  }); // Debug log
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -156,7 +195,7 @@ export default function Register() {
                   onChange={handleChange}
                   placeholder="Email"
                   required
-                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20"
+                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
                   autoComplete="email"
                 />
               </div>
@@ -166,9 +205,9 @@ export default function Register() {
                   name="display_name"
                   value={formData.display_name}
                   onChange={handleChange}
-                  placeholder="Display Name"
+                  placeholder="First Name"
                   required
-                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20"
+                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
                   autoComplete="name"
                 />
               </div>
@@ -180,7 +219,7 @@ export default function Register() {
                   onChange={handleChange}
                   placeholder="Password"
                   required
-                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20"
+                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
                   autoComplete="new-password"
                 />
               </div>
@@ -192,7 +231,7 @@ export default function Register() {
                   onChange={handleChange}
                   placeholder="Confirm Password"
                   required
-                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20"
+                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
                   autoComplete="new-password"
                 />
               </div>
@@ -201,7 +240,7 @@ export default function Register() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 bg-white hover:bg-gray-100 text-black font-medium text-lg relative overflow-hidden group"
+              className="w-full h-12 bg-white font-degular hover:bg-gray-100 text-black font-medium text-lg relative overflow-hidden group"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -211,7 +250,7 @@ export default function Register() {
             </Button>
 
             <div className="text-center">
-              <p className="text-gray-400">
+              <p className="text-gray-400 font-degular">
                 Already have an account?{' '}
                 <button
                   type="button"
@@ -237,17 +276,17 @@ export default function Register() {
               {subscriptionTiers?.map((tier) => (
                 <Card
                   key={tier.id}
-                  className={`relative p-6 transition-all duration-300 bg-white/[0.03] border-white/10 hover:bg-white/[0.06] cursor-pointer ${
+                  className={`relative p-6 transition-all duration-300 bg-white/[0.03] border-white/10 hover:bg-white/[0.06] ${
                     formData.selectedTier === tier.id ? 'ring-2 ring-white' : ''
                   }`}
                   onClick={() => handleSelectTier(tier.id)}
                 >
                   <div className="relative z-10 flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold mb-1 text-white">
+                      <h3 className="text-xl font-degular font-semibold mb-1 text-white font-degular">
                         {tier.name}
                       </h3>
-                      <p className="text-3xl font-bold flex items-baseline text-white">
+                      <p className="text-3xl font-bold flex items-baseline text-white font-degular">
                         ${tier.price.toFixed(2)}
                         <span className="text-sm font-normal text-gray-400 ml-2">
                           /mo
@@ -259,7 +298,7 @@ export default function Register() {
                         {Object.entries(tier.features).map(([key, value]) => (
                           <li
                             key={key}
-                            className="flex items-center text-sm text-gray-300"
+                            className="flex items-center text-sm text-gray-300 font-degular"
                           >
                             <Check className="w-4 h-4 mr-3 text-white/60 flex-shrink-0" />
                             <span className="capitalize">
@@ -290,7 +329,7 @@ export default function Register() {
               <Button
                 onClick={() => setCurrentStep('services')}
                 disabled={!formData.selectedTier}
-                className="w-full h-12 bg-white hover:bg-gray-100 text-black font-medium text-lg"
+                className="w-full h-12 bg-white hover:bg-gray-100 text-black font-medium text-lg font-degular"
               >
                 Continue
               </Button>
@@ -313,19 +352,19 @@ export default function Register() {
                   description:
                     'Connect your Spotify account to sync your playlists and library',
                   service: 'spotify' as const,
-                  icon: '🎵',
+                  icon: <SpotifyIcon className="w-8 h-8 text-[#1DB954]" />,
                 },
                 {
                   name: 'Apple Music',
                   description: 'Sync your Apple Music library and playlists',
                   service: 'apple-music' as const,
-                  icon: '🎵',
+                  icon: <AppleMusicIcon className="w-8 h-8 text-[#FA243C]" />,
                 },
                 {
                   name: 'Tidal',
                   description: 'Coming soon - Connect your Tidal account',
                   service: 'tidal' as const,
-                  icon: '🎵',
+                  icon: <TidalIcon className="w-8 h-8 text-white" />,
                   disabled: true,
                 },
               ].map((service) => (
@@ -339,7 +378,10 @@ export default function Register() {
                   onClick={() => {
                     if (!service.disabled) {
                       // Save current URL with step parameter
-                      sessionStorage.setItem('auth_callback_url', `/register?step=services`);
+                      sessionStorage.setItem(
+                        'auth_callback_url',
+                        `/register?step=services`
+                      );
                     }
                   }}
                 >
@@ -348,18 +390,15 @@ export default function Register() {
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{service.icon}</span>
                         <div>
-                          <h3 className="text-xl font-semibold text-white">
+                          <h3 className="text-xl font-semibold text-white font-degular">
                             {service.name}
                           </h3>
-                          <p className="text-sm text-gray-400">
-                            {service.description}
-                          </p>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center">
                       {!service.disabled ? (
-                        <ServiceConnection service={service.service} />
+                        <RegisterServiceConnection service={service.service} />
                       ) : (
                         <Button
                           variant="outline"
@@ -379,9 +418,14 @@ export default function Register() {
             <div className="flex justify-between mt-8">
               <Button
                 onClick={handleFinish}
-                className="w-full h-12 bg-white hover:bg-gray-100 text-black font-medium text-lg"
+                className="w-full h-12 bg-white hover:bg-gray-100 text-black font-medium text-lg font-degular disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!connectedServices?.length || isAnySyncing}
               >
-                Go to App
+                {isAnySyncing
+                  ? 'Syncing Library...'
+                  : !connectedServices?.length
+                  ? 'Connect a Service First'
+                  : 'Go to App'}
               </Button>
             </div>
           </motion.div>
@@ -390,9 +434,14 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-black to-black opacity-50" />
-
+    <div
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: 'url("/images/background.jpg")',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundBlendMode: 'overlay',
+      }}
+    >
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Navigation */}
         <nav className="p-6 flex justify-between items-center">
@@ -411,7 +460,7 @@ export default function Register() {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             )}
-            <h1 className="text-xl font-semibold">Create Account</h1>
+            <h1 className="text-xl font-semibold text-white">Velvet Metal</h1>
           </div>
         </nav>
 
@@ -426,7 +475,7 @@ export default function Register() {
             {/* Header */}
             <div className="text-center">
               <motion.h1
-                className="text-6xl font-bold tracking-tighter mb-2"
+                className="text-6xl font-bold tracking-tighter mb-2 text-white"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -434,7 +483,7 @@ export default function Register() {
                 {getStepTitle()}
               </motion.h1>
               <motion.p
-                className="text-gray-400 text-lg"
+                className="text-gray-400 text-lg font-degular"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
