@@ -914,3 +914,37 @@ async function retryWithBackoff<T>(
 
   throw lastError;
 }
+
+export async function getAppleMusicPlaylists(
+  musicUserToken: string
+): Promise<NormalizedPlaylist[]> {
+  const music = MusicKit.getInstance();
+  
+  try {
+    const response = await music.api.library.playlists();
+    
+    return response.map(playlist => ({
+      id: playlist.id,
+      user_id: '', // Apple Music doesn't provide this
+      playlist_id: playlist.id,
+      name: playlist.attributes.name,
+      description: playlist.attributes.description?.standard || undefined,
+      artwork: playlist.attributes.artwork ? {
+        url: playlist.attributes.artwork.url,
+        height: playlist.attributes.artwork.height,
+        width: playlist.attributes.artwork.width,
+      } : undefined,
+      tracks_count: playlist.attributes.trackCount || 0,
+      owner: {
+        id: '', // Apple Music doesn't provide this
+        display_name: undefined,
+      },
+      service: 'apple-music' as const,
+      is_public: false, // Apple Music playlists are private by default
+      external_url: playlist.attributes.url,
+    }));
+  } catch (error) {
+    console.error('Error fetching Apple Music playlists:', error);
+    throw error;
+  }
+}

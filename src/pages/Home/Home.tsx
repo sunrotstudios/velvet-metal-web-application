@@ -1,4 +1,6 @@
 import { useAuth } from '@/contexts/auth-context';
+import { getUniqueAlbumsCount } from '@/lib/api/albums';
+import { getUniquePlaylists } from '@/lib/api/playlists';
 import { getUserServices } from '@/lib/services/streaming-auth';
 import { MobileHome } from '@/pages/Home/MobileHome';
 import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
@@ -9,20 +11,39 @@ import { Clock, Music, PlayCircle } from 'lucide-react';
 
 export default function Home() {
   const { user } = useAuth();
+  console.log('Current user:', user);
+
   const { data: connectedServices } = useQuery({
     queryKey: ['userServices', user?.id],
     queryFn: () => getUserServices(user!.id),
     enabled: !!user,
   });
 
+  const { data: uniqueAlbumsCount, error: albumsError } = useQuery({
+    queryKey: ['uniqueAlbumsCount', user?.id],
+    queryFn: () => getUniqueAlbumsCount(user!.id),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    placeholderData: (previousData) => previousData,
+  });
+
+  const { data: uniquePlaylistsCount } = useQuery({
+    queryKey: ['uniquePlaylistsCount', user?.id],
+    queryFn: () => getUniquePlaylists(user!.id),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  console.log('Albums query error:', albumsError);
+
   return (
     <ResponsiveContainer mobileContent={<MobileHome />}>
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen w-full">
         {/* Header Section */}
         <div className="relative">
-          {/* Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-purple/10 to-transparent h-[70vh] pointer-events-none" />
-
           <div className="relative max-w-[1200px] mx-auto px-6">
             {/* Welcome Section */}
             <div className="pt-16 pb-12">
@@ -74,10 +95,10 @@ export default function Home() {
                 >
                   <Music className="w-8 h-8 mb-4 text-white/60 group-hover:text-brand-blue transition-colors" />
                   <div className="text-3xl font-bold mb-2 font-display text-white">
-                    847
+                    {uniqueAlbumsCount ?? '-'}
                   </div>
                   <div className="text-white/60 group-hover:text-white/80 transition-colors font-sans">
-                    Total Tracks
+                    Unique Albums
                   </div>
                 </motion.div>
 
@@ -87,10 +108,10 @@ export default function Home() {
                 >
                   <PlayCircle className="w-8 h-8 mb-4 text-white/60 group-hover:text-brand-yellow transition-colors" />
                   <div className="text-3xl font-bold mb-2 font-display text-white">
-                    24
+                    {uniquePlaylistsCount ?? '-'}
                   </div>
                   <div className="text-white/60 group-hover:text-white/80 transition-colors font-sans">
-                    Playlists
+                    Unique Playlists
                   </div>
                 </motion.div>
               </div>

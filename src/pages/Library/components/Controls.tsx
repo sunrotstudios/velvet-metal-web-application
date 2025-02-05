@@ -48,7 +48,7 @@ export const Controls = ({
   onAlbumTypeChange,
 }: ControlsProps) => {
   return (
-    <div className="flex flex-col space-y-4">
+    <div className="flex flex-col space-y-2 pr-14 ">
       <div className="grid gap-4 md:grid-cols-[1fr_auto_auto]">
         {/* Left Section: Tabs and Service Selection */}
         <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
@@ -77,9 +77,24 @@ export const Controls = ({
               <SelectValue placeholder="Select Service" />
             </SelectTrigger>
             <SelectContent className="bg-black/95 border-white/10">
-              <SelectItem value="spotify" className="text-white focus:bg-white/10 focus:text-white">Spotify</SelectItem>
-              <SelectItem value="apple-music" className="text-white focus:bg-white/10 focus:text-white">Apple Music</SelectItem>
-              <SelectItem value="tidal" className="text-white focus:bg-white/10 focus:text-white">Tidal</SelectItem>
+              <SelectItem
+                value="spotify"
+                className="text-white focus:bg-white/10 focus:text-white"
+              >
+                Spotify
+              </SelectItem>
+              <SelectItem
+                value="apple-music"
+                className="text-white focus:bg-white/10 focus:text-white"
+              >
+                Apple Music
+              </SelectItem>
+              <SelectItem
+                value="tidal"
+                className="text-white focus:bg-white/10 focus:text-white"
+              >
+                Tidal
+              </SelectItem>
             </SelectContent>
           </Select>
 
@@ -89,10 +104,30 @@ export const Controls = ({
                 <SelectValue placeholder="Album Type" />
               </SelectTrigger>
               <SelectContent className="bg-black/95 border-white/10">
-                <SelectItem value="all" className="text-white focus:bg-white/10 focus:text-white">All Types</SelectItem>
-                <SelectItem value="album" className="text-white focus:bg-white/10 focus:text-white">Album</SelectItem>
-                <SelectItem value="single" className="text-white focus:bg-white/10 focus:text-white">Single</SelectItem>
-                <SelectItem value="ep" className="text-white focus:bg-white/10 focus:text-white">EP</SelectItem>
+                <SelectItem
+                  value="all"
+                  className="text-white focus:bg-white/10 focus:text-white"
+                >
+                  All Types
+                </SelectItem>
+                <SelectItem
+                  value="album"
+                  className="text-white focus:bg-white/10 focus:text-white"
+                >
+                  Album
+                </SelectItem>
+                <SelectItem
+                  value="single"
+                  className="text-white focus:bg-white/10 focus:text-white"
+                >
+                  Single
+                </SelectItem>
+                <SelectItem
+                  value="ep"
+                  className="text-white focus:bg-white/10 focus:text-white"
+                >
+                  EP
+                </SelectItem>
               </SelectContent>
             </Select>
           ) : null}
@@ -116,11 +151,36 @@ export const Controls = ({
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent className="bg-black/95 border-white/10">
-              <SelectItem value="name-asc" className="text-white focus:bg-white/10 focus:text-white">Name (A-Z)</SelectItem>
-              <SelectItem value="name-desc" className="text-white focus:bg-white/10 focus:text-white">Name (Z-A)</SelectItem>
-              <SelectItem value="artist-asc" className="text-white focus:bg-white/10 focus:text-white">Artist (A-Z)</SelectItem>
-              <SelectItem value="artist-desc" className="text-white focus:bg-white/10 focus:text-white">Artist (Z-A)</SelectItem>
-              <SelectItem value="recent" className="text-white focus:bg-white/10 focus:text-white">Recent</SelectItem>
+              <SelectItem
+                value="name-asc"
+                className="text-white focus:bg-white/10 focus:text-white"
+              >
+                Name (A-Z)
+              </SelectItem>
+              <SelectItem
+                value="name-desc"
+                className="text-white focus:bg-white/10 focus:text-white"
+              >
+                Name (Z-A)
+              </SelectItem>
+              <SelectItem
+                value="artist-asc"
+                className="text-white focus:bg-white/10 focus:text-white"
+              >
+                Artist (A-Z)
+              </SelectItem>
+              <SelectItem
+                value="artist-desc"
+                className="text-white focus:bg-white/10 focus:text-white"
+              >
+                Artist (Z-A)
+              </SelectItem>
+              <SelectItem
+                value="recent"
+                className="text-white focus:bg-white/10 focus:text-white"
+              >
+                Recent
+              </SelectItem>
             </SelectContent>
           </Select>
 

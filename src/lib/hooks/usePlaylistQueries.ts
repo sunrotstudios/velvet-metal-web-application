@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getSpotifyPlaylistDetails } from '@/lib/api/spotify';
-import { getAppleMusicPlaylistDetails } from '@/lib/api/apple-music';
+import { getSpotifyPlaylistDetails, getSpotifyPlaylists } from '@/lib/api/spotify';
+import { getAppleMusicPlaylistDetails, getAppleMusicPlaylists } from '@/lib/api/apple-music';
 import { DetailedPlaylist, NormalizedPlaylist } from '@/lib/types';
 import { getServiceAuth } from '@/lib/services/streaming-auth';
 
@@ -56,6 +56,43 @@ export function usePlaylistDetails(
       }
       return failureCount < 3;
     },
+  });
+}
+
+export function useUserPlaylists(
+  userId: string | undefined,
+  service: 'spotify' | 'apple-music'
+) {
+  return useQuery<NormalizedPlaylist[]>({
+    queryKey: ['userPlaylists', userId, service],
+    queryFn: async () => {
+      if (!userId) {
+        throw new Error('No user found');
+      }
+
+      const auth = await getServiceAuth(userId, service);
+      if (!auth) {
+        throw new Error(`${service} not connected`);
+      }
+
+      switch (service) {
+        case 'spotify':
+          if (!auth.accessToken) {
+            throw new Error('No Spotify access token found');
+          }
+          return getSpotifyPlaylists(auth.accessToken, userId);
+        
+        case 'apple-music':
+          if (!auth.musicUserToken) {
+            throw new Error('No Apple Music user token found');
+          }
+          return getAppleMusicPlaylists(auth.musicUserToken);
+        
+        default:
+          throw new Error(`Unsupported service: ${service}`);
+      }
+    },
+    enabled: !!userId,
   });
 }
 

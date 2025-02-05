@@ -27,9 +27,16 @@ export default function Layout() {
   }, [sidebarOpen]);
 
   return (
-    <div className="flex h-screen bg-black text-white">
+    <div
+      className="flex min-h-screen bg-cover bg-center bg-no-repeat overscroll-none"
+      style={{
+        backgroundImage: 'url("/images/background.jpg")',
+        backgroundColor: 'rgba(0, 0, 0, 0.0)',
+        backgroundBlendMode: 'multiply',
+      }}
+    >
       {/* Mobile Header */}
-      <div className="absolute top-0 left-0 right-0 md:hidden flex items-center justify-between p-4 border-b border-white/10 bg-black z-50">
+      <div className="absolute top-0 left-0 right-0 md:hidden flex items-center justify-between p-4 z-50">
         <Button
           ref={toggleButtonRef}
           variant="ghost"
@@ -47,22 +54,20 @@ export default function Layout() {
         <div className="text-xl tracking-tighter font-bold">
           VELVET<span className="text-gray-500">METAL</span>
         </div>
-        <div className="w-10" /> {/* Spacer for centering */}
+        <div className="w-10" />
       </div>
 
-      <div className="flex flex-1 h-full">
-        {/* Sidebar */}
+      <div className="flex flex-1">
         <div
           ref={sidebarRef}
           className={cn(
-            'fixed inset-y-0 left-0 z-40 w-64 bg-black border-r border-white/10 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 overflow-y-auto',
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            'w-64',
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           )}
         >
           <Sidebar onClose={() => setSidebarOpen(false)} />
         </div>
 
-        {/* Main Content */}
         <main className="flex-1 overflow-y-auto pt-[60px] md:pt-0">
           <Outlet />
         </main>

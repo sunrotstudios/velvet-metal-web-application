@@ -60,10 +60,12 @@ export function Sidebar({ onClose }: SidebarProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Brand */}
-      <div className="p-6 border-b border-white/10">
-        <div className="text-xl font-radlush font-extrabold hidden md:block">
-          Velvet Metal
-        </div>
+      <div className="p-6">
+        <Link to="/" className="block">
+          <span className="text-xl font-degular font-semibold text-white">
+            Velvet Metal
+          </span>
+        </Link>
       </div>
 
       {/* Navigation */}
@@ -74,33 +76,41 @@ export function Sidebar({ onClose }: SidebarProps) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          {routes.map((route) => {
-            const isActive = location.pathname === route.path;
-            const Icon = route.icon;
-
+          {routes.map(({ path: href, label, icon: Icon }) => {
+            const isActive = href === location.pathname;
             return (
               <Link
-                key={route.path}
-                to={route.path}
+                key={label}
+                to={href}
+                className="block group"
                 onClick={handleNavigation}
-                className="block"
               >
                 <motion.div
-                  whileHover={{ x: 4 }}
-                  transition={{ duration: 0.2 }}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-300 ease-in-out",
+                    isActive 
+                      ? "text-white hover:text-white" 
+                      : "text-white/60 hover:text-white"
+                  )}
+                  layout
+                  layoutId={`nav-item-${label}`}
+                  transition={{ 
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30
+                  }}
                 >
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      'w-full justify-start gap-4 px-4 font-medium',
-                      isActive
-                        ? 'bg-white/10 text-white hover:bg-white/20'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    )}
+                  <motion.div 
+                    className="flex items-center gap-2 w-full"
+                    initial={false}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     <Icon className="h-5 w-5" />
-                    {route.label}
-                  </Button>
+                    <span className="font-medium">
+                      {label}
+                    </span>
+                  </motion.div>
                 </motion.div>
               </Link>
             );

@@ -78,12 +78,6 @@ function Landing() {
           </div>
         </div>
       </ResponsiveContainer>
-
-      {/* Background Elements */}
-      <div className="absolute inset-0 opacity-50">
-        <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-gradient-to-br from-gray-900 to-transparent" />
-        <div className="absolute bottom-0 right-0 w-1/3 h-1/3 bg-gradient-to-tl from-gray-900 to-transparent" />
-      </div>
     </div>
   );
 }

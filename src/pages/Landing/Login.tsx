@@ -52,13 +52,13 @@ export default function Login() {
         <nav className="p-6 flex justify-between items-center">
           <Button
             variant="ghost"
-            className="text-gray-400 hover:text-white hover:bg-white/10"
+            className="text-white hover:text-white/80 hover:bg-white/10"
             onClick={() => navigate('/')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <div className="text-xl tracking-tighter font-bold">
+          <div className="text-xl tracking-tighter font-bold text-white">
             VELVET<span className="text-gray-500">METAL</span>
           </div>
         </nav>
@@ -74,7 +74,7 @@ export default function Login() {
             {/* Header */}
             <div className="text-center">
               <motion.h1
-                className="text-6xl font-bold tracking-tighter mb-2"
+                className="text-6xl font-bold tracking-tighter mb-2 text-white"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -82,7 +82,7 @@ export default function Login() {
                 Welcome<br />Back
               </motion.h1>
               <motion.p
-                className="text-gray-400 text-lg"
+                className="text-lg text-white/60"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -139,7 +139,7 @@ export default function Login() {
               </Button>
 
               <div className="text-center">
-                <p className="text-gray-400">
+                <p className="text-white/60">
                   Don't have an account?{' '}
                   <button
                     type="button"

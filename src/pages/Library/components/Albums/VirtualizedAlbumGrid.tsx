@@ -1,8 +1,8 @@
 import { NormalizedAlbum, ViewMode } from '@/lib/types';
+import { motion } from 'framer-motion'; // Import motion from framer-motion
 import React, { useCallback } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeGrid as Grid } from 'react-window';
-import { motion } from 'framer-motion'; // Import motion from framer-motion
 
 interface VirtualizedGridProps {
   items: NormalizedAlbum[];
@@ -43,49 +43,63 @@ const VirtualizedGrid = ({
     return GRID_COLUMN_COUNTS.base;
   }, []);
 
-  const Cell = useCallback(({ columnIndex, rowIndex, style, data }) => {
-    const { items, ItemComponent, columnCount, isSelectionMode, onSelect, selectedItems } = data;
-    const index = rowIndex * columnCount + columnIndex;
+  const Cell = useCallback(
+    ({ columnIndex, rowIndex, style, data }) => {
+      const {
+        items,
+        ItemComponent,
+        columnCount,
+        isSelectionMode,
+        onSelect,
+        selectedItems,
+      } = data;
+      const index = rowIndex * columnCount + columnIndex;
 
-    if (index >= items.length) return null;
+      if (index >= items.length) return null;
 
-    const item = items[index];
-    const isSelected = selectedItems?.some((selected) => selected.id === item.id);
+      const item = items[index];
+      const isSelected = selectedItems?.some(
+        (selected) => selected.id === item.id
+      );
 
-    // Adjust the cell style to account for gaps
-    const adjustedStyle = {
-      ...style,
-      left: `${parseFloat(style.left) + GRID_GAP}px`,
-      top: `${parseFloat(style.top) + GRID_GAP}px`,
-      width: `${parseFloat(style.width) - GRID_GAP}px`,
-      height: `${parseFloat(style.height) - GRID_GAP}px`,
-      padding: `${CELL_PADDING}px`,
-    };
+      // Adjust the cell style to account for gaps
+      const adjustedStyle = {
+        ...style,
+        left: `${parseFloat(style.left) + GRID_GAP}px`,
+        top: `${parseFloat(style.top) + GRID_GAP}px`,
+        width: `${parseFloat(style.width) - GRID_GAP}px`,
+        height: `${parseFloat(style.height) - GRID_GAP}px`,
+        padding: `${CELL_PADDING}px`,
+      };
 
-    return (
-      <div style={adjustedStyle}>
-        <ItemComponent 
-          album={item} 
-          viewMode="grid" 
-          isSelectionMode={isSelectionMode}
-          onSelect={onSelect}
-          isSelected={isSelected}
-        />
-      </div>
-    );
-  }, [isSelectionMode, onSelect, selectedItems]);
+      return (
+        <div style={adjustedStyle}>
+          <ItemComponent
+            album={item}
+            viewMode="grid"
+            isSelectionMode={isSelectionMode}
+            onSelect={onSelect}
+            isSelected={isSelected}
+          />
+        </div>
+      );
+    },
+    [isSelectionMode, onSelect, selectedItems]
+  );
 
   if (viewMode === 'list') {
     return (
       <div className="grid grid-cols-1 gap-6">
         {items.map((item) => (
-          <ItemComponent 
-            key={item.id} 
-            album={item} 
+          <ItemComponent
+            key={item.id}
+            album={item}
             viewMode={viewMode}
             isSelectionMode={isSelectionMode}
             onSelect={onSelect}
-            isSelected={selectedItems.some((selected) => selected.id === item.id)}
+            isSelected={selectedItems.some(
+              (selected) => selected.id === item.id
+            )}
           />
         ))}
       </div>

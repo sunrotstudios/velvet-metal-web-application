@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/auth-context';
 import { useLastFm } from '@/contexts/last-fm-context';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
 import { supabase } from '@/lib/supabase';
-import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
 import { ServiceConnection } from '@/shared/services/ServiceConnection';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -24,7 +23,7 @@ import {
   User,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { MobileSettings } from './MobileSettings';
+import { Header } from './components/Header';
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -236,72 +235,67 @@ export default function Settings() {
   ];
 
   return (
-    <ResponsiveContainer mobileContent={<MobileSettings />}>
-      <div className="min-h-screen bg-black text-white">
-        {/* Header Section */}
-        <div className="relative">
-          {/* Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent h-[30vh] pointer-events-none" />
+    <div className="h-screen flex flex-col overflow-hidden">
+      <div className="flex-none pt-20">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          <Header />
+        </motion.div>
+        <div className="relative max-w-[1200px] mx-auto px-6">
+          {/* Settings Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {settingsSections.map((section, sectionIndex) => (
+              <motion.div
+                key={section.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: sectionIndex * 0.1 }}
+                className="space-y-4"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <section.icon className="h-5 w-5 text-white/60" />
+                  <h2 className="font-polymath text-xl font-medium text-white">
+                    {section.title}
+                  </h2>
+                </div>
 
-          <div className="relative max-w-[1200px] mx-auto px-6">
-            {/* Title Section */}
-            <div className="pt-16 pb-12">
-              <h1 className="font-polymath text-4xl font-bold tracking-normal text-white mb-4">
-                Settings
-              </h1>
-            </div>
-
-            {/* Settings Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {settingsSections.map((section, sectionIndex) => (
-                <motion.div
-                  key={section.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: sectionIndex * 0.1 }}
-                  className="space-y-4"
-                >
-                  <div className="flex items-center gap-2 mb-4">
-                    <section.icon className="h-5 w-5 text-white/60" />
-                    <h2 className="font-polymath text-xl font-medium text-white">
-                      {section.title}
-                    </h2>
-                  </div>
-
-                  <div className="space-y-2">
-                    {section.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="group rounded-lg border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
-                      >
-                        {item.content ? (
-                          item.content
-                        ) : (
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="rounded-full bg-white/10 p-2">
-                                <item.icon className="h-5 w-5 text-white/80" />
-                              </div>
-                              <div>
-                                <h3 className="font-medium text-white group-hover:text-white/90">
-                                  {item.title}
-                                </h3>
-                                {item.subtitle && (
-                                  <p className="text-sm text-white/60 group-hover:text-white/70">
-                                    {item.subtitle}
-                                  </p>
-                                )}
-                              </div>
+                <div className="space-y-2">
+                  {section.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="group rounded-lg border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
+                    >
+                      {item.content ? (
+                        item.content
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="rounded-full bg-white/10 p-2">
+                              <item.icon className="h-5 w-5 text-white/80" />
                             </div>
-                            {item.action}
+                            <div>
+                              <h3 className="font-medium text-white group-hover:text-white/90">
+                                {item.title}
+                              </h3>
+                              {item.subtitle && (
+                                <p className="text-sm text-white/60 group-hover:text-white/70">
+                                  {item.subtitle}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                          {item.action}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
@@ -313,6 +307,6 @@ export default function Settings() {
         open={isUpgradePlanOpen}
         onClose={() => setIsUpgradePlanOpen(false)}
       />
-    </ResponsiveContainer>
+    </div>
   );
 }

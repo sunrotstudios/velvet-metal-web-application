@@ -1,6 +1,10 @@
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/auth-context';
 import { LastFmProvider } from '@/contexts/last-fm-context';
+import {
+  checkAndTriggerSync,
+  initializeAutoSync,
+} from '@/lib/services/library-sync';
 import SpotifyCallback from '@/pages/Callbacks/SpotifyCallback';
 import AlbumDetails from '@/pages/Details/AlbumDetails';
 import PlaylistDetails from '@/pages/Details/PlaylistDetails';
@@ -17,15 +21,13 @@ import Layout from '@/shared/layouts/Layout';
 import { ProtectedRoute } from '@/shared/layouts/ProtectedRoute';
 import { ThemeProvider } from '@/shared/layouts/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useEffect } from 'react';
 import {
   Navigate,
   Route,
   BrowserRouter as Router,
   Routes,
 } from 'react-router-dom';
-import { useEffect } from 'react';
-import { initializeAutoSync, checkAndTriggerSync } from '@/lib/services/library-sync';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,7 +89,6 @@ function App() {
           </AuthProvider>
         </Router>
         <Toaster />
-        <ReactQueryDevtools initialIsOpen={false} />
       </ThemeProvider>
     </QueryClientProvider>
   );
