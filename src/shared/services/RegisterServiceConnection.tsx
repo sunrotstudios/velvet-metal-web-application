@@ -34,7 +34,7 @@ export function RegisterServiceConnection({ service }: RegisterServiceConnection
       if (!user?.id || !isConnected) return null;
       const { data } = await supabase
         .from('user_services')
-        .select('last_library_sync')
+        .select('last_library_sync, sync_in_progress')
         .eq('user_id', user.id)
         .eq('service', service)
         .single();
@@ -52,8 +52,12 @@ export function RegisterServiceConnection({ service }: RegisterServiceConnection
     syncStatus,
   }); // Debug log
 
-  // Only consider it syncing if we have a sync status and last_library_sync is explicitly null
-  const isSyncing = isConnected && syncStatus && syncStatus.last_library_sync === null;
+  // Consider it syncing if sync_in_progress is true or last_library_sync is null
+  const isSyncing = isConnected && (
+    (syncStatus && syncStatus.sync_in_progress) || 
+    (syncStatus && syncStatus.last_library_sync === null)
+  );
+  
   console.log('Service:', service, 'Is connected:', isConnected, 'Is syncing:', isSyncing); // Debug log
 
   const handleConnect = async () => {
@@ -67,21 +71,20 @@ export function RegisterServiceConnection({ service }: RegisterServiceConnection
 
     setIsConnecting(true);
     try {
+      // Set sync_in_progress to true before starting auth
+      await supabase
+        .from('user_services')
+        .upsert({
+          user_id: user.id,
+          service: service,
+          last_library_sync: null,
+          sync_in_progress: true
+        });
+
       if (service === 'spotify') {
         await authorizeSpotify(user.id);
       } else if (service === 'apple-music') {
         await authorizeAppleMusic(user.id);
-      }
-
-      // After successful connection, update last_library_sync
-      const { error } = await supabase
-        .from('user_services')
-        .update({ last_library_sync: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .eq('service', service);
-
-      if (error) {
-        console.error('Error updating last_library_sync:', error);
       }
 
       // Invalidate queries to refresh UI
@@ -89,6 +92,16 @@ export function RegisterServiceConnection({ service }: RegisterServiceConnection
       queryClient.invalidateQueries(['syncStatus']);
 
     } catch (error: any) {
+      // If there's an error, reset the sync status
+      await supabase
+        .from('user_services')
+        .update({ 
+          sync_in_progress: false,
+          last_library_sync: new Date().toISOString() 
+        })
+        .eq('user_id', user.id)
+        .eq('service', service);
+
       toast({
         title: 'Error',
         description: error.message || 'Failed to connect service',

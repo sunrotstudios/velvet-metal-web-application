@@ -2,19 +2,19 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ServiceSelector } from '@/components/ui/service-selector';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { getServiceAuth } from '@/lib/services/streaming-auth';
 import {
   TransferProgress,
   transferLibrary,
-  verifyTransfer,
 } from '@/lib/services/transfer-service';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 import { TransferLog } from './TransferLog';
-import { useToast } from '@/components/ui/use-toast';
+import { Header } from './components/Header';
 
 interface LogEntry {
   type: 'info' | 'success' | 'error';
@@ -79,7 +79,8 @@ export default function Transfer() {
 
       toast({
         title: 'Transfer Started',
-        description: 'Your transfer has started and will continue in the background.',
+        description:
+          'Your transfer has started and will continue in the background.',
       });
     } catch (error) {
       console.error('Transfer failed:', error);
@@ -96,20 +97,19 @@ export default function Transfer() {
   };
 
   return (
-    <div className="container max-w-7xl mx-auto py-12">
-      <div className="space-y-6">
-        <div>
-          <h1 className="font-radlush text-4xl font-medium text-white">
-            Transfer Library
-          </h1>
-          <p className="text-lg text-white/80 mt-2">
-            Seamlessly transfer your music collection between streaming
-            services.
-          </p>
-        </div>
+    <div className="h-screen flex flex-col overflow-hidden">
+      <div className="flex-none pt-20">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          <Header />
+        </motion.div>
 
         <div className="grid lg:grid-cols-5 gap-8">
-          <Card className="lg:col-span-3 p-8 bg-gradient-to-b from-zinc-900 to-zinc-950 border-white/20">
+          <Card className="lg:col-span-3 p-8">
             <div className="space-y-8">
               {/* Service Selection */}
               <div className="space-y-6">
@@ -143,15 +143,17 @@ export default function Transfer() {
                     <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
                       <div
                         className={cn(
-                          "h-full transition-all duration-500 ease-in-out",
-                          isCompleted ? "bg-green-400" : "bg-white"
+                          'h-full transition-all duration-500 ease-in-out',
+                          isCompleted ? 'bg-green-400' : 'bg-white'
                         )}
                         style={{
                           width: isCompleted
-                            ? "100%"
+                            ? '100%'
                             : `${Math.max(
                                 5,
-                                (progress.current / Math.max(1, progress.total)) * 100
+                                (progress.current /
+                                  Math.max(1, progress.total)) *
+                                  100
                               )}%`,
                         }}
                       />
@@ -160,27 +162,26 @@ export default function Transfer() {
                       <span>Progress</span>
                       <span>
                         {isCompleted
-                          ? "Complete"
+                          ? 'Complete'
                           : progress.total > 0
                           ? `${Math.round(
                               (progress.current / progress.total) * 100
                             )}%`
-                          : "Starting..."}
+                          : 'Starting...'}
                       </span>
                     </div>
-                    {progress.total > 0 && progress.current <= progress.total && !isCompleted && (
-                      <p className="text-sm text-center text-white/80">
-                        {progress.stage === 'processing' && (
-                          `Processing ${progress.current.toLocaleString()} of ${progress.total.toLocaleString()} albums`
-                        )}
-                        {progress.stage === 'matching' && (
-                          `Matching ${progress.current.toLocaleString()} of ${progress.total.toLocaleString()} albums in Apple Music`
-                        )}
-                        {progress.stage === 'adding' && (
-                          `Adding ${progress.current.toLocaleString()} of ${progress.total.toLocaleString()} albums to your library`
-                        )}
-                      </p>
-                    )}
+                    {progress.total > 0 &&
+                      progress.current <= progress.total &&
+                      !isCompleted && (
+                        <p className="text-sm text-center text-white/80">
+                          {progress.stage === 'processing' &&
+                            `Processing ${progress.current.toLocaleString()} of ${progress.total.toLocaleString()} albums`}
+                          {progress.stage === 'matching' &&
+                            `Matching ${progress.current.toLocaleString()} of ${progress.total.toLocaleString()} albums in Apple Music`}
+                          {progress.stage === 'adding' &&
+                            `Adding ${progress.current.toLocaleString()} of ${progress.total.toLocaleString()} albums to your library`}
+                        </p>
+                      )}
                     {isCompleted && (
                       <div className="flex flex-col items-center gap-2 py-2">
                         <div className="flex items-center gap-2 text-green-400">
@@ -188,7 +189,9 @@ export default function Transfer() {
                           <span className="font-medium">Transfer Complete</span>
                         </div>
                         <p className="text-sm text-white/80">
-                          Successfully transferred {progress.total.toLocaleString()} albums to your library
+                          Successfully transferred{' '}
+                          {progress.total.toLocaleString()} albums to your
+                          library
                         </p>
                       </div>
                     )}
@@ -201,18 +204,19 @@ export default function Transfer() {
                     onClick={handleTransfer}
                     disabled={isTransferring || fromService === toService}
                     className={cn(
-                      "bg-white/20 text-white hover:bg-white/30 border-0",
-                      (isTransferring || fromService === toService) && "opacity-50"
+                      'bg-white/20 text-white hover:bg-white/30 border-0',
+                      (isTransferring || fromService === toService) &&
+                        'opacity-50'
                     )}
                   >
                     {isTransferring ? (
                       <LoadingSpinner className="mr-2 h-4 w-4 text-white" />
                     ) : null}
                     {isTransferring
-                      ? "Transferring..."
+                      ? 'Transferring...'
                       : isCompleted
-                      ? "Start New Transfer"
-                      : "Start Transfer"}
+                      ? 'Start New Transfer'
+                      : 'Start Transfer'}
                   </Button>
                 </div>
               </div>

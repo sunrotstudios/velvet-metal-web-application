@@ -4,7 +4,6 @@ import { TabsContent } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
 import { NormalizedAlbum, ViewMode } from '@/lib/types';
 import { BulkTransferModal } from '@/shared/modals/BulkTransferModal';
-import { Loader2 } from 'lucide-react';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { AlbumListHeader } from './Albums/AlbumListHeader';
 import VirtualizedAlbumGrid from './Albums/VirtualizedAlbumGrid';

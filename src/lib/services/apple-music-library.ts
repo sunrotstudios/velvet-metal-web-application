@@ -116,6 +116,16 @@ export async function syncAppleMusicLibrary(
   onProgress?: (progress: number) => void
 ) {
   try {
+    // Update sync status to in progress
+    await supabase
+      .from('user_services')
+      .update({ 
+        sync_in_progress: true,
+        last_library_sync: null 
+      })
+      .eq('user_id', userId)
+      .eq('service', 'apple-music');
+
     const music = await initializeAppleMusic();
 
     if (!music) {
@@ -248,5 +258,15 @@ export async function syncAppleMusicLibrary(
   } catch (error) {
     console.error('Error syncing Apple Music library:', error);
     throw error;
+  } finally {
+    // Always update sync status when done, whether successful or not
+    await supabase
+      .from('user_services')
+      .update({ 
+        sync_in_progress: false,
+        last_library_sync: new Date().toISOString() 
+      })
+      .eq('user_id', userId)
+      .eq('service', 'apple-music');
   }
 }

@@ -3,12 +3,13 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/auth-context';
 import { supabase } from '@/lib/supabase';
+import { storage } from '@/lib/services/storage';
 import { RegisterServiceConnection } from '@/shared/services/RegisterServiceConnection';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowLeft, Check, Loader2, Upload, X } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { SpotifyIcon, AppleMusicIcon, TidalIcon } from '@/components/icons/service-icons';
@@ -45,7 +46,11 @@ export default function Register() {
     password: '',
     confirmPassword: '',
     selectedTier: '',
+    avatar: null as File | null,
   });
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Update URL when step changes
   useEffect(() => {
@@ -122,31 +127,111 @@ export default function Register() {
     }));
   };
 
-  const handleAccountSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await handleFileUpload(file);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Avatar image must be less than 2MB');
+      return;
+    }
+    
+    // Create preview URL
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setFormData(prev => ({ ...prev, avatar: file }));
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    setIsDragging(true);
+  }, []);
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      await handleFileUpload(file);
+    } else {
+      toast.error('Please upload an image file');
     }
+  }, []);
 
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
-      return;
+  const removeAvatar = useCallback(() => {
+    setFormData(prev => ({ ...prev, avatar: null }));
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
     }
+  }, [previewUrl]);
 
+  const uploadAvatar = async (userId: string) => {
+    if (!formData.avatar) return null;
+    
+    try {
+      const fileExt = formData.avatar.name.split('.').pop();
+      const fileName = `${userId}/${Math.random()}.${fileExt}`;
+      
+      const publicUrl = await storage.uploadFile('avatars', fileName, formData.avatar);
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      return null;
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
 
     try {
+      if (formData.password !== formData.confirmPassword) {
+        toast.error('Passwords do not match');
+        return;
+      }
+
+      // Register the user
       await register(formData.email, formData.password, formData.display_name);
-      toast.success('Account created successfully!');
+      
+      // Get the newly registered user
+      const { data: { user: newUser } } = await supabase.auth.getUser();
+      
+      if (newUser && formData.avatar) {
+        const avatarUrl = await uploadAvatar(newUser.id);
+        
+        if (avatarUrl) {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ avatar_url: avatarUrl })
+            .eq('id', newUser.id);
+            
+          if (updateError) {
+            console.error('Error updating profile with avatar:', updateError);
+          }
+        }
+      }
+      
       setCurrentStep('subscription');
     } catch (error: any) {
-      console.error('Registration error:', error);
-      toast.error(error.message || 'Failed to create account');
+      toast.error(error.message || 'An error occurred during registration');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFinish = () => {
+    navigate('/home');
   };
 
   const getStepTitle = () => {
@@ -171,69 +256,109 @@ export default function Register() {
     }
   };
 
-  const handleFinish = () => {
-    navigate('/home');
-  };
-
   const renderStep = () => {
     switch (currentStep) {
       case 'account':
         return (
           <motion.form
             className="space-y-6"
-            onSubmit={handleAccountSubmit}
+            onSubmit={handleRegister}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
             <div className="space-y-4">
-              <div>
-                <Input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Email"
-                  required
-                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
-                  autoComplete="email"
-                />
-              </div>
-              <div>
-                <Input
-                  type="text"
-                  name="display_name"
-                  value={formData.display_name}
-                  onChange={handleChange}
-                  placeholder="First Name"
-                  required
-                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
-                  autoComplete="name"
-                />
-              </div>
-              <div>
-                <Input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Password"
-                  required
-                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
-                  autoComplete="new-password"
-                />
-              </div>
-              <div>
-                <Input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm Password"
-                  required
-                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
-                  autoComplete="new-password"
-                />
+              <Input
+                type="text"
+                name="display_name"
+                value={formData.display_name}
+                onChange={handleChange}
+                placeholder="Display Name"
+                required
+                className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
+                autoComplete="name"
+              />
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                required
+                className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
+                autoComplete="email"
+              />
+              <Input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                required
+                className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
+                autoComplete="new-password"
+              />
+              <Input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm Password"
+                required
+                className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20 font-degular"
+                autoComplete="new-password"
+              />
+              <div 
+                className={`relative space-y-2 ${formData.avatar ? 'pb-4' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <label className="block text-sm text-gray-500 mb-2">Profile Picture (Optional)</label>
+                
+                {previewUrl ? (
+                  <div className="relative w-24 h-24 mx-auto mb-4">
+                    <img
+                      src={previewUrl}
+                      alt="Avatar preview"
+                      className="w-full h-full object-cover rounded-full ring-2 ring-white/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeAvatar}
+                      className="absolute -top-2 -right-2 p-1 bg-black/80 rounded-full hover:bg-black/60 transition-colors"
+                    >
+                      <X className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+                      isDragging
+                        ? 'border-white/40 bg-white/5'
+                        : 'border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <div className="text-center">
+                      <Upload className="mx-auto h-8 w-8 text-gray-500" />
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                          Drag and drop an image, or{' '}
+                          <span className="text-white">browse</span>
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          PNG, JPG up to 2MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -228,31 +228,4 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  html {
-    font-family: system-ui, sans-serif;
-  }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: 'Degular', system-ui, sans-serif;
-  }
-}
-
-.font-radlush {
-  font-family: 'Degular', system-ui, sans-serif;
-}
-
-.font-degular {
-  font-family: 'Degular', system-ui, sans-serif;
-}
-
-/* Base styles that don't conflict with Tailwind */
-body {
-  min-width: 320px;
-  min-height: 100vh;
-}
