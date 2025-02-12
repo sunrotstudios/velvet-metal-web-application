@@ -1,11 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/auth-context';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export default function Login() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -39,28 +39,13 @@ export default function Login() {
   };
 
   return (
-    <div
-      className="min-h-screen w-full bg-cover bg-center bg-no-repeat"
-      style={{
-        backgroundImage: 'url("/images/background.jpg")',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        backgroundBlendMode: 'overlay',
-      }}
-    >
+    <div className="min-h-screen w-full bg-bg dark:bg-darkBg">
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Navigation */}
-        <nav className="p-6 flex justify-between items-center">
-          <Button
-            variant="ghost"
-            className="text-white hover:text-white/80 hover:bg-white/10"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <div className="text-xl tracking-tighter font-bold text-white">
-            VELVET<span className="text-gray-500">METAL</span>
-          </div>
+        <nav className="p-6">
+          <h1 className="text-xl font-semibold text-text dark:text-darkText">
+            Velvet Metal
+          </h1>
         </nav>
 
         {/* Main Content */}
@@ -74,15 +59,17 @@ export default function Login() {
             {/* Header */}
             <div className="text-center">
               <motion.h1
-                className="text-6xl font-bold tracking-tighter mb-2 text-white"
+                className="text-6xl font-bold tracking-tighter mb-2 text-text dark:text-darkText"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                Welcome<br />Back
+                Welcome
+                <br />
+                Back
               </motion.h1>
               <motion.p
-                className="text-lg text-white/60"
+                className="text-lg text-text/60 dark:text-darkText/60"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -108,7 +95,7 @@ export default function Login() {
                     onChange={handleChange}
                     placeholder="Email"
                     required
-                    className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20"
+                    className="h-12 bg-transparent border-2 border-text dark:border-darkText text-text dark:text-darkText placeholder:text-text/50 dark:placeholder:text-darkText/50 shadow-light dark:shadow-dark hover:translate-x-boxShadowX hover:translate-y-boxShadowY focus:translate-x-boxShadowX focus:translate-y-boxShadowY transition-transform"
                     autoComplete="email"
                   />
                 </div>
@@ -120,7 +107,7 @@ export default function Login() {
                     onChange={handleChange}
                     placeholder="Password"
                     required
-                    className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 focus:ring-white/20"
+                    className="h-12 bg-transparent border-2 border-text dark:border-darkText text-text dark:text-darkText placeholder:text-text/50 dark:placeholder:text-darkText/50 shadow-light dark:shadow-dark hover:translate-x-boxShadowX hover:translate-y-boxShadowY focus:translate-x-boxShadowX focus:translate-y-boxShadowY transition-transform"
                     autoComplete="current-password"
                   />
                 </div>
@@ -129,7 +116,7 @@ export default function Login() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 bg-white hover:bg-gray-100 text-black font-medium text-lg relative overflow-hidden group"
+                className="w-full h-12 bg-main text-text hover:bg-opacity-90 text-lg px-12 py-6 font-medium shadow-light dark:shadow-dark hover:translate-x-boxShadowX hover:translate-y-boxShadowY active:translate-x-0 active:translate-y-0 transition-transform"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -139,12 +126,12 @@ export default function Login() {
               </Button>
 
               <div className="text-center">
-                <p className="text-white/60">
+                <p className="text-text/60 dark:text-darkText/60">
                   Don't have an account?{' '}
                   <button
                     type="button"
                     onClick={() => navigate('/register')}
-                    className="text-white hover:underline focus:outline-none"
+                    className="text-text dark:text-darkText hover:underline focus:outline-none"
                   >
                     Create one
                   </button>

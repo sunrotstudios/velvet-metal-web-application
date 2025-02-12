@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
@@ -62,7 +61,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       {/* Brand */}
       <div className="p-6">
         <Link to="/" className="block">
-          <span className="text-xl font-degular font-semibold text-white">
+          <span className="text-xl font-semibold text-text dark:text-darkText">
             Velvet Metal
           </span>
         </Link>
@@ -87,29 +86,27 @@ export function Sidebar({ onClose }: SidebarProps) {
               >
                 <motion.div
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-300 ease-in-out",
-                    isActive 
-                      ? "text-white hover:text-white" 
-                      : "text-white/60 hover:text-white"
+                    'flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-300 ease-in-out',
+                    isActive
+                      ? 'text-text dark:text-darkText hover:text-text dark:hover:text-darkText'
+                      : 'text-text/60 dark:text-darkText/60 hover:text-text dark:hover:text-darkText'
                   )}
                   layout
                   layoutId={`nav-item-${label}`}
-                  transition={{ 
-                    type: "spring",
+                  transition={{
+                    type: 'spring',
                     stiffness: 500,
-                    damping: 30
+                    damping: 30,
                   }}
                 >
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-2 w-full"
                     initial={false}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <Icon className="h-5 w-5" />
-                    <span className="font-medium">
-                      {label}
-                    </span>
+                    <span className="font-medium">{label}</span>
                   </motion.div>
                 </motion.div>
               </Link>

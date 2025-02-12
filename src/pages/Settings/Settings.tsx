@@ -1,6 +1,16 @@
 import { EditProfileModal } from '@/components/modals/EditProfileModal';
 import { UpgradePlanModal } from '@/components/modals/UpgradePlanModal';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/auth-context';
 import { useLastFm } from '@/contexts/last-fm-context';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
@@ -23,6 +33,7 @@ import {
   User,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Label } from 'recharts';
 import { Header } from './components/Header';
 
 export default function Settings() {
@@ -93,48 +104,71 @@ export default function Settings() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <User className="h-12 w-12 text-white/80" />
+                      <User className="h-12 w-12 text-text/80" />
                     </div>
                   )}
                 </div>
                 <div className="flex-1 space-y-4">
                   <div>
-                    <h3 className="text-xl font-medium text-white">
+                    <h3 className="text-xl font-medium text-text">
                       {user.user_metadata?.display_name || 'User'}
                     </h3>
-                    <p className="text-sm text-white/60">{user.email}</p>
+                    <p className="text-sm text-text/60">{user.email}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-white/60">Member since:</p>
-                      <p className="text-sm text-white">
+                      <p className="text-sm text-text/60">Member since:</p>
+                      <p className="text-sm text-text">
                         {format(new Date(user.created_at), 'MMMM d, yyyy')}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-white/60">Status:</p>
-                      <p className="text-sm text-white capitalize">
+                      <p className="text-sm text-text/60">Status:</p>
+                      <p className="text-sm text-text capitalize">
                         {profile?.subscription_tier || 'Free'} Plan
                       </p>
                     </div>
                   </div>
                   <div className="pt-4 flex items-center gap-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white/10 text-white hover:bg-white/20 border-0"
-                      onClick={() => setIsEditProfileOpen(true)}
-                    >
-                      Edit Profile
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white/10 text-white hover:bg-white/20 border-0"
-                      onClick={() => setIsUpgradePlanOpen(true)}
-                    >
-                      Upgrade Plan
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button>Edit Profile</Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Edit profile</DialogTitle>
+                          <DialogDescription>
+                            Make changes to your profile here. Click save when
+                            youre done.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">
+                              Name
+                            </Label>
+                            <Input
+                              id="name"
+                              defaultValue="Pedro Duarte"
+                              className="col-span-3"
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="username" className="text-right">
+                              Username
+                            </Label>
+                            <Input
+                              id="username"
+                              defaultValue="@peduarte"
+                              className="col-span-3"
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button type="submit">Save changes</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
               </div>
@@ -199,7 +233,7 @@ export default function Settings() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-white/80 hover:text-white hover:bg-white/10"
+              className="text-text/80 hover:text-text hover:bg-text/10"
               onClick={logout}
             >
               <LogOut className="h-4 w-4" />
@@ -257,8 +291,8 @@ export default function Settings() {
                 className="space-y-4"
               >
                 <div className="flex items-center gap-2 mb-4">
-                  <section.icon className="h-5 w-5 text-white/60" />
-                  <h2 className="font-polymath text-xl font-medium text-white">
+                  <section.icon className="h-5 w-5 text-text/60" />
+                  <h2 className="font-polymath text-xl font-medium text-text">
                     {section.title}
                   </h2>
                 </div>
@@ -267,22 +301,22 @@ export default function Settings() {
                   {section.items.map((item) => (
                     <div
                       key={item.id}
-                      className="group rounded-lg border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
+                      className="group rounded-lg border border-text/10 bg-text/5 p-4 hover:bg-text/10 transition-colors"
                     >
                       {item.content ? (
                         item.content
                       ) : (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="rounded-full bg-white/10 p-2">
-                              <item.icon className="h-5 w-5 text-white/80" />
+                            <div className="rounded-full bg-text/10 p-2">
+                              <item.icon className="h-5 w-5 text-text/80" />
                             </div>
                             <div>
-                              <h3 className="font-medium text-white group-hover:text-white/90">
+                              <h3 className="font-medium text-text group-hover:text-text/90">
                                 {item.title}
                               </h3>
                               {item.subtitle && (
-                                <p className="text-sm text-white/60 group-hover:text-white/70">
+                                <p className="text-sm text-text/60 group-hover:text-text/70">
                                   {item.subtitle}
                                 </p>
                               )}
