@@ -80,3 +80,12 @@
   font-style: normal;
   font-display: swap;
 }
+
+/* Casserole Blackletter */
+@font-face {
+  font-family: "Casserole-Blackletter";
+  src: url("/fonts/Casserole/CasseroleDemo-Blackletter.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}

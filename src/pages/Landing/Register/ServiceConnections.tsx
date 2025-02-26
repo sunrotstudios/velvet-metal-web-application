@@ -1,19 +1,22 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { RegisterServiceConnection } from "@/shared/services/RegisterServiceConnection";
-import {
-  SpotifyIcon,
-  AppleMusicIcon,
-  TidalIcon,
-} from "@/components/icons/service-icons";
+import { SpotifyIcon, AppleMusicIcon } from "@/components/icons/service-icons";
 import { cn } from "@/lib/utils";
 import { Check, Loader } from "lucide-react";
+import { ServiceType } from "@/lib/services/streaming-auth";
 
 interface ServiceConnectionsProps {
-  connectedServices: any[];
+  connectedServices: ServiceType[];
   isAnySyncing: boolean;
   onFinish: () => void;
+}
+
+interface ServiceInfo {
+  id: ServiceType;
+  name: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
 }
 
 export function ServiceConnections({
@@ -22,7 +25,7 @@ export function ServiceConnections({
   onFinish,
 }: ServiceConnectionsProps) {
   // Configuration for service cards
-  const services = [
+  const services: ServiceInfo[] = [
     {
       id: "spotify",
       name: "Spotify",
@@ -30,31 +33,22 @@ export function ServiceConnections({
       color: "bg-green-400",
     },
     {
-      id: "apple_music",
+      id: "apple-music",
       name: "Apple Music",
       icon: AppleMusicIcon,
       color: "bg-red-400",
-    },
-    {
-      id: "tidal",
-      name: "Tidal",
-      icon: TidalIcon,
-      color: "bg-blue-400",
     },
   ];
 
   return (
     <motion.div
-      className="space-y-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.4 }}
     >
-      <div className="space-y-4">
+      <div className="space-y-2">
         {services.map((service, index) => {
-          const isConnected = connectedServices?.some(
-            (s) => s.service === service.id
-          );
+          const isConnected = connectedServices?.includes(service.id);
           const isSyncing = isConnected && isAnySyncing;
           const ServiceIcon = service.icon;
 
@@ -67,76 +61,50 @@ export function ServiceConnections({
             >
               <div
                 className={cn(
-                  "relative p-4",
-                  "border-4 border-black rounded-[20px]",
+                  "relative p-3",
+                  "border-3 border-black rounded-lg",
                   "transition-all duration-200",
                   isConnected
-                    ? "bg-purple-100 -translate-y-1"
-                    : "bg-white hover:-translate-y-1",
-                  isConnected
-                    ? "shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
-                    : "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+                    ? "bg-purple-100 -translate-y-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                    : "bg-white hover:-translate-y-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
                     <div
                       className={cn(
-                        "w-12 h-12 flex items-center justify-center rounded-lg",
-                        "border-4 border-black",
+                        "w-10 h-10 flex items-center justify-center rounded-lg",
+                        "border-3 border-black",
                         service.color
                       )}
                     >
-                      <ServiceIcon className="w-6 h-6" />
+                      <ServiceIcon className="w-5 h-5" />
                     </div>
-                    <span className="text-xl font-bold">{service.name}</span>
+                    <span className="text-base font-bold">{service.name}</span>
                   </div>
 
                   {isConnected ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center">
                       {isSyncing ? (
-                        <div className="flex items-center gap-2">
-                          <Loader className="w-5 h-5 animate-spin" />
-                          <span className="text-sm font-bold">Syncing...</span>
+                        <div className="flex items-center gap-1.5">
+                          <Loader className="w-4 h-4 animate-spin" />
+                          <span className="text-xs font-bold">Syncing</span>
                         </div>
                       ) : (
                         <div
                           className={cn(
-                            "px-3 py-1",
-                            "bg-green-300 border-3 border-black rounded-full",
-                            "flex items-center gap-2"
+                            "px-2 py-1",
+                            "bg-green-300 border-2 border-black rounded-full",
+                            "flex items-center gap-1.5"
                           )}
                         >
-                          <Check className="w-4 h-4" />
-                          <span className="text-sm font-bold">Connected</span>
+                          <Check className="w-3 h-3" />
+                          <span className="text-xs font-bold">Connected</span>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <RegisterServiceConnection
-                      service={service.id}
-                      render={({ onClick, isLoading }) => (
-                        <Button
-                          onClick={onClick}
-                          disabled={isLoading}
-                          className={cn(
-                            "px-4 py-2 h-10 font-bold",
-                            "border-3 border-black rounded-lg",
-                            "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
-                            "hover:translate-x-[-1px] hover:translate-y-[-1px]",
-                            "active:translate-x-0 active:translate-y-0",
-                            "transition-all",
-                            "bg-yellow-300 hover:bg-yellow-400"
-                          )}
-                        >
-                          {isLoading ? (
-                            <Loader className="w-4 h-4 animate-spin mr-2" />
-                          ) : (
-                            "Connect"
-                          )}
-                        </Button>
-                      )}
-                    />
+                    <RegisterServiceConnection service={service.id} />
                   )}
                 </div>
               </div>
@@ -149,22 +117,20 @@ export function ServiceConnections({
         onClick={onFinish}
         disabled={!connectedServices?.length || isAnySyncing}
         className={cn(
-          "w-full h-12 text-lg font-bold mt-6",
-          "border-4 border-black rounded-xl",
-          "shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
-          "hover:translate-x-[-2px] hover:translate-y-[-2px]",
-          "active:translate-x-0 active:translate-y-0",
+          "w-full h-11 text-base font-black mt-3",
+          "border-3 border-black rounded-lg",
+          "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
           "transition-all",
           connectedServices?.length && !isAnySyncing
-            ? "bg-purple-100 hover:bg-purple-200"
+            ? "bg-purple-500 text-white hover:bg-purple-600"
             : "bg-gray-100 opacity-50 cursor-not-allowed"
         )}
       >
         {isAnySyncing
           ? "Syncing Library..."
           : !connectedServices?.length
-          ? "Connect a Service First"
-          : "Go to App"}
+          ? "Connect a Service"
+          : "GO TO APP"}
       </Button>
     </motion.div>
   );

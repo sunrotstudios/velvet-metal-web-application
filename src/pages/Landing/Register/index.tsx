@@ -1,11 +1,9 @@
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import { storage } from "@/lib/services/storage";
 import { useConnectedServices } from "@/lib/hooks/useConnectedServices";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -54,11 +52,10 @@ export default function Register() {
     },
   });
 
-  const { data: connectedServices, isLoading: isLoadingConnections } =
-    useConnectedServices();
+  const { data: connectedServices } = useConnectedServices();
 
   // Query sync status for all services
-  const { data: syncStatuses, isLoading: isLoadingSync } = useQuery({
+  const { data: syncStatuses } = useQuery({
     queryKey: ["syncStatuses", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -153,8 +150,8 @@ export default function Register() {
       case "services":
         return (
           <ServiceConnections
-            connectedServices={connectedServices}
-            isAnySyncing={isAnySyncing}
+            connectedServices={connectedServices || []}
+            isAnySyncing={isAnySyncing || false}
             onFinish={() => navigate("/home")}
           />
         );
@@ -211,35 +208,14 @@ export default function Register() {
           </div>
         </div>
 
-        {/* Back Button */}
-        {currentStep !== "account" && (
-          <div className="absolute top-20 left-8 z-40">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                if (currentStep === "services") setCurrentStep("subscription");
-                if (currentStep === "subscription") setCurrentStep("account");
-              }}
-              className={cn(
-                "h-12 w-12 border-4 border-black rounded-xl bg-white",
-                "hover:translate-x-[-2px] hover:translate-y-[-2px]",
-                "active:translate-x-0 active:translate-y-0",
-                "transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-              )}
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </Button>
-          </div>
-        )}
-
-        <main className="flex-1 flex items-center justify-center px-8 pt-16">
-          <div className="w-full max-w-[1000px] mx-auto grid md:grid-cols-[1fr_1.5fr] gap-24 items-center">
+        {/* Desktop Main Content */}
+        <main className="hidden md:flex flex-1 items-center justify-center px-8 pt-16">
+          <div className="w-full max-w-[1000px] mx-auto grid grid-cols-[1fr_1.5fr] gap-24 items-center">
             {/* Left Side - Title and Progress */}
             <div className="space-y-12">
               <div className="space-y-4">
                 <motion.h1
-                  className="text-6xl md:text-7xl font-black tracking-tight leading-[0.9] whitespace-pre-line"
+                  className="text-6xl lg:text-7xl font-black tracking-tight leading-[0.9] whitespace-pre-line"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
@@ -256,7 +232,7 @@ export default function Register() {
                 </motion.p>
               </div>
 
-              {/* Step Indicator */}
+              {/* Step Indicator - Desktop */}
               <div className="space-y-6">
                 {["account", "subscription", "services"].map((step, index) => {
                   const isActive =
@@ -306,10 +282,10 @@ export default function Register() {
                                   ? "w-full rounded-l-sm"
                                   : "w-full rounded-l-sm"
                                 : step === "subscription"
-                                ? isCurrentStep
-                                  ? "w-1/2 rounded-l-sm"
+                                  ? isCurrentStep
+                                    ? "w-1/2 rounded-l-sm"
+                                    : "w-full rounded-l-sm"
                                   : "w-full rounded-l-sm"
-                                : "w-full rounded-l-sm"
                             )}
                           />
                         )}
@@ -323,9 +299,9 @@ export default function Register() {
                             "transition-all",
                             isActive &&
                               index <
-                                ["account", "subscription", "services"].indexOf(
-                                  currentStep
-                                )
+                              ["account", "subscription", "services"].indexOf(
+                                currentStep
+                              )
                               ? "bg-black"
                               : "bg-white"
                           )}
@@ -337,14 +313,96 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Right Side - Form Container */}
+            {/* Right Side - Form Container - Desktop */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
+              className="flex justify-center"
             >
               {renderStep()}
             </motion.div>
+          </div>
+        </main>
+
+        {/* Mobile Main Content - Full Neo-brutalist Approach */}
+        <main className="md:hidden flex flex-col min-h-[calc(100vh-3.5rem)] overflow-auto">
+          <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full px-4 py-8">
+            {/* Step Counter Box - Larger and More Prominent */}
+            <div className="w-full mb-8">
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-6">
+                  <div
+                    className={cn(
+                      "flex items-center justify-center",
+                      "w-20 h-20 border-4 border-black rounded-2xl",
+                      "font-black text-3xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]",
+                      "bg-yellow-300"
+                    )}
+                  >
+                    {["account", "subscription", "services"].indexOf(currentStep) + 1}
+                  </div>
+                  <div>
+                    <h2 className="font-black text-3xl uppercase leading-tight">
+                      {currentStep.charAt(0).toUpperCase() + currentStep.slice(1)}
+                    </h2>
+                    <p className="text-base text-black/70 mt-1">
+                      {getStepDescription()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  {["account", "subscription", "services"].map((step, index) => {
+                    const isActive = index <= ["account", "subscription", "services"].indexOf(currentStep);
+                    return (
+                      <div
+                        key={step}
+                        className={cn(
+                          "flex-1 h-5 border-3 border-black rounded-md",
+                          isActive ? "bg-black" : "bg-gray-100"
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Form Container */}
+            <div className="w-full">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full"
+              >
+                {renderStep()}
+              </motion.div>
+              
+              {/* Quote Section */}
+              <div className="w-full pt-8">
+                <div
+                  className={cn(
+                    "border-3 border-black rounded-lg p-5",
+                    "bg-purple-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
+                    "text-sm italic"
+                  )}
+                >
+                  <p className="mb-3 text-base">"{currentStep === "account"
+                    ? "Music is the universal language of mankind."
+                    : currentStep === "subscription"
+                      ? "Without music, life would be a mistake."
+                      : "Music gives a soul to the universe, wings to the mind, and life to everything."}"</p>
+                  <p className="text-right font-bold">
+                    — {currentStep === "account"
+                      ? "Henry Wadsworth Longfellow"
+                      : currentStep === "subscription"
+                        ? "Friedrich Nietzsche"
+                        : "Plato"}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
       </div>
