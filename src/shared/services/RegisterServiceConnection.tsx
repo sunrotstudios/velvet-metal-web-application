@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { cn } from '@/lib/utils';
 
 interface RegisterServiceConnectionProps {
   service: ServiceType;
@@ -88,8 +89,8 @@ export function RegisterServiceConnection({ service }: RegisterServiceConnection
       }
 
       // Invalidate queries to refresh UI
-      queryClient.invalidateQueries(['connectedServices']);
-      queryClient.invalidateQueries(['syncStatus']);
+      queryClient.invalidateQueries({ queryKey: ['connectedServices'] });
+      queryClient.invalidateQueries({ queryKey: ['syncStatus'] });
 
     } catch (error: any) {
       // If there's an error, reset the sync status
@@ -113,34 +114,40 @@ export function RegisterServiceConnection({ service }: RegisterServiceConnection
 
   if (isSyncing) {
     return (
-      <div className="flex items-center gap-2 text-white">
+      <div className="flex items-center gap-2 text-black font-bold">
         <Loader2 className="w-5 h-5 animate-spin" />
-        <span className="text-sm font-medium">Syncing...</span>
+        <span className="text-sm">Syncing...</span>
       </div>
     );
   }
 
   if (isConnected) {
     return (
-      <div className="flex items-center gap-2 text-emerald-500">
+      <div className="flex items-center gap-2 text-emerald-500 font-bold">
         <Check className="w-5 h-5" />
-        <span className="text-sm font-medium">Connected</span>
+        <span className="text-sm">Connected</span>
       </div>
     );
   }
 
   return (
     <Button
-      variant="outline"
-      size="sm"
       onClick={handleConnect}
       disabled={isConnecting}
-      className="bg-white/10 text-white hover:bg-white/20 border-0"
+      className={cn(
+        "px-3 py-1.5 h-8 text-sm font-bold",
+        "border-2 border-black rounded-lg",
+        "shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]",
+        "hover:translate-x-[-1px] hover:translate-y-[-1px]",
+        "active:translate-x-0 active:translate-y-0",
+        "transition-all",
+        "bg-yellow-300 hover:bg-yellow-400 text-black"
+      )}
     >
       {isConnecting ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          Connecting...
+          <span className="font-bold">Connecting...</span>
         </>
       ) : (
         'Connect'

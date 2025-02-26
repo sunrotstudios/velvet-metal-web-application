@@ -101,15 +101,16 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
     <motion.div
       className={cn(
         "w-full max-w-[600px] bg-white",
-        "rounded-[32px] border-4 border-black",
-        "shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
-        "p-8 md:p-12"
+        "rounded-xl sm:rounded-[32px] border-2 sm:border-4 border-black",
+        "shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
+        "p-3 sm:p-6 md:p-8"
       )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Avatar Upload */}
+      {/* Desktop Form */}
+      <form onSubmit={handleSubmit} className="hidden md:block space-y-6">
+        {/* Desktop Avatar Upload */}
         <div
           className={cn(
             "border-4 border-black rounded-xl p-6",
@@ -152,10 +153,10 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
                 accept="image/*"
                 onChange={handleFileChange}
                 className="hidden"
-                id="avatar-upload"
+                id="avatar-upload-desktop"
               />
               <label
-                htmlFor="avatar-upload"
+                htmlFor="avatar-upload-desktop"
                 className="text-lg font-bold cursor-pointer hover:underline"
               >
                 Upload Avatar
@@ -165,7 +166,7 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
           )}
         </div>
 
-        {/* Form Fields */}
+        {/* Desktop Form Fields */}
         <div className="space-y-4">
           {[
             { name: "display_name", type: "text", placeholder: "Display Name" },
@@ -197,7 +198,7 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
           ))}
         </div>
 
-        {/* Submit Button */}
+        {/* Desktop Submit Button */}
         <Button
           type="submit"
           disabled={loading}
@@ -213,9 +214,159 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
           {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Continue"}
         </Button>
 
-        {/* Sign In Link */}
+        {/* Desktop Sign In Link */}
         <div className="text-center">
           <p className="text-lg">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="font-bold hover:underline"
+            >
+              Sign in
+            </button>
+          </p>
+        </div>
+      </form>
+      
+      {/* Mobile Form - Neo-brutalist style */}
+      <form onSubmit={handleSubmit} className="md:hidden space-y-4">
+        {/* Mobile Form with Avatar and Fields */}
+        <div className="bg-white border-3 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-3">
+          {/* Top Row: Avatar and Main Fields */}
+          <div className="grid grid-cols-[auto_1fr] gap-3 mb-3">
+            {/* Avatar Upload - Mobile */}
+            <div
+              className={cn(
+                "border-3 border-black rounded-lg bg-yellow-300 p-2 w-20 h-20 flex flex-col items-center justify-center",
+                isDragging ? "translate-x-[-2px] translate-y-[-2px]" : ""
+              )}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {previewUrl ? (
+                <div className="relative w-16 h-16">
+                  <img
+                    src={previewUrl}
+                    alt="Avatar preview"
+                    className="w-full h-full object-cover rounded-full border-2 border-black"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeAvatar}
+                    className="absolute -top-1 -right-1 p-0.5 bg-white border-2 border-black rounded-full transition-all"
+                  >
+                    <X className="w-2 h-2" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-6 h-6 mb-1" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="avatar-upload"
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    className="text-[10px] font-bold cursor-pointer text-center"
+                  >
+                    UPLOAD PHOTO
+                  </label>
+                </>
+              )}
+            </div>
+
+            {/* Top Form Fields */}
+            <div className="space-y-2">
+              <Input
+                name="display_name"
+                type="text"
+                placeholder="DISPLAY NAME"
+                value={formData.display_name}
+                onChange={handleChange}
+                required
+                className={cn(
+                  "h-9 bg-white text-sm",
+                  "border-3 border-black rounded-lg",
+                  "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
+                  "placeholder:text-black/60 px-2",
+                  "font-bold"
+                )}
+              />
+              <Input
+                name="email"
+                type="email"
+                placeholder="EMAIL"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className={cn(
+                  "h-9 bg-white text-sm",
+                  "border-3 border-black rounded-lg",
+                  "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
+                  "placeholder:text-black/60 px-2",
+                  "font-bold"
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Password Fields */}
+          <div className="space-y-2">
+            <Input
+              name="password"
+              type="password"
+              placeholder="PASSWORD"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className={cn(
+                "h-9 bg-white text-sm w-full",
+                "border-3 border-black rounded-lg",
+                "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
+                "placeholder:text-black/60 px-2",
+                "font-bold"
+              )}
+            />
+            <Input
+              name="confirmPassword"
+              type="password"
+              placeholder="CONFIRM PASSWORD"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              className={cn(
+                "h-9 bg-white text-sm w-full",
+                "border-3 border-black rounded-lg",
+                "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
+                "placeholder:text-black/60 px-2",
+                "font-bold"
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Mobile Submit Button */}
+        <Button
+          type="submit"
+          disabled={loading}
+          className={cn(
+            "w-full h-11 bg-purple-500 text-white text-base font-black",
+            "border-3 border-black rounded-lg",
+            "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
+            "transition-all"
+          )}
+        >
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "CONTINUE"}
+        </Button>
+
+        {/* Mobile Sign In Link */}
+        <div className="text-center">
+          <p className="text-sm">
             Already have an account?{" "}
             <button
               type="button"
