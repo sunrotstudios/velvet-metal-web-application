@@ -177,7 +177,7 @@ export default function Register() {
   ];
 
   return (
-    <div className="min-h-screen md:min-h-screen w-full bg-[#F5F0E8] relative overflow-hidden">
+    <div className="min-h-[100dvh] md:min-h-screen w-full bg-[#F5F0E8] relative overflow-hidden">
       {/* Background Design Elements */}
       <div className="absolute inset-0 overflow-hidden opacity-10">
         <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-purple-300 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
