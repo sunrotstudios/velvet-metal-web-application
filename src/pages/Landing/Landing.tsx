@@ -40,7 +40,8 @@ const getRandomAlbums = (albums: Album[], count: number): Album[] => {
 
 export default function Landing() {
   const navigate = useNavigate();
-  // No longer need mobileMenuOpen state as we're showing nav directly in the pill
+
+
 
   const { data: albums = [] } = useQuery<Album[]>({
     queryKey: ["albums"],
@@ -50,7 +51,8 @@ export default function Landing() {
   const marqueeLines = [...Array(20)].map(() => getRandomAlbums(albums, 15));
 
   return (
-    <div className="min-h-[100dvh] md:min-h-screen w-full relative overflow-hidden">
+    <div className="min-h-[100dvh] w-full relative overflow-hidden">
+
       {/* Background Marquee - Reduced opacity and size for mobile */}
       <div className="fixed inset-0 opacity-10 md:opacity-20 overflow-hidden pointer-events-none">
         {marqueeLines.map((albumsInLine, i) => (
@@ -90,12 +92,13 @@ export default function Landing() {
       </div>
 
       {/* Main Content - Adjusted padding and centering for mobile */}
-      <div className="relative z-10 min-h-[100dvh] md:min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-[100dvh] flex flex-col">
         <motion.div
           className={cn(
             "bg-white rounded-[24px] md:rounded-[48px] border-3 md:border-6 border-black",
             "shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]",
-            "p-3 md:p-8 lg:p-10 max-w-[1200px] w-[94%] md:w-[90%] mx-auto my-auto relative"
+            "p-3 md:p-8 lg:p-10 max-w-[1200px] w-[94%] md:w-[90%] mx-auto my-auto relative",
+            
           )}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -117,12 +120,10 @@ export default function Landing() {
                   <div className="hidden md:block">
                     <WeirdDesigns />
                   </div>
-                  <div className="md:hidden">
-                    <MobileWeirdDesigns />
-                  </div>
+                 
                 </div>
               </div>
-              
+
               <motion.h1
                 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-black text-right w-2/3 md:w-1/2"
                 style={{
@@ -135,24 +136,25 @@ export default function Landing() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
-              {/* Navigation Bar - Simplified for mobile, limited width on desktop */}
-              <div className="border-2 border-black rounded-full bg-white overflow-hidden md:col-span-2">
-                <div className="flex items-center justify-between h-10 md:h-12 w-full px-2 md:px-8">
-                  <div className="flex items-center justify-between w-full md:justify-start gap-2 md:gap-0">
-                    <Link to="/about" className="py-2 text-xs md:text-base font-medium font-body md:mr-10 relative group hover:line-through decoration-2">
-                      ABOUT
-                    </Link>
-                    <Link to="/faq" className="py-2 text-xs md:text-base font-medium font-body md:mr-10 relative group hover:line-through decoration-2">
-                      FAQ
-                    </Link>
-                    <Link to="/team" className="py-2 text-xs md:text-base font-medium font-body md:mr-10 relative group hover:line-through decoration-2">
-                      TEAM
-                    </Link>
-                    <Link to="/contact" className="py-2 text-xs md:text-base font-medium font-body relative group hover:line-through decoration-2">
-                      CONTACT
-                    </Link>
+              {/* Navigation Bar - Hidden on mobile, visible on desktop */}
+              <div className="hidden md:block md:col-span-2">
+                <div className="border-2 border-black rounded-full bg-white overflow-hidden">
+                  <div className="flex items-center justify-between h-12 w-full px-8">
+                    <div className="flex items-center justify-start gap-0">
+                      <Link to="/about" className="py-2 text-base font-medium font-body mr-10 relative group hover:line-through decoration-2">
+                        ABOUT
+                      </Link>
+                      <Link to="/faq" className="py-2 text-base font-medium font-body mr-10 relative group hover:line-through decoration-2">
+                        FAQ
+                      </Link>
+                      <Link to="/team" className="py-2 text-base font-medium font-body mr-10 relative group hover:line-through decoration-2">
+                        TEAM
+                      </Link>
+                      <Link to="/contact" className="py-2 text-base font-medium font-body relative group hover:line-through decoration-2">
+                        CONTACT
+                      </Link>
+                    </div>
                   </div>
-                 
                 </div>
               </div>
 
@@ -178,8 +180,8 @@ export default function Landing() {
                 </button>
               </div>
             </div>
-            
-              
+
+
             {/* Mobile navigation now directly in the pill above */}
 
             {/* Mobile Action Buttons - Moved to top of content */}
@@ -211,80 +213,79 @@ export default function Landing() {
               </svg>
             </div>
 
-            {/* Featured Content Section - Adjusted heights and spacing */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
-              <div className="md:col-span-2">
-                <div className="overflow-hidden rounded-xl md:rounded-3xl border-4 border-black relative h-48 md:h-64">
-                  <div className="absolute top-2 md:top-4 left-2 md:left-4 bg-white rounded-full py-1 px-3 border-4 border-black font-medium text-xs z-10">
-                    SONG OF THE WEEK
-                  </div>
-                  <img
-                    src="/images/visions-of-you.jpeg"
-                    alt="Song cover"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-white px-3 md:px-6 py-2 md:py-4 border-t-4 border-black flex items-center justify-between">
-                    <div>
-                      <h2 className="text-base md:text-xl font-bold leading-tight font-title">VISIONS OF YOU</h2>
-                      <p className="text-sm md:text-base font-body">By Isa Ma</p>
-                    </div>
-                    <div className="bg-orange-400 rounded-full w-10 h-10 md:w-14 md:h-14 border-4 border-black flex items-center justify-center cursor-pointer transform rotate-45 hover:bg-orange-500 transition-colors">
-                      <div className="transform -rotate-45 text-lg md:text-xl">→</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+           {/* Featured Content Section - Optimized for mobile */}
+<div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-6">
+  <div className="md:col-span-2">
+    <div className="overflow-hidden rounded-xl md:rounded-3xl border-2 md:border-4 border-black relative h-36 md:h-64">
+      <div className="absolute top-1 md:top-4 left-1 md:left-4 bg-white rounded-full py-0.5 px-2 md:py-1 md:px-3 border-2 md:border-4 border-black font-medium text-[10px] md:text-xs z-10">
+        SONG OF THE WEEK
+      </div>
+      <img
+        src="/images/visions-of-you.jpeg"
+        alt="Song cover"
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute bottom-0 left-0 right-0 bg-white px-2 md:px-6 py-1.5 md:py-4 border-t-2 md:border-t-4 border-black flex items-center justify-between">
+        <div>
+          <h2 className="text-sm md:text-xl font-bold leading-tight font-title">VISIONS OF YOU</h2>
+          <p className="text-xs md:text-base font-body">By Isa Ma</p>
+        </div>
+        <div className="bg-orange-400 rounded-full w-8 h-8 md:w-14 md:h-14 border-2 md:border-4 border-black flex items-center justify-center cursor-pointer transform rotate-45 hover:bg-orange-500 transition-colors">
+          <div className="transform -rotate-45 text-base md:text-xl">→</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-              <div className="md:col-span-1">
-                <div className="border-4 border-black rounded-xl md:rounded-3xl p-3 md:p-4 bg-purple-100 h-auto md:h-64 relative" style={{
-                  backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(168, 85, 247, 0.1) 5px, rgba(168, 85, 247, 0.1) 10px)'
-                }}>
-                  <div className="flex items-center mb-2">
-                    <div className="w-6 h-6 md:w-8 md:h-8 mr-2">
-                      <Music className="w-full h-full" />
-                    </div>
-                    <h2 className="text-sm md:text-lg font-bold font-title">
-                      SUBMIT YOUR SONG OF THE WEEK
-                    </h2>
-                  </div>
-                  <div className="border-t-2 border-black pt-2">
-                    <p className="mb-3 text-xs md:text-base font-body">
-                      HAVE A NEW SONG YOU'RE PROUD OF? SUBMIT YOUR SONG 
-                      RECOMMENDATION AND IT MIGHT BE FEATURED!
-                    </p>
-                    <div className="md:absolute md:bottom-4 md:left-4 md:right-4">
-                      <button className="w-full bg-yellow-300 border-4 border-black rounded-lg py-2 px-3 font-title font-bold text-sm md:text-base shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all">
-                        C'MON, SUBMIT IT
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+  <div className="md:col-span-1">
+    <div className="border-2 md:border-4 border-black rounded-xl md:rounded-3xl p-2 md:p-4 bg-purple-100 h-auto md:h-64 relative" style={{
+      backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(168, 85, 247, 0.1) 5px, rgba(168, 85, 247, 0.1) 10px)'
+    }}>
+      <div className="flex items-center mb-1 md:mb-2">
+        <div className="w-5 h-5 md:w-8 md:h-8 mr-1 md:mr-2">
+          <Music className="w-full h-full" />
+        </div>
+        <h2 className="text-xs md:text-lg font-bold font-title">
+          SUBMIT YOUR SONG
+        </h2>
+      </div>
+      <div className="border-t-1 md:border-t-2 border-black pt-1 md:pt-2 text-center">
+        <p className="mb-2 md:mb-3 text-[10px] md:text-base font-body sm:text-center">
+          HAVE A NEW SONG YOU'RE PROUD OF? IT MIGHT BE FEATURED!
+        </p>
+        <div className="md:absolute md:bottom-4 md:left-4 md:right-4">
+          <button className="w-full bg-yellow-300 border-2 md:border-4 border-black rounded-lg py-1 md:py-2 px-2 md:px-3 font-title font-bold text-xs md:text-base shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] md:hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] md:hover:translate-x-[-2px] md:hover:translate-y-[-2px] transition-all">
+            SUBMIT IT
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-            {/* Call to Action - Reduced padding for mobile */}
-            <div className="bg-purple-600 py-4 md:py-5 px-3 md:px-6 rounded-xl md:rounded-2xl text-center relative overflow-hidden border-4 border-black">
-              <div className="absolute inset-0" style={{
-                backgroundImage: `
-                  repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(255, 255, 255, 0.5) 8px, rgba(255, 255, 255, 0.5) 10px),
-                  repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255, 255, 255, 0.3) 12px, rgba(255, 255, 255, 0.3) 14px)
-                `,
-                mixBlendMode: 'overlay'
-              }}></div>
-              
-              <div className="relative z-10">
-                <h2 className="text-lg sm:text-xl md:text-4xl font-black text-white uppercase tracking-tighter font-title leading-tight">
-                  All Great Music Collections Begin When You Find Yourself In Someone Else
-                </h2>
-                <button
-                  className="mt-3 md:mt-4 bg-black text-white px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl font-bold text-sm md:text-lg border-4 border-white hover:opacity-90 transition-opacity"
-                >
-                  JOIN COMMUNITY
-                </button>
-              </div>
-            </div>
+{/* Call to Action - More compact for mobile */}
+<div className="bg-purple-600 py-3 md:py-5 px-2 md:px-6 rounded-lg md:rounded-2xl text-center relative overflow-hidden border-2 md:border-4 border-black">
+  <div className="absolute inset-0" style={{
+    backgroundImage: `
+      repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(255, 255, 255, 0.5) 8px, rgba(255, 255, 255, 0.5) 10px),
+      repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(255, 255, 255, 0.3) 12px, rgba(255, 255, 255, 0.3) 14px)
+    `,
+    mixBlendMode: 'overlay'
+  }}></div>
+  
+  <div className="relative z-10">
+    <h2 className="text-base sm:text-xl md:text-4xl font-black text-white uppercase tracking-tighter font-title leading-tight">
+      All Great Music Collections Begin When You Find Yourself In Someone Else
+    </h2>
+    <button
+      className="mt-2 md:mt-4 bg-black text-white px-3 md:px-6 py-1.5 md:py-3 rounded-md md:rounded-xl font-bold text-xs md:text-lg border-2 md:border-4 border-white hover:opacity-90 transition-opacity"
+    >
+      JOIN COMMUNITY
+    </button>
+  </div>
+</div>
 
-{/* Desktop Action Buttons - Already moved to header */}
+            {/* Desktop Action Buttons - Already moved to header */}
           </div>
         </motion.div>
       </div>
@@ -292,22 +293,22 @@ export default function Landing() {
   );
 }
 
-// Simplified Mobile WeirdDesigns
-const MobileWeirdDesigns = () => {
-  return (
-    <div className="w-full flex items-center">
-      <svg width="100%" height="32" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g transform="translate(5, 2) scale(0.6)">
-          <rect x="18" y="5" width="4" height="35" rx="1" fill="black" />
-          <ellipse cx="20" cy="40" rx="10" ry="7" fill="black" />
-          <circle cx="28" cy="10" r="8" stroke="black" strokeWidth="3" fill="#f0e9d6" />
-        </g>
-        <g transform="translate(45, 2) scale(0.6)">
-          <circle cx="25" cy="25" r="20" stroke="black" strokeWidth="2" fill="#c084fc" />
-          <circle cx="25" cy="25" r="10" stroke="black" strokeWidth="1.5" fill="black" />
-          <circle cx="25" cy="25" r="3" fill="white" />
-        </g>
-      </svg>
-    </div>
-  );
-};
+// // Simplified Mobile WeirdDesigns
+// const MobileWeirdDesigns = () => {
+//   return (
+//     <div className="w-full flex items-center">
+//       <svg width="100%" height="32" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+//         <g transform="translate(5, 2) scale(0.6)">
+//           <rect x="18" y="5" width="4" height="35" rx="1" fill="black" />
+//           <ellipse cx="20" cy="40" rx="10" ry="7" fill="black" />
+//           <circle cx="28" cy="10" r="8" stroke="black" strokeWidth="3" fill="#f0e9d6" />
+//         </g>
+//         <g transform="translate(45, 2) scale(0.6)">
+//           <circle cx="25" cy="25" r="20" stroke="black" strokeWidth="2" fill="#c084fc" />
+//           <circle cx="25" cy="25" r="10" stroke="black" strokeWidth="1.5" fill="black" />
+//           <circle cx="25" cy="25" r="3" fill="white" />
+//         </g>
+//       </svg>
+//     </div>
+//   );
+// };
