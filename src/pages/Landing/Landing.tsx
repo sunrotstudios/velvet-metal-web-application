@@ -50,7 +50,7 @@ export default function Landing() {
   const marqueeLines = [...Array(20)].map(() => getRandomAlbums(albums, 15));
 
   return (
-    <div className="w-full bg-[#F5F0E8] relative min-h-screen">
+    <div className="min-h-screen md:min-h-screen w-full relative overflow-hidden">
       {/* Background Marquee - Reduced opacity and size for mobile */}
       <div className="fixed inset-0 opacity-10 md:opacity-20 overflow-hidden pointer-events-none">
         {marqueeLines.map((albumsInLine, i) => (
@@ -90,12 +90,12 @@ export default function Landing() {
       </div>
 
       {/* Main Content - Adjusted padding and centering for mobile */}
-      <div className="relative w-full p-4 md:py-8 md:px-4 flex flex-col min-h-screen justify-center">
+      <div className="relative z-10 min-h-[100dvh] md:min-h-screen flex flex-col">
         <motion.div
           className={cn(
             "bg-white rounded-[24px] md:rounded-[48px] border-3 md:border-6 border-black",
             "shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]",
-            "p-3 md:p-8 lg:p-10 max-w-[1200px] w-[94%] md:w-full mx-auto relative"
+            "p-3 md:p-8 lg:p-10 max-w-[1200px] w-[94%] md:w-[90%] mx-auto my-auto relative"
           )}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
