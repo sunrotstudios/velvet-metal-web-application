@@ -220,7 +220,7 @@ export default function Landing() {
            {/* Featured Content Section - Optimized for mobile */}
 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-6">
   <div className="md:col-span-2">
-    <div className="overflow-hidden rounded-xl md:rounded-3xl border-2 md:border-4 border-black relative h-36 md:h-64">
+    <div className="overflow-hidden rounded-xl md:rounded-3xl border-2 md:border-4 border-black relative h-40 md:h-64">
       <div className="absolute top-1 md:top-4 left-1 md:left-4 bg-white rounded-full py-0.5 px-2 md:py-1 md:px-3 border-2 md:border-4 border-black font-medium text-[10px] md:text-xs z-10">
         SONG OF THE WEEK
       </div>
@@ -242,7 +242,7 @@ export default function Landing() {
   </div>
 
   <div className="md:col-span-1">
-    <div className="border-2 md:border-4 border-black rounded-xl md:rounded-3xl p-2 md:p-4 bg-purple-100 h-auto md:h-64 relative" style={{
+    <div className="border-2 md:border-4 border-black rounded-xl md:rounded-3xl p-2 md:p-4 bg-purple-100 h-auto min-h-[160px] md:h-64 relative" style={{
       backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(168, 85, 247, 0.1) 5px, rgba(168, 85, 247, 0.1) 10px)'
     }}>
       <div className="flex items-center mb-1 md:mb-2">
@@ -253,13 +253,44 @@ export default function Landing() {
           SUBMIT YOUR SONG
         </h2>
       </div>
-      <div className="border-t-1 md:border-t-2 border-black pt-1 md:pt-2 text-center">
-        <p className="mb-2 md:mb-3 text-[10px] md:text-base font-body sm:text-center">
-          HAVE A NEW SONG YOU'RE PROUD OF? IT MIGHT BE FEATURED!
-        </p>
+      <div className="border-t-2 border-black pt-1 md:pt-2">
+        {/* Mobile version with compact bullet list */}
+        <div className="md:hidden mb-2">
+         
+          <ul className="space-y-1 text-left pl-1.5">
+            {[
+              "Original music",
+              "MP3/WAV format",
+              "Weekly selection"
+            ].map((item, index) => (
+              <li key={index} className="flex items-start">
+                <div className="w-3 h-3 mt-0.5 mr-1.5 bg-black border-1.5 border-black rounded-sm flex-shrink-0"></div>
+                <span className="text-[12px] font-bold">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+        {/* Desktop version with bullet list */}
+        <div className="hidden md:block mb-3">
+          <ul className="space-y-1.5 text-left pl-2">
+            {[
+              "Original music only",
+              "MP3 or WAV format",
+              "Include your artist bio",
+              "Selected weekly by our team"
+            ].map((item, index) => (
+              <li key={index} className="flex items-start">
+                <div className="w-4 h-4 mt-0.5 mr-2 bg-black border-2 border-black rounded-sm flex-shrink-0"></div>
+                <span className="text-sm font-bold">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        
         <div className="md:absolute md:bottom-4 md:left-4 md:right-4">
           <button className="w-full bg-yellow-300 border-2 md:border-4 border-black rounded-lg py-1 md:py-2 px-2 md:px-3 font-title font-bold text-xs md:text-base shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] md:hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] md:hover:translate-x-[-2px] md:hover:translate-y-[-2px] transition-all">
-            SUBMIT IT
+            LET'S HEAR IT
           </button>
         </div>
       </div>
@@ -268,7 +299,7 @@ export default function Landing() {
 </div>
 
 {/* Call to Action - More compact for mobile */}
-<div className="bg-purple-600 py-3 md:py-5 px-2 md:px-6 rounded-lg md:rounded-2xl text-center relative overflow-hidden border-2 md:border-4 border-black">
+<div className="bg-purple-600 py-3.5 md:py-5 px-2 md:px-6 rounded-lg md:rounded-2xl text-center relative overflow-hidden border-2 md:border-4 border-black">
   <div className="absolute inset-0" style={{
     backgroundImage: `
       repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(255, 255, 255, 0.5) 8px, rgba(255, 255, 255, 0.5) 10px),
@@ -278,11 +309,11 @@ export default function Landing() {
   }}></div>
   
   <div className="relative z-10">
-    <h2 className="text-base sm:text-xl md:text-4xl font-black text-white uppercase tracking-tighter font-title leading-tight">
-      All Great Music Collections Begin When You Find Yourself In Someone Else
+    <h2 className="text-base sm:text-xl md:text-4xl font-black text-white uppercase tracking-tighter font-title leading-tight mb-3 md:mb-4">
+      All Great Music Collections Begin When You Hear Yourself In Another
     </h2>
     <button
-      className="mt-2 md:mt-4 bg-black text-white px-3 md:px-6 py-1.5 md:py-3 rounded-md md:rounded-xl font-bold text-xs md:text-lg border-2 md:border-4 border-white hover:opacity-90 transition-opacity"
+      className="bg-black text-white px-4 md:px-6 py-2 md:py-3 rounded-md md:rounded-xl font-bold text-xs md:text-lg border-2 md:border-4 border-white hover:opacity-90 transition-opacity"
     >
       JOIN COMMUNITY
     </button>
