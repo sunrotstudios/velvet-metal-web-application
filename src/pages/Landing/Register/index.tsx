@@ -177,14 +177,14 @@ export default function Register() {
   ];
 
   return (
-    <div className="min-h-[100dvh] md:min-h-screen w-full bg-[#F5F0E8] relative overflow-hidden">
+    <div className="min-h-[100dvh] w-full bg-[#F5F0E8] relative overflow-hidden">
       {/* Background Design Elements */}
       <div className="absolute inset-0 overflow-hidden opacity-10">
         <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-purple-300 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-yellow-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
       </div>
 
-      <div className="relative z-10 min-h-[100dvh] md:min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-[100dvh] flex flex-col">
         {/* Marquee Navigation */}
         <div className="sticky top-0 z-50 bg-black py-4 border-b-4 border-black overflow-hidden">
           <div className="flex whitespace-nowrap">
@@ -326,8 +326,8 @@ export default function Register() {
         </main>
 
         {/* Mobile Main Content - Full Neo-brutalist Approach */}
-        <main className="md:hidden flex flex-col min-h-[calc(100vh-3.5rem)] overflow-auto">
-          <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full px-4 py-8">
+        <main className="md:hidden flex flex-col min-h-[calc(100dvh-3.5rem)] overflow-auto">
+          <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full px-4">
             {/* Step Counter Box - Larger and More Prominent */}
             <div className="w-full mb-8">
               <div className="flex flex-col gap-6">
@@ -378,30 +378,6 @@ export default function Register() {
               >
                 {renderStep()}
               </motion.div>
-              
-              {/* Quote Section */}
-              <div className="w-full pt-8">
-                <div
-                  className={cn(
-                    "border-3 border-black rounded-lg p-5",
-                    "bg-purple-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
-                    "text-sm italic"
-                  )}
-                >
-                  <p className="mb-3 text-base">"{currentStep === "account"
-                    ? "Music is the universal language of mankind."
-                    : currentStep === "subscription"
-                      ? "Without music, life would be a mistake."
-                      : "Music gives a soul to the universe, wings to the mind, and life to everything."}"</p>
-                  <p className="text-right font-bold">
-                    — {currentStep === "account"
-                      ? "Henry Wadsworth Longfellow"
-                      : currentStep === "subscription"
-                        ? "Friedrich Nietzsche"
-                        : "Plato"}
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </main>
