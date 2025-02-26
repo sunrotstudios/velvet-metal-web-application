@@ -66,7 +66,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-bold">Email Us</h3>
-                    <p>hello@velvetmetal.com</p>
+                    <p>contact@velvetmetal.com</p>
                   </div>
                 </div>
               </div>
@@ -78,7 +78,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-bold">Call Us</h3>
-                    <p>(123) 456-7890</p>
+                    <p>(615) 414-9554</p>
                   </div>
                 </div>
               </div>
@@ -90,7 +90,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-bold">Location</h3>
-                    <p>123 Music Street, San Francisco, CA</p>
+                    <p>Venice, CA</p>
                   </div>
                 </div>
               </div>

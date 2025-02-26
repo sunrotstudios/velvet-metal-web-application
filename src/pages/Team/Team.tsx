@@ -21,14 +21,14 @@ export default function Team() {
   
   const team: TeamMember[] = [
     {
-      name: "Alex Johnson",
-      role: "Founder & CEO",
-      bio: "Music enthusiast and tech innovator with 10+ years in software development.",
+      name: "Brennan Pollock",
+      role: "Founder & Lead Engineer",
+      bio: "Music nerd, artist, and software engineer with a passion for music discovery.",
       color: "bg-purple-100",
       socials: {
-        github: "https://github.com/alexjohnson",
-        twitter: "https://twitter.com/alexjohnson",
-        linkedin: "https://linkedin.com/in/alexjohnson"
+        github: "https://github.com/brennankapollock",
+        twitter: "https://twitter.com/velvetmetalapp",
+        linkedin: "https://linkedin.com/in/brennanpollock"
       }
     },
     {
