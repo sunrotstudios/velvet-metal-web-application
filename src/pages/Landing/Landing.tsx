@@ -50,7 +50,7 @@ export default function Landing() {
   const marqueeLines = [...Array(20)].map(() => getRandomAlbums(albums, 15));
 
   return (
-    <div className="min-h-screen md:min-h-screen w-full relative overflow-hidden">
+    <div className="min-h-[100dvh] md:min-h-screen w-full relative overflow-hidden">
       {/* Background Marquee - Reduced opacity and size for mobile */}
       <div className="fixed inset-0 opacity-10 md:opacity-20 overflow-hidden pointer-events-none">
         {marqueeLines.map((albumsInLine, i) => (
