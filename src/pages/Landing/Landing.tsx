@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Music } from "lucide-react";
-import { WeirdDesigns } from "@/styles/abstract-designs";
+import { WeirdDesigns, MobileIcon } from "@/styles/abstract-designs";
 import "@/styles/fonts.css";
 
 interface Album {
@@ -97,7 +97,7 @@ export default function Landing() {
           className={cn(
             "bg-white rounded-[24px] md:rounded-[48px] border-3 md:border-6 border-black",
             "shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]",
-            "p-3 md:p-8 lg:p-10 max-w-[1200px] w-[94%] md:w-[90%] mx-auto my-auto relative",
+            "p-4 md:p-8 lg:p-10 max-w-[1200px] w-[92%] md:w-[90%] mx-auto my-auto relative",
             
           )}
           initial={{ opacity: 0, y: 20 }}
@@ -120,15 +120,19 @@ export default function Landing() {
                   <div className="hidden md:block">
                     <WeirdDesigns />
                   </div>
-                 
+                  <div className="flex md:hidden items-center justify-start">
+                    <div className="w-full h-12 flex items-center px-2">
+                      <MobileIcon />
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <motion.h1
-                className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-black text-right w-2/3 md:w-1/2"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black text-right w-2/3 md:w-1/2"
                 style={{
                   fontFamily: "Mondwest",
-                  textShadow: "2px 2px 0px rgba(168, 85, 247, 0.3)",
+                  textShadow: "3px 3px 0px rgba(168, 85, 247, 0.3)",
                 }}
               >
                 Velvet Metal
