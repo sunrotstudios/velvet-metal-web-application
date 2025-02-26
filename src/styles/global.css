@@ -1,231 +1,61 @@
-@font-face {
-  font-family: 'Polymath Display';
-  src: url('/fonts/PolymathDispDemo-Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Polymath Display';
-  src: url('/fonts/PolymathDispDemo-Bold.otf') format('opentype');
-  font-weight: bold;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Polymath Text';
-  src: url('/fonts/PolymathTextDemo-Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Polymath Text';
-  src: url('/fonts/PolymathTextDemo-Bold.otf') format('opentype');
-  font-weight: bold;
-  font-style: normal;
-}
-
-/* Degular Regular */
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-Thin.otf') format('opentype');
-  font-weight: 100;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-ThinItalic.otf') format('opentype');
-  font-weight: 100;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-Light.otf') format('opentype');
-  font-weight: 300;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-LightItalic.otf') format('opentype');
-  font-weight: 300;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-Italic.otf') format('opentype');
-  font-weight: 400;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-Medium.otf') format('opentype');
-  font-weight: 500;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-MediumItalic.otf') format('opentype');
-  font-weight: 500;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-Semibold.otf') format('opentype');
-  font-weight: 600;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-SemiboldItalic.otf') format('opentype');
-  font-weight: 600;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-Bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-BoldItalic.otf') format('opentype');
-  font-weight: 700;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-Black.otf') format('opentype');
-  font-weight: 900;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular';
-  src: url('./fonts/DegularDemo-BlackItalic.otf') format('opentype');
-  font-weight: 900;
-  font-style: italic;
-}
-
-/* Degular Display */
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-Thin.otf') format('opentype');
-  font-weight: 100;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-ThinItalic.otf') format('opentype');
-  font-weight: 100;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-Light.otf') format('opentype');
-  font-weight: 300;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-LightItalic.otf') format('opentype');
-  font-weight: 300;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-Italic.otf') format('opentype');
-  font-weight: 400;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-Medium.otf') format('opentype');
-  font-weight: 500;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-MediumItalic.otf') format('opentype');
-  font-weight: 500;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-Semibold.otf') format('opentype');
-  font-weight: 600;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-SemiboldItalic.otf') format('opentype');
-  font-weight: 600;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-Bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-BoldItalic.otf') format('opentype');
-  font-weight: 700;
-  font-style: italic;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-Black.otf') format('opentype');
-  font-weight: 900;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Degular Display';
-  src: url('./fonts/DegularDisplayDemo-BlackItalic.otf') format('opentype');
-  font-weight: 900;
-  font-style: italic;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Apply font family to body */
+@layer base {
+  body {
+    font-family: "Montreal", system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Forevs", system-ui, sans-serif;
+  }
+  
+  .font-title {
+    font-family: "Forevs", system-ui, sans-serif;
+  }
+  
+  .font-body {
+    font-family: "Montreal", system-ui, sans-serif;
+  }
+}
 
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+@keyframes marquee-straight {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-text {
+  transition: all 0.2s ease-in-out;
+  transform-origin: center;
+  display: inline-block;
+}
+
+.scrollbar-hide {
+  /* For Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* For IE, Edge and Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

@@ -1,119 +1,51 @@
-import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
-import {
-  ArrowLeftRight,
-  History,
-  Home,
-  Library,
-  Radio,
-  Settings,
-} from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import { Home, Library, Search, Settings } from "lucide-react";
+import { cn } from "../../lib/utils";
 
-interface SidebarProps {
-  onClose?: () => void;
-}
-
-const routes = [
-  {
-    path: '/home',
-    label: 'Home',
-    icon: Home,
-  },
-  {
-    path: '/library',
-    label: 'Library',
-    icon: Library,
-  },
-  {
-    path: '/transfer',
-    label: 'Transfer',
-    icon: ArrowLeftRight,
-  },
-  {
-    path: '/lastfm',
-    label: 'Stats',
-    icon: Radio,
-  },
-  {
-    path: '/transfer-history',
-    label: 'Transfer History',
-    icon: History,
-  },
-  {
-    path: '/settings',
-    label: 'Settings',
-    icon: Settings,
-  },
-];
-
-export function Sidebar({ onClose }: SidebarProps) {
-  const location = useLocation();
-
-  const handleNavigation = () => {
-    if (onClose) {
-      onClose();
-    }
-  };
+export const Sidebar: React.FC = () => {
+  const navItems = [
+    { icon: Home, label: "Home", path: "/home" },
+    { icon: Library, label: "Library", path: "/library" },
+    { icon: Search, label: "History", path: "/transfer-history" },
+    { icon: Settings, label: "Settings", path: "/settings" },
+  ];
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Brand */}
-      <div className="p-6">
-        <Link to="/" className="block">
-          <span className="text-xl font-semibold text-text dark:text-darkText">
-            Velvet Metal
-          </span>
-        </Link>
+    <div className="w-64 bg-white border-r-4 border-black h-screen flex flex-col p-4">
+      <div className="flex items-center gap-2 mb-8 px-4">
+        <h1 className="text-2xl font-bold">Velvet Metal</h1>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <motion.div
-          className="space-y-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          {routes.map(({ path: href, label, icon: Icon }) => {
-            const isActive = href === location.pathname;
-            return (
-              <Link
-                key={label}
-                to={href}
-                className="block group"
-                onClick={handleNavigation}
-              >
-                <motion.div
-                  className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-300 ease-in-out',
-                    isActive
-                      ? 'text-text dark:text-darkText hover:text-text dark:hover:text-darkText'
-                      : 'text-text/60 dark:text-darkText/60 hover:text-text dark:hover:text-darkText'
-                  )}
-                  layout
-                  layoutId={`nav-item-${label}`}
-                  transition={{
-                    type: 'spring',
-                    stiffness: 500,
-                    damping: 30,
-                  }}
-                >
-                  <motion.div
-                    className="flex items-center gap-2 w-full"
-                    initial={false}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{label}</span>
-                  </motion.div>
-                </motion.div>
-              </Link>
-            );
-          })}
-        </motion.div>
+      <nav className="flex-1">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 px-4 py-3 mb-2 font-medium rounded-lg transition-all",
+                "hover:bg-yellow-100 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
+                "border-2 border-transparent hover:border-black",
+                isActive &&
+                  "bg-yellow-200 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              )
+            }
+          >
+            <item.icon className="w-5 h-5" />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
       </nav>
+
+      <div className="mt-auto px-4">
+        <div className="border-4 border-black p-4 rounded-lg bg-purple-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <h3 className="font-bold mb-2">Pro Tip</h3>
+          <p className="text-sm">
+            Press Ctrl + K to quickly search your library
+          </p>
+        </div>
+      </div>
     </div>
   );
-}
+};
