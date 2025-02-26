@@ -1,4 +1,44 @@
 
+export const MobileIcon = () => {
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <svg width="100%" height="40" viewBox="0 0 240 40" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        {/* First element */}
+        <g transform="translate(10, 0)">
+          <circle cx="20" cy="20" r="15" stroke="black" strokeWidth="2" fill="#f0e9d6" />
+          <circle cx="20" cy="20" r="8" stroke="black" strokeWidth="1.5" fill="#c084fc" />
+          <circle cx="20" cy="20" r="3" fill="black" />
+        </g>
+        
+        {/* Connecting line */}
+        <line x1="40" y1="20" x2="70" y2="20" stroke="black" strokeWidth="2" strokeDasharray="4 2" />
+        
+        {/* Second element */}
+        <g transform="translate(80, 0)">
+          <rect x="0" y="5" width="30" height="30" rx="6" stroke="black" strokeWidth="2" fill="#fcd34d" />
+          <circle cx="15" cy="20" r="8" stroke="black" strokeWidth="1.5" fill="white" />
+          <circle cx="15" cy="20" r="3" fill="black" />
+        </g>
+        
+        {/* Connecting line */}
+        <line x1="120" y1="20" x2="150" y2="20" stroke="black" strokeWidth="2" strokeDasharray="4 2" />
+        
+        {/* Third element */}
+        <g transform="translate(160, 0)">
+          <circle cx="20" cy="20" r="15" stroke="black" strokeWidth="2" fill="#a78bfa" />
+          <path d="M13 20 L27 20 M20 13 L20 27" stroke="black" strokeWidth="2" />
+        </g>
+
+        {/* Fourth element */}
+        <g transform="translate(200, 0)">
+          <rect x="5" y="5" width="30" height="30" rx="15" stroke="black" strokeWidth="2" fill="#fb7185" />
+          <path d="M15 20 L25 20" stroke="white" strokeWidth="2.5" />
+        </g>
+      </svg>
+    </div>
+  );
+};
+
 export const WeirdDesigns = () => {
   return (
     <div className="w-full flex items-center justify-center">
