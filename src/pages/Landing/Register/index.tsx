@@ -124,11 +124,11 @@ export default function Register() {
   const getStepDescription = () => {
     switch (currentStep) {
       case "account":
-        return "Start managing your music library";
+        return "you know what to do here...";
       case "subscription":
-        return "Select a plan that fits your needs";
+        return "if you want to give us money...";
       case "services":
-        return "Connect your favorite streaming services";
+        return "the grand finale of registration...";
     }
   };
 
