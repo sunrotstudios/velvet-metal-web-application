@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Music } from "lucide-react";
 import { WeirdDesigns, MobileIcon } from "@/styles/abstract-designs";
-import "@/styles/fonts.css";
 
 interface Album {
   name: string;
