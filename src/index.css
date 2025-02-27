@@ -1,8 +1,69 @@
-@config "../tailwind.config.js";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-  
+@import 'tailwindcss';
+
+@plugin 'tailwindcss-animate';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --animate-marquee: marquee 25s linear infinite;
+
+  --font-sans: Montreal, system-ui, sans-serif;
+  --font-display: Montreal, system-ui, sans-serif;
+  --font-mondwest: Mondwest, system-ui, sans-serif;
+  --font-forevs: Forevs, system-ui, sans-serif;
+
+  --color-main: var(--main);
+  --color-overlay: var(--overlay);
+  --color-bg: var(--bg);
+  --color-bw: var(--bw);
+  --color-blank: var(--blank);
+  --color-text: var(--text);
+  --color-mtext: var(--mtext);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-ring-offset: var(--ring-offset);
+  --color-secondary-black: #212121;
+
+  --radius-base: 0px;
+
+  --shadow-shadow: var(--shadow);
+
+  --translate-box-shadow-x: 6px;
+  --translate-box-shadow-y: 5px;
+  --translate-reverse-box-shadow-x: -6px;
+  --translate-reverse-box-shadow-y: -5px;
+
+  --font-weight-base: 600;
+  --font-weight-heading: 800;
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
 :root {
   --main: #FD9745;
   --overlay: rgba(0, 0, 0, 0.8); /* background color overlay for alert dialogs, modals, etc. */

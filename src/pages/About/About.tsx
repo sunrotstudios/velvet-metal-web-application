@@ -102,7 +102,7 @@ export default function About() {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5">
                 {/* Intro Section */}
-                <div className="lg:col-span-3 bg-gradient-to-r from-purple-100 to-purple-50 p-3 md:p-5 rounded-xl md:rounded-3xl border-3 md:border-4 border-black">
+                <div className="lg:col-span-3 bg-linear-to-r from-purple-100 to-purple-50 p-3 md:p-5 rounded-xl md:rounded-3xl border-3 md:border-4 border-black">
                   <p className="text-base md:text-xl font-medium font-title text-center px-2 md:px-4">
                     Finally, a music app that doesn't make your streaming services fight for attention. 
                     Velvet Metal brings all your music together under one roof, no family therapy required.
@@ -143,7 +143,7 @@ export default function About() {
                         "Transfer history that keeps the receipts"
                       ].map((item, index) => (
                         <li key={index} className="flex items-start">
-                          <div className="w-3 h-3 mt-1 mr-2 bg-black rounded-sm flex-shrink-0"></div>
+                          <div className="w-3 h-3 mt-1 mr-2 bg-black rounded-xs shrink-0"></div>
                           <span className="text-sm md:text-base font-medium">{item}</span>
                         </li>
                       ))}
@@ -163,7 +163,7 @@ export default function About() {
                     </div>
                     <ul className="space-y-2 pl-1">
                       <li className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center flex-shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center shrink-0">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12.5 4C10.8 4 9.1 4.6 7.9 5.9C6.7 7.2 6 8.9 6 10.8C6 13.1 7.1 15.2 8.9 16.3C9.3 16.6 9.9 16.5 10.2 16.1C10.5 15.7 10.4 15.1 10 14.8C8.7 14 7.8 12.4 7.8 10.8C7.8 9.4 8.3 8.1 9.2 7.1C10.1 6.1 11.3 5.7 12.6 5.7C15.5 5.7 17.8 8.3 17.8 11.2C17.8 12 17.6 12.8 17.2 13.5C17 13.8 16.7 14 16.4 14C16 14 15.8 13.7 15.8 13.3C15.8 13.2 15.8 13.1 15.8 13C15.9 12.7 15.9 12.4 15.9 12C15.9 10.3 14.5 8.8 12.8 8.8C11.1 8.8 9.7 10.2 9.7 12C9.7 13.8 11.1 15.2 12.8 15.2C13.5 15.2 14.2 15 14.7 14.5C15.2 15.2 16 15.6 16.9 15.5C18.3 15.3 19.4 14 19.5 12.5C19.6 8.5 16.4 5 12.5 4Z" fill="white"/>
                             <path d="M12.8 13.4C12.1 13.4 11.5 12.8 11.5 12C11.5 11.2 12.1 10.6 12.8 10.6C13.5 10.6 14.1 11.2 14.1 12C14.1 12.8 13.5 13.4 12.8 13.4Z" fill="white"/>
@@ -172,7 +172,7 @@ export default function About() {
                         <span className="text-sm md:text-base font-medium">Apple Music</span>
                       </li>
                       <li className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center shrink-0">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 4C7.6 4 4 7.6 4 12C4 16.4 7.6 20 12 20C16.4 20 20 16.4 20 12C20 7.6 16.4 4 12 4ZM15.7 15.5C15.5 15.8 15.1 15.9 14.8 15.7C13.1 14.6 11 14.4 8.6 15C8.3 15.1 7.9 14.9 7.8 14.6C7.7 14.3 7.9 13.9 8.2 13.8C10.9 13.2 13.3 13.4 15.2 14.6C15.6 14.8 15.7 15.2 15.5 15.5ZM16.5 13.2C16.3 13.6 15.8 13.7 15.4 13.5C13.5 12.3 10.7 11.8 8 12.5C7.5 12.6 7 12.3 6.9 11.8C6.8 11.3 7.1 10.8 7.6 10.7C10.7 10 13.9 10.5 16.1 11.9C16.6 12.1 16.7 12.6 16.5 13.2ZM16.6 10.8C14.2 9.5 10.2 9.3 7.5 10C6.9 10.2 6.3 9.8 6.1 9.2C5.9 8.6 6.3 8 6.9 7.8C10 7 14.5 7.3 17.3 8.8C17.8 9.1 18 9.7 17.7 10.3C17.4 10.7 16.8 10.9 16.6 10.8Z" fill="white"/>
                           </svg>
@@ -214,7 +214,7 @@ export default function About() {
                           "Music graph view"
                         ].map((item, index) => (
                           <li key={index} className="flex items-start">
-                            <div className="w-2.5 h-2.5 mt-1 mr-2 bg-white/70 rounded-sm flex-shrink-0"></div>
+                            <div className="w-2.5 h-2.5 mt-1 mr-2 bg-white/70 rounded-xs shrink-0"></div>
                             <span className="text-xs md:text-sm font-medium">{item}</span>
                           </li>
                         ))}
@@ -234,7 +234,7 @@ export default function About() {
                           "YouTube Music, Last.fm"
                         ].map((item, index) => (
                           <li key={index} className="flex items-start">
-                            <div className="w-2.5 h-2.5 mt-1 mr-2 bg-white/70 rounded-sm flex-shrink-0"></div>
+                            <div className="w-2.5 h-2.5 mt-1 mr-2 bg-white/70 rounded-xs shrink-0"></div>
                             <span className="text-xs md:text-sm font-medium">{item}</span>
                           </li>
                         ))}

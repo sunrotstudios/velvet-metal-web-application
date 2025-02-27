@@ -83,7 +83,7 @@ export const PlaylistCard = ({
               'group/image relative overflow-hidden rounded-xl',
               viewMode === 'grid'
                 ? 'aspect-square w-full'
-                : 'h-[72px] w-[72px] flex-shrink-0'
+                : 'h-[72px] w-[72px] shrink-0'
             )}
           >
             {artworkUrl ? (
@@ -102,7 +102,7 @@ export const PlaylistCard = ({
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 rounded-full bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:scale-105 transition-transform"
+                  className="h-8 w-8 rounded-full bg-white/10 text-white backdrop-blur-xs hover:bg-white/20 hover:scale-105 transition-transform"
                   aria-label="Transfer playlist"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -137,11 +137,11 @@ export const PlaylistCard = ({
                 )}
               </div>
 
-              <div className="w-24 flex-shrink-0 text-sm text-white/60 hidden md:block">
+              <div className="w-24 shrink-0 text-sm text-white/60 hidden md:block">
                 {playlist.tracks.total} tracks
               </div>
 
-              <div className="w-24 flex-shrink-0 hidden md:block">
+              <div className="w-24 shrink-0 hidden md:block">
                 <span className="text-sm capitalize px-2 py-0.5 rounded-full bg-white/5 text-white/80 border border-white/10">
                   {playlist.service}
                 </span>

@@ -154,7 +154,7 @@ export default function FAQ() {
 
               {/* FAQ Intro */}
               <div>
-                <div className="bg-gradient-to-r from-purple-100 to-purple-50 p-3 md:p-4 rounded-xl md:rounded-2xl border-3 border-black">
+                <div className="bg-linear-to-r from-purple-100 to-purple-50 p-3 md:p-4 rounded-xl md:rounded-2xl border-3 border-black">
                   <p className="text-sm md:text-base font-medium font-title text-center">
                     Got questions about Velvet Metal? We've got answers! Here are some of the most common questions we receive.
                   </p>

@@ -119,8 +119,8 @@ export function MobileLanding({ features }: MobileLandingProps) {
                       visible: { opacity: 1, scale: 1 },
                     }}
                     className={`
-                      p-3 rounded-full bg-gradient-to-br ${feature.color}
-                      backdrop-blur-sm border border-primary/20
+                      p-3 rounded-full bg-linear-to-br ${feature.color}
+                      backdrop-blur-xs border border-primary/20
                       hover:border-primary/40 transition-colors relative
                       group
                     `}
@@ -183,7 +183,7 @@ export function MobileLanding({ features }: MobileLandingProps) {
               </SheetTrigger>
               <SheetContent
                 side="bottom"
-                className="h-[60vh] focus:outline-none"
+                className="h-[60vh] focus:outline-hidden"
               >
                 <SheetHeader>
                   <SheetTitle className="sr-only">Create an Account</SheetTitle>

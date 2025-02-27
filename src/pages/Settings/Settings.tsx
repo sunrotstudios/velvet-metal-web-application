@@ -79,7 +79,7 @@ export default function Settings() {
             )}
           >
             <div className="flex items-center gap-4">
-              <div className="rounded-full border-4 border-black overflow-hidden w-16 h-16 flex-shrink-0">
+              <div className="rounded-full border-4 border-black overflow-hidden w-16 h-16 shrink-0">
                 {user.user_metadata?.avatar_url ? (
                   <img
                     src={user.user_metadata.avatar_url}

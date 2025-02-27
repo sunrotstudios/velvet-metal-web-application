@@ -686,7 +686,7 @@ export const Library = () => {
           <div className="flex items-center gap-2 p-1 bg-white border-2 border-black rounded-lg">
             <button
               className={cn(
-                "p-2 rounded transition-all",
+                "p-2 rounded-xs transition-all",
                 viewMode === "grid" && "bg-yellow-200"
               )}
               onClick={() =>
@@ -700,7 +700,7 @@ export const Library = () => {
             </button>
             <button
               className={cn(
-                "p-2 rounded transition-all",
+                "p-2 rounded-xs transition-all",
                 viewMode === "list" && "bg-yellow-200"
               )}
               onClick={() =>
@@ -745,8 +745,8 @@ export const Library = () => {
                 )}
               >
                 <div className="aspect-square bg-gray-200 rounded-lg mb-4" />
-                <div className="h-4 bg-gray-200 rounded mb-2" />
-                <div className="h-4 bg-gray-200 rounded w-2/3" />
+                <div className="h-4 bg-gray-200 rounded-xs mb-2" />
+                <div className="h-4 bg-gray-200 rounded-xs w-2/3" />
               </motion.div>
             ))
           ) : (

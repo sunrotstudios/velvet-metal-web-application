@@ -96,7 +96,7 @@ export const AlbumsTab = forwardRef<AlbumsTabHandle, AlbumsTabProps>(
                           deselectAll();
                         }
                       }}
-                      className="h-5 w-5 rounded-sm border-2"
+                      className="h-5 w-5 rounded-xs border-2"
                     />
                     <span className="text-sm font-medium">
                       Select All ({filteredAlbums.length} albums)

@@ -15,10 +15,10 @@ export function AlbumListHeader({ className }: AlbumListHeaderProps) {
       <div className="flex-1">Title</div>
 
       {/* Additional Info Columns */}
-      <div className="w-24 flex-shrink-0">Type</div>
-      <div className="w-24 flex-shrink-0">Tracks</div>
-      <div className="w-20 flex-shrink-0">Year</div>
-      <div className="w-24 flex-shrink-0">Service</div>
+      <div className="w-24 shrink-0">Type</div>
+      <div className="w-24 shrink-0">Tracks</div>
+      <div className="w-20 shrink-0">Year</div>
+      <div className="w-24 shrink-0">Service</div>
     </div>
   );
 }
