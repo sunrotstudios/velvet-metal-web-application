@@ -407,7 +407,7 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => navigate("/login")}
-                  className="text-white hover:underline focus:outline-none"
+                  className="text-white hover:underline focus:outline-hidden"
                 >
                   Sign in
                 </button>
@@ -452,7 +452,7 @@ export default function Register() {
                             key={key}
                             className="flex items-center text-sm text-gray-300 font-degular"
                           >
-                            <Check className="w-4 h-4 mr-3 text-white/60 flex-shrink-0" />
+                            <Check className="w-4 h-4 mr-3 text-white/60 shrink-0" />
                             <span className="capitalize">
                               {key === "max_playlists" ? (
                                 <>

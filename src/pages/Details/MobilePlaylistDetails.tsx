@@ -44,7 +44,7 @@ export function MobilePlaylistDetails({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xs supports-backdrop-filter:bg-background/60 transition-all duration-300">
         <div className="flex items-center p-4 gap-4">
           <Button
             variant="ghost"

@@ -104,7 +104,7 @@ export default function SpotifyCallback() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-accent/10 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-linear-to-b from-background to-accent/10 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center text-lg font-semibold">
             Loading...

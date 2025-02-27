@@ -268,7 +268,7 @@ export function BulkTransferModal({
                         </div>
                       )}
                       {progress[item.id] && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs">
                           {progress[item.id].stage === 'complete' ? (
                             <CheckCircle2 className="h-4 w-4 text-green-500" />
                           ) : progress[item.id].stage === 'error' ? (
@@ -289,7 +289,7 @@ export function BulkTransferModal({
                         </div>
                       )}
                     </div>
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1">
+                    <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/60 to-transparent p-1">
                       <p className="truncate text-[10px] font-medium text-white">
                         {item.name}
                       </p>

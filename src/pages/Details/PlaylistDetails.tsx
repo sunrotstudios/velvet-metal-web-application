@@ -228,7 +228,7 @@ export default function PlaylistDetails() {
                     Play
                   </motion.button>
                   <motion.button
-                    className="h-11 px-8 rounded-md inline-flex items-center justify-center gap-2 !border !border-white !bg-transparent !text-white font-medium"
+                    className="h-11 px-8 rounded-md inline-flex items-center justify-center gap-2 border! border-white! bg-transparent! text-white! font-medium"
                     onClick={handleTransfer}
                     whileHover={{
                       scale: 1.02,
@@ -242,7 +242,7 @@ export default function PlaylistDetails() {
                   </motion.button>
                   {!syncPair && (
                     <motion.button
-                      className="h-11 px-8 rounded-md inline-flex items-center justify-center gap-2 !border !border-white !bg-transparent !text-white font-medium"
+                      className="h-11 px-8 rounded-md inline-flex items-center justify-center gap-2 border! border-white! bg-transparent! text-white! font-medium"
                       onClick={handleLink}
                       whileHover={{
                         scale: 1.02,
@@ -257,7 +257,7 @@ export default function PlaylistDetails() {
                   )}
                   {syncPair && (
                     <motion.button
-                      className="h-11 px-8 rounded-md inline-flex items-center justify-center gap-2 !border !border-yellow-500 !bg-yellow-500/10 !text-yellow-500 font-medium"
+                      className="h-11 px-8 rounded-md inline-flex items-center justify-center gap-2 border! border-yellow-500! bg-yellow-500/10! text-yellow-500! font-medium"
                       whileHover={{
                         scale: 1.02,
                         backgroundColor: 'rgba(234, 179, 8, 0.2)',
@@ -283,7 +283,7 @@ export default function PlaylistDetails() {
               transition={{ delay: 0.6, duration: 0.5 }}
             >
               {/* Track List Header */}
-              <div className="sticky top-0 z-10 border-b border-white/10 bg-transparent backdrop-blur-sm">
+              <div className="sticky top-0 z-10 border-b border-white/10 bg-transparent backdrop-blur-xs">
                 <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-3 px-4 text-sm font-medium text-white/60">
                   <span className="w-8">#</span>
                   <span>Title</span>

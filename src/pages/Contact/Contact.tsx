@@ -120,7 +120,7 @@ export default function Contact() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                 {/* Contact Intro */}
                 <div className="md:col-span-3">
-                  <div className="bg-gradient-to-r from-purple-100 to-purple-50 p-3 md:p-4 rounded-xl md:rounded-2xl border-3 border-black">
+                  <div className="bg-linear-to-r from-purple-100 to-purple-50 p-3 md:p-4 rounded-xl md:rounded-2xl border-3 border-black">
                     <p className="text-sm md:text-base font-medium font-title text-center">
                       Got questions? We'd love to hear from you! Send a message or reach out directly.
                     </p>
@@ -214,7 +214,7 @@ export default function Contact() {
                               id="name"
                               name="name"
                               required
-                              className="w-full p-2 border-2 border-black rounded-lg bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm"
+                              className="w-full p-2 border-2 border-black rounded-lg bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden text-sm"
                               placeholder="Your name"
                             />
                           </div>
@@ -227,7 +227,7 @@ export default function Contact() {
                               id="email"
                               name="email"
                               required
-                              className="w-full p-2 border-2 border-black rounded-lg bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm"
+                              className="w-full p-2 border-2 border-black rounded-lg bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden text-sm"
                               placeholder="your.email@example.com"
                             />
                           </div>
@@ -241,7 +241,7 @@ export default function Contact() {
                             name="message"
                             rows={3}
                             required
-                            className="w-full p-2 border-2 border-black rounded-lg bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm"
+                            className="w-full p-2 border-2 border-black rounded-lg bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden text-sm"
                             placeholder="How can we help you?"
                           />
                         </div>

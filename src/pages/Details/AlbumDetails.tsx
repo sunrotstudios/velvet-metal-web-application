@@ -207,7 +207,7 @@ export default function AlbumDetails() {
               transition={{ delay: 0.6, duration: 0.5 }}
             >
               {/* Track List Header */}
-              <div className="sticky top-0 z-10 border-b border-white/10 bg-transparent backdrop-blur-sm">
+              <div className="sticky top-0 z-10 border-b border-white/10 bg-transparent backdrop-blur-xs">
                 <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-3 px-4 text-sm font-medium text-white/60">
                   <span className="w-8">#</span>
                   <span>Title</span>

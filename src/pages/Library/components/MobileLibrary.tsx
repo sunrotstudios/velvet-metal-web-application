@@ -64,14 +64,14 @@ export function MobileLibrary({
   return (
     <div className="flex flex-col h-full w-full">
       {/* Top Bar with Search and Controls */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs supports-backdrop-filter:bg-background/60 border-b">
         <div className="flex items-center gap-2 p-4">
           <input
             type="text"
             placeholder="Search your library..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 py-2 rounded-full bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 px-4 py-2 rounded-full bg-muted/50 focus:outline-hidden focus:ring-2 focus:ring-primary"
           />
           <Button
             variant="ghost"

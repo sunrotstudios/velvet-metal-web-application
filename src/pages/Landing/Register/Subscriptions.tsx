@@ -53,7 +53,7 @@ export function Subscriptions({
                 )}
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-[120px] flex-shrink-0">
+                  <div className="w-[120px] shrink-0">
                     <h3 className="text-base font-black">{tier.name}</h3>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black">
@@ -71,7 +71,7 @@ export function Subscriptions({
                             className={cn(
                               "w-3 h-3 rounded-full border-2 border-black",
                               "flex items-center justify-center",
-                              "bg-white flex-shrink-0"
+                              "bg-white shrink-0"
                             )}
                           >
                             <Check className="w-1.5 h-1.5" />
@@ -94,7 +94,7 @@ export function Subscriptions({
                   
                   <div
                     className={cn(
-                      "w-4 h-4 rounded-full border-2 border-black flex-shrink-0",
+                      "w-4 h-4 rounded-full border-2 border-black shrink-0",
                       "transition-all duration-200",
                       selectedTier === tier.id
                         ? "bg-black"

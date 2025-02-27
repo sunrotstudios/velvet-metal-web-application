@@ -76,7 +76,7 @@ export function MobileHome() {
               </span>
             )}
           </div>
-          <div className="rounded-xl bg-card shadow-sm border border-border/50">
+          <div className="rounded-xl bg-card shadow-2xs border border-border/50">
             <ServicesGrid />
           </div>
         </motion.div>

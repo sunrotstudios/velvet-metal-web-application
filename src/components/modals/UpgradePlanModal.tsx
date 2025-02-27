@@ -130,7 +130,7 @@ export function UpgradePlanModal({ open, onClose }: UpgradePlanModalProps) {
                 <ul className="space-y-2">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="text-sm text-white/80 flex items-center gap-2">
-                      <Check className="h-4 w-4 flex-shrink-0" />
+                      <Check className="h-4 w-4 shrink-0" />
                       {feature}
                     </li>
                   ))}

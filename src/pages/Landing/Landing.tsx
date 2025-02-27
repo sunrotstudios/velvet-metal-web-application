@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Music } from "lucide-react";
 import { WeirdDesigns, MobileIcon } from "@/styles/abstract-designs";
-import "@/styles/fonts.css";
 
 interface Album {
   name: string;
@@ -264,7 +263,7 @@ export default function Landing() {
                           "Weekly selection"
                         ].map((item, index) => (
                           <li key={index} className="flex items-start">
-                            <div className="w-3 h-3 mt-0.5 mr-1.5 bg-black border-1.5 border-black rounded-sm flex-shrink-0"></div>
+                            <div className="w-3 h-3 mt-0.5 mr-1.5 bg-black border-1.5 border-black rounded-xs shrink-0"></div>
                             <span className="text-[12px] font-bold">{item}</span>
                           </li>
                         ))}
@@ -281,7 +280,7 @@ export default function Landing() {
                           "Selected weekly by our team"
                         ].map((item, index) => (
                           <li key={index} className="flex items-start">
-                            <div className="w-4 h-4 mt-0.5 mr-2 bg-black border-2 border-black rounded-sm flex-shrink-0"></div>
+                            <div className="w-4 h-4 mt-0.5 mr-2 bg-black border-2 border-black rounded-xs shrink-0"></div>
                             <span className="text-sm font-bold">{item}</span>
                           </li>
                         ))}

@@ -163,7 +163,7 @@ export default function Team() {
 
               {/* Team Intro */}
               <div className="md:col-span-3">
-                <div className="bg-gradient-to-r from-purple-100 to-purple-50 p-3 md:p-4 rounded-xl md:rounded-2xl border-3 border-black">
+                <div className="bg-linear-to-r from-purple-100 to-purple-50 p-3 md:p-4 rounded-xl md:rounded-2xl border-3 border-black">
                   <p className="text-sm md:text-base font-medium font-title text-center">
                     Meet the passionate people behind Velvet Metal, working to build the ultimate music management experience.
                   </p>

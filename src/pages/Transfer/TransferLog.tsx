@@ -22,7 +22,7 @@ export function TransferLog({ logs, className }: TransferLogProps) {
   }, [logs]);
 
   return (
-    <div className={cn('flex flex-col h-[400px] max-h-[400px] bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-lg border border-white/20', className)}>
+    <div className={cn('flex flex-col h-[400px] max-h-[400px] bg-linear-to-b from-zinc-900 to-zinc-950 rounded-lg border border-white/20', className)}>
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/20 shrink-0 bg-white/5">
         <div>
           <h3 className="font-radlush text-lg font-medium text-white">Transfer Log</h3>

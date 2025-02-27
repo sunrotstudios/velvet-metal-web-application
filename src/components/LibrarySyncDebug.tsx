@@ -104,7 +104,7 @@ export function LibrarySyncDebug() {
         <h2 className="text-xl font-bold">Library Sync Debug</h2>
         <button
           onClick={triggerManualSync}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-4 py-2 bg-blue-500 text-white rounded-xs hover:bg-blue-600"
         >
           Trigger Manual Sync
         </button>
@@ -117,7 +117,7 @@ export function LibrarySyncDebug() {
             {syncHistory.map((sync) => (
               <div
                 key={sync.id}
-                className="p-3 bg-gray-100 rounded flex justify-between"
+                className="p-3 bg-gray-100 rounded-xs flex justify-between"
               >
                 <div>
                   <span className="font-medium">{sync.service}</span>
@@ -138,7 +138,7 @@ export function LibrarySyncDebug() {
             {libraryItems.map((item) => (
               <div
                 key={item.id}
-                className="p-3 bg-gray-100 rounded flex justify-between"
+                className="p-3 bg-gray-100 rounded-xs flex justify-between"
               >
                 <div>
                   <span className="font-medium">{item.name}</span>
