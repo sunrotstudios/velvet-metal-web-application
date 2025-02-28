@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getSpotifyPlaylistDetails, getSpotifyPlaylists } from '@/lib/api/spotify';
-import { getAppleMusicPlaylistDetails, getAppleMusicPlaylists } from '@/lib/api/apple-music';
+import { getSpotifyPlaylistDetails, getSpotifyPlaylists } from '@/lib/services/spotify';
+import { getAppleMusicPlaylistDetails, getAppleMusicPlaylists } from '@/lib/services/apple-music';
 import { DetailedPlaylist, NormalizedPlaylist } from '@/lib/types';
-import { getServiceAuth } from '@/lib/services/streaming-auth';
+import { getServiceAuth } from '@/lib/services/auth';
 
 export const PLAYLIST_DETAILS_QUERY_KEY = 'playlistDetails';
 

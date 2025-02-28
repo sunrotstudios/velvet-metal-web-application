@@ -1,8 +1,7 @@
 import { supabase } from '@/lib/supabase';
-import { ServiceType } from '@/lib/types';
-import { refreshSpotifyToken } from '@/lib/api/spotify';
+import { ServiceType } from '@/lib/services/auth';
+import { refreshSpotifyToken, getAllSpotifyAlbums, getSpotifyPlaylists } from '@/lib/services/spotify';
 import { isTokenExpired } from '@/lib/auth';
-import { getAllSpotifyAlbums, getSpotifyPlaylists } from '@/lib/api/spotify';
 
 // Configuration
 const SYNC_INTERVALS = {

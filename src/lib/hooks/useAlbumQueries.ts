@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getSpotifyAlbumDetails } from '@/lib/api/spotify';
-import { getAppleMusicAlbumDetails } from '@/lib/api/apple-music';
-import { DetailedAlbum, ServiceType } from '@/lib/types';
-import { getServiceAuth } from '@/lib/services/streaming-auth';
+import { getSpotifyAlbumDetails } from '@/lib/services/spotify';
+import { getAppleMusicAlbumDetails } from '@/lib/services/apple-music';
+import { DetailedAlbum } from '@/lib/types';
+import { getServiceAuth, ServiceType } from '@/lib/services/auth';
 
 export const ALBUM_DETAILS_QUERY_KEY = 'albumDetails';
 

@@ -6,13 +6,13 @@ import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
 import {
   authorizeAppleMusic,
   unauthorizeAppleMusic,
-} from '@/lib/services/apple-music-auth';
+} from '@/lib/services/apple-music';
 import { authorizeLastFm, unauthorizeLastFm } from '@/lib/services/lastfm-auth';
 import {
   authorizeSpotify,
   unauthorizeSpotify,
-} from '@/lib/services/spotify-auth';
-import { ServiceType } from '@/lib/services/streaming-auth';
+} from '@/lib/services/spotify';
+import { ServiceType } from '@/lib/services/auth';
 import { useState } from 'react';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { forceSyncLibrary } from '@/lib/services/library-sync';

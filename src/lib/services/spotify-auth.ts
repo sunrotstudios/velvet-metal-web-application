@@ -1,3 +1,12 @@
+// COMPATIBILITY WRAPPER
+// This file is deprecated and will be removed in a future update.
+// Please use @/lib/services/spotify instead.
+// 
+// Related files that have been refactored:
+// - spotify-auth.ts -> moved to ./spotify/index.ts
+// - spotify-library.ts -> moved to ./spotify/index.ts
+// - All Spotify related functionality is now in the spotify directory
+
 import { saveServiceAuth, removeServiceAuth } from './streaming-auth';
 
 export async function authorizeSpotify(userId: string) {

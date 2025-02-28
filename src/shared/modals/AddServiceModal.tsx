@@ -11,9 +11,8 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { useConnectedServices } from '@/lib/hooks/useConnectedServices';
-import { authorizeAppleMusic } from '@/lib/services/apple-music-auth';
-import { syncAppleMusicLibrary } from '@/lib/services/apple-music-library';
-import { authorizeSpotify } from '@/lib/services/spotify-auth';
+import { authorizeAppleMusic, syncAppleMusicLibrary } from '@/lib/services/apple-music';
+import { authorizeSpotify } from '@/lib/services/spotify';
 import { Music, Music2 } from 'lucide-react';
 import { useState } from 'react';
 

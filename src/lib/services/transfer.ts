@@ -1,13 +1,12 @@
-import { refreshSpotifyToken } from '@/lib/api/spotify';
+import { refreshSpotifyToken, addSpotifyAlbumToLibrary, searchSpotifyAlbum } from '@/lib/services/spotify';
 import { isTokenExpired } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import { ServiceType } from '@/lib/types';
+import { ServiceType } from '@/lib/services/auth';
 import {
   addAppleMusicAlbumToLibrary,
   searchAppleMusicAlbum,
-} from '../api/apple-music';
-import { addSpotifyAlbumToLibrary, searchSpotifyAlbum } from '../api/spotify';
-import { getServiceAuth, saveServiceAuth } from './streaming-auth';
+} from '@/lib/services/apple-music';
+import { getServiceAuth, saveServiceAuth } from '@/lib/services/auth';
 
 interface Track {
   name: string;

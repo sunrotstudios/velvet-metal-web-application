@@ -1,8 +1,7 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
-import { getSpotifyToken } from '@/lib/api/spotify';
-import { syncSpotifyLibrary } from '@/lib/services/spotify-library';
-import { saveServiceAuth } from '@/lib/services/streaming-auth';
+import { getSpotifyToken, syncSpotifyLibrary } from '@/lib/services/spotify';
+import { saveServiceAuth } from '@/lib/services/auth';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
