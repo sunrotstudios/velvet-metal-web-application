@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
+import logger from '@/lib/logger';
 
-export type ServiceType = 'spotify' | 'apple-music' | 'lastfm';
+export type ServiceType = 'spotify' | 'apple-music' | 'lastfm' | 'tidal';
 
 interface ServiceTokens {
   accessToken: string;
@@ -15,7 +16,17 @@ export async function saveServiceAuth(
   tokens: ServiceTokens
 ) {
   try {
-    console.log('Saving service auth...', { userId, service });
+    logger.info({
+      msg: 'Saving service auth...',
+      context: {
+        userId,
+        service,
+        hasAccessToken: !!tokens.accessToken,
+        hasRefreshToken: !!tokens.refreshToken,
+        expiresAt: tokens.expiresAt,
+        hasMusicUserToken: !!tokens.musicUserToken
+      }
+    });
 
     // Use upsert to handle both insert and update
     const { error } = await supabase.from('user_services').upsert(
@@ -24,7 +35,7 @@ export async function saveServiceAuth(
         service,
         access_token: tokens.accessToken,
         refresh_token: tokens.refreshToken,
-        token_expires_at: tokens.expiresAt?.toISOString(),
+        expires_at: tokens.expiresAt?.toISOString(),
         music_user_token: tokens.musicUserToken, // Add music user token
         updated_at: new Date().toISOString(),
       },
@@ -34,13 +45,35 @@ export async function saveServiceAuth(
     );
 
     if (error) {
-      console.error('Error saving service auth:', error);
+      logger.error({
+        msg: 'Error saving service auth',
+        context: {
+          userId,
+          service,
+          error: error.message,
+          code: error.code
+        }
+      });
       throw error;
     }
 
-    console.log('Service auth saved successfully');
+    logger.info({
+      msg: 'Service auth saved successfully',
+      context: {
+        userId,
+        service,
+        updatedAt: new Date().toISOString()
+      }
+    });
   } catch (error) {
-    console.error('Failed to save service auth:', error);
+    logger.error({
+      msg: 'Failed to save service auth',
+      context: {
+        userId,
+        service,
+        error: error instanceof Error ? error.message : String(error)
+      }
+    });
     throw error;
   }
 }
@@ -63,7 +96,7 @@ export async function getServiceAuth(
     }
 
     if (!data) {
-      console.log(`No ${service} auth found for user ${userId}`);
+      logger.info(`No ${service} auth found for user ${userId}`);
       return null;
     }
 
@@ -80,8 +113,8 @@ export async function getServiceAuth(
         accessToken: data.access_token || '', // Use stored access token if available
         musicUserToken: musicUserToken,
         refreshToken: data.refresh_token || null,
-        expiresAt: data.token_expires_at
-          ? new Date(data.token_expires_at)
+        expiresAt: data.expires_at
+          ? new Date(data.expires_at)
           : undefined,
       };
     }
@@ -90,8 +123,8 @@ export async function getServiceAuth(
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
-      expiresAt: data.token_expires_at
-        ? new Date(data.token_expires_at)
+      expiresAt: data.expires_at
+        ? new Date(data.expires_at)
         : undefined,
       musicUserToken: data.music_user_token,
     };
@@ -103,7 +136,7 @@ export async function getServiceAuth(
 
 export async function removeServiceAuth(userId: string, service: ServiceType) {
   try {
-    console.log('Removing service auth and associated data...', {
+    logger.info('Removing service auth and associated data...', {
       userId,
       service,
     });
@@ -144,7 +177,7 @@ export async function removeServiceAuth(userId: string, service: ServiceType) {
       throw authError;
     }
 
-    console.log('Service data removed successfully');
+    logger.info('Service data removed successfully');
   } catch (error) {
     console.error('Failed to remove service data:', error);
     throw error;
@@ -175,7 +208,7 @@ export async function isServiceConnected(
   service: ServiceType
 ): Promise<boolean> {
   try {
-    console.log('Checking service connection...', { userId, service });
+    logger.info('Checking service connection...', { userId, service });
 
     const { data, error } = await supabase
       .from('user_services')
@@ -190,7 +223,7 @@ export async function isServiceConnected(
     }
 
     const isConnected = !!data;
-    console.log('Service connection status:', isConnected);
+    logger.info('Service connection status:', isConnected);
     return isConnected;
   } catch (error) {
     console.error('Failed to check service connection:', error);

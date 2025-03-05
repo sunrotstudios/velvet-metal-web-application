@@ -12,7 +12,7 @@ interface PlaylistSyncPair {
   source_service: ServiceType;
   target_playlist_id: string;
   target_service: ServiceType;
-  last_synced_at: string | null;
+  synced_at: string | null;
   is_active: boolean;
   sync_enabled: boolean;
   last_error: string | null;

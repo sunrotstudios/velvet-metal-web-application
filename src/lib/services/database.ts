@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import logger from '@/lib/logger';
 
 export interface DatabaseRecord {
   id: string;
@@ -165,25 +166,59 @@ export const database = {
   },
 
   async saveAlbums(userId: string, albums: Album[]) {
-    console.log('Saving albums:', albums[0]); // Log first album for debugging
+    logger.info(`Starting to save ${albums.length} albums for user ${userId}`);
+    
+    if (albums.length === 0) {
+      logger.warn('No albums to save');
+      return;
+    }
 
-    const { error } = await supabase.from('user_albums').upsert(
-      albums.map((album) => ({
-        user_id: userId,
-        service: album.sourceService,
-        album_id: album.sourceId,
-        name: album.name,
-        artist_name: album.artistName,
-        image_url: album.artwork.url,
-        release_date: album.releaseDate,
-        tracks_count: album.trackCount,
-        external_url: album.metadata?.externalUrl,
-        synced_at: new Date().toISOString(),
-      }))
-    );
+    try {
+      logger.info('First album to be saved:', {
+        id: albums[0].id,
+        name: albums[0].name,
+        artist: albums[0].artistName || albums[0].artist_name,
+        service: albums[0].service
+      });
 
-    if (error) {
-      console.error('Error saving albums:', error);
+      const albumsToUpsert = albums.map((album) => {
+        logger.debug(`Processing album: ${album.name} by ${album.artistName || album.artist_name}`);
+        return {
+          user_id: userId,
+          service: album.service,
+          album_id: album.id,
+          name: album.name,
+          artist_name: album.artistName || album.artist_name,
+          image_url: album.artwork?.url || album.image_url,
+          release_date: album.releaseDate,
+          tracks: album.tracks,
+          album_type: album.album_type || 'album',
+          external_url: album.metadata?.externalUrl,
+          added_at: album.added_at || new Date().toISOString(),
+          upc: album.upc,
+          synced_at: new Date().toISOString(),
+        };
+      });
+
+      logger.info(`Attempting to upsert ${albumsToUpsert.length} albums to database...`);
+
+      const { error, count } = await supabase.from('user_albums').upsert(
+        albumsToUpsert,
+        {
+          onConflict: 'user_id,service,album_id',
+          ignoreDuplicates: false,
+          count: 'exact'
+        }
+      );
+
+      if (error) {
+        logger.error('Error saving albums:', error);
+        throw error;
+      }
+
+      logger.info(`Successfully saved ${count} albums to database`);
+    } catch (error) {
+      logger.error('Failed to save albums:', error);
       throw error;
     }
   },
@@ -191,8 +226,8 @@ export const database = {
   async savePlaylists(userId: string, playlists: Playlist[]) {
     // Filter out null playlists and log the count
     const validPlaylists = playlists.filter(p => p !== null);
-    console.log(`Saving ${validPlaylists.length} playlists out of ${playlists.length} total`);
-    console.log('First playlist:', validPlaylists[0]);
+    logger.info(`Saving ${validPlaylists.length} playlists out of ${playlists.length} total`);
+    logger.info('First playlist:', validPlaylists[0]);
 
     const { error } = await supabase.from('user_playlists').upsert(
       validPlaylists.map((playlist) => ({
@@ -202,7 +237,7 @@ export const database = {
         name: playlist.name,
         description: playlist.description,
         image_url: playlist.artwork?.url,
-        tracks_count: playlist.tracks?.total,
+        tracks: playlist.tracks?.total,
         owner_id: playlist.owner?.id,
         owner_name: playlist.owner?.displayName,
         is_public: playlist.metadata?.isPublic,

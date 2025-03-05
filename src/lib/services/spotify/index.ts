@@ -1,5 +1,8 @@
 import { getServiceAuth, saveServiceAuth, removeServiceAuth, ServiceType } from '@/lib/services/auth';
 import { supabase } from '@/lib/supabase';
+import logger from '@/lib/logger';
+import { SpotifyAlbumResponse, SpotifyAlbumItem } from './types';
+import { batchMapSpotifyAlbumsToDbFormat } from './albumMapper';
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
@@ -48,7 +51,7 @@ export function getSpotifyAuthUrl() {
 
 export async function authorizeSpotify(userId: string) {
   try {
-    console.log('Starting Spotify authorization...', { userId });
+    logger.info('Starting Spotify authorization...', { userId });
     
     if (!SPOTIFY_CLIENT_ID || !SPOTIFY_REDIRECT_URI) {
       throw new Error('Spotify client ID or redirect URI not found');
@@ -72,7 +75,7 @@ export async function authorizeSpotify(userId: string) {
     });
 
     const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
-    console.log('Redirecting to Spotify authorization page');
+    logger.info('Redirecting to Spotify authorization page');
     
     window.location.href = authUrl;
   } catch (error) {
@@ -83,9 +86,9 @@ export async function authorizeSpotify(userId: string) {
 
 export async function unauthorizeSpotify(userId: string) {
   try {
-    console.log('Removing Spotify authorization...');
+    logger.info('Removing Spotify authorization...');
     await removeServiceAuth(userId, 'spotify');
-    console.log('Spotify authorization removed successfully');
+    logger.info('Spotify authorization removed successfully');
   } catch (error) {
     console.error('Failed to remove Spotify authorization:', error);
     throw error;
@@ -94,7 +97,7 @@ export async function unauthorizeSpotify(userId: string) {
 
 export async function handleSpotifyCallback(code: string, userId: string) {
   try {
-    console.log('Handling Spotify callback...', { code, userId });
+    logger.info('Handling Spotify callback...', { code, userId });
 
     if (!SPOTIFY_CLIENT_ID || !SPOTIFY_REDIRECT_URI) {
       throw new Error('Missing Spotify configuration');
@@ -121,7 +124,7 @@ export async function handleSpotifyCallback(code: string, userId: string) {
 }
 
 export async function getSpotifyToken(code: string): Promise<SpotifyAuth> {
-  console.log('Getting Spotify token with code');
+  logger.info('Getting Spotify token with code');
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET || !SPOTIFY_REDIRECT_URI) {
     throw new Error('Missing Spotify environment variables');
   }
@@ -171,7 +174,7 @@ export async function getSpotifyToken(code: string): Promise<SpotifyAuth> {
 }
 
 export async function refreshSpotifyToken(refreshToken: string): Promise<SpotifyAuth> {
-  console.log('Starting Spotify token refresh...');
+  logger.info('Starting Spotify token refresh...');
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
     console.error('Missing environment variables');
     throw new Error('Missing Spotify environment variables');
@@ -184,7 +187,7 @@ export async function refreshSpotifyToken(refreshToken: string): Promise<Spotify
   });
 
   try {
-    console.log('Making refresh token request to Spotify...');
+    logger.info('Making refresh token request to Spotify...');
     const response = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
@@ -265,7 +268,7 @@ async function handleSpotifyRequest<T>(
 
         try {
           // Attempt to refresh the token
-          console.log('Token expired, attempting refresh...');
+          logger.info('Token expired, attempting refresh...');
           const newAuth = await refreshSpotifyToken(currentAuth.refreshToken);
 
           // Save the new tokens
@@ -276,7 +279,7 @@ async function handleSpotifyRequest<T>(
           });
 
           // Retry the request with the new token
-          console.log('Token refreshed, retrying request...');
+          logger.info('Token refreshed, retrying request...');
           return await requestFn(newAuth.accessToken);
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
@@ -356,7 +359,7 @@ export async function getSpotifyPlaylists(accessToken: string, userId: string) {
               width: item.images[0].width || null,
             }
           : null,
-        tracks_count: item.tracks?.total || 0,
+        tracks: item.tracks?.total || 0,
         owner: item.owner
           ? {
               id: item.owner.id || null,
@@ -371,7 +374,7 @@ export async function getSpotifyPlaylists(accessToken: string, userId: string) {
   );
 }
 
-export async function getSpotifyAlbums(accessToken: string) {
+export async function getSpotifyAlbums(accessToken: string): Promise<SpotifyAlbumResponse> {
   const response = await fetch(
     'https://api.spotify.com/v1/me/albums?limit=50',
     {
@@ -403,7 +406,7 @@ export async function getSpotifyAlbums(accessToken: string) {
 export async function getMoreSpotifyAlbums(
   nextUrl: string,
   accessToken: string
-) {
+): Promise<SpotifyAlbumResponse> {
   const response = await fetch(nextUrl, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -435,8 +438,8 @@ export async function getAllSpotifyAlbums(
   onProgress?: (current: number, total: number) => void
 ) {
   try {
-    let allAlbums = [];
-    let nextUrl = null;
+    let allAlbums: SpotifyAlbumItem[] = [];
+    let nextUrl: string | null = null;
     let total = 0;
     let current = 0;
 
@@ -461,28 +464,8 @@ export async function getAllSpotifyAlbums(
       }
     }
 
-    // Process albums
-    return allAlbums.map((item: any) => {
-      const album = item.album || item;
-      // Ensure album_type matches database constraints
-      let albumType = album?.album_type?.toLowerCase() || 'album';
-      if (!['album', 'single', 'ep'].includes(albumType)) {
-        albumType = 'album'; // Default to 'album' if unknown type
-      }
-      
-      return {
-        album_id: album?.id,
-        name: album?.name,
-        artist_name: album?.artists?.[0]?.name,
-        image_url: album?.images?.[0]?.url,
-        release_date: album?.release_date,
-        tracks_count: album?.total_tracks,
-        external_url: album?.external_urls?.spotify || null,
-        album_type: albumType,
-        added_at: item.added_at || null,
-        upc: album?.external_ids?.upc || null,
-      };
-    });
+    // Convert albums to database format using our utility function
+    return batchMapSpotifyAlbumsToDbFormat(allAlbums, userId);
   } catch (error) {
     console.error('Failed to get all Spotify albums:', error);
     throw error;
@@ -562,7 +545,7 @@ export async function getSpotifyPlaylistDetails(
   accessToken: string,
   userId?: string
 ) {
-  console.log('Getting playlist details for:', playlistId);
+  logger.info('Getting playlist details for:', playlistId);
 
   return handleSpotifyRequest(
     accessToken,
@@ -705,42 +688,12 @@ export async function syncSpotifyLibrary(
     const playlists = await getSpotifyPlaylists(accessToken, userId);
 
     // Save albums to Supabase
-    const { error: albumError } = await supabase.from('user_albums').upsert(
-      albums.map((album: any) => {
-        // First check Spotify's album_type
-        let albumType = album.album_type?.toLowerCase();
-
-        // If it's not one of our valid types, determine based on our rules
-        if (!['album', 'single', 'ep'].includes(albumType)) {
-          albumType =
-            album.name?.toLowerCase().includes(' ep') ||
-            album.name?.toLowerCase().endsWith(' ep')
-              ? 'ep'
-              : album.tracks_count <= 6
-              ? 'ep'
-              : 'album';
-        }
-
-        return {
-          id: globalThis.crypto.randomUUID(),
-          user_id: userId,
-          service: 'spotify',
-          album_id: album.album_id,
-          name: album.name,
-          artist_name: album.artist_name,
-          image_url: album.image_url,
-          release_date: album.release_date,
-          tracks_count: album.tracks_count,
-          external_url: album.external_url,
-          synced_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          album_type: albumType,
-          added_at: album.added_at,
-          upc: album.upc,
-        };
-      })
-    );
+    const { error: albumError } = await supabase
+      .from('user_albums')
+      .upsert(albums.map(album => ({
+        id: globalThis.crypto.randomUUID(),
+        ...album
+      })));
 
     if (albumError) {
       console.error('Failed to save albums:', albumError);
@@ -759,7 +712,7 @@ export async function syncSpotifyLibrary(
           name: playlist.name,
           description: playlist.description || '',
           image_url: playlist.artwork?.url || null,
-          tracks_count: playlist.tracks_count || 0,
+          tracks: playlist.tracks || 0,
           owner_id: playlist.owner?.id || null,
           owner_name: playlist.owner?.display_name || null,
           is_public: playlist.is_public,
@@ -775,6 +728,19 @@ export async function syncSpotifyLibrary(
       throw playlistError;
     }
 
+    // Update sync timestamp in user_services
+    const { error: serviceError } = await supabase
+      .from('user_services')
+      .update({ synced_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('service', 'spotify');
+
+    if (serviceError) {
+      console.error('Failed to update sync timestamp:', serviceError);
+      throw serviceError;
+    }
+
+    logger.info('Spotify library sync completed successfully');
     return true;
   } catch (error) {
     console.error('Failed to sync Spotify library:', error);

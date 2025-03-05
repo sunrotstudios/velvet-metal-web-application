@@ -3,6 +3,7 @@
 This document provides a comprehensive overview of all types and data structures used in the Velvet Metal web application.
 
 ## Table of Contents
+
 - [Core Service Types](#core-service-types)
 - [User Data Models](#user-data-models)
   - [User Collections](#user-collections)
@@ -19,8 +20,8 @@ This document provides a comprehensive overview of all types and data structures
 ## Core Service Types
 
 ```typescript
-type ServiceType = 'spotify' | 'apple-music';
-type ViewMode = 'grid' | 'list';
+type ServiceType = "spotify" | "apple-music";
+type ViewMode = "grid" | "list";
 ```
 
 ## User Data Models
@@ -29,14 +30,14 @@ type ViewMode = 'grid' | 'list';
 
 ```typescript
 interface UserAlbums {
-  user: string;           // Relation to users collection
+  user: string; // Relation to users collection
   service: ServiceType;
-  albums: Album[];        // Store the full album data
+  albums: Album[]; // Store the full album data
   lastSynced: Date;
 }
 
 interface UserPlaylists {
-  user: string;           // Relation to users collection
+  user: string; // Relation to users collection
   service: ServiceType;
   playlists: NormalizedPlaylist[]; // Store the full playlist data
   lastSynced: Date;
@@ -50,11 +51,11 @@ interface UserPlaylist {
   id: string;
   user_id: string;
   service: ServiceType;
-  playlist_id: string;    // Platform-specific ID
+  playlist_id: string; // Platform-specific ID
   name: string;
   description?: string;
   image_url?: string;
-  tracks_count?: number;
+  tracks?: number;
   owner_id?: string;
   owner_name?: string;
   is_public: boolean;
@@ -73,7 +74,7 @@ interface UserAlbum {
   artist_name: string;
   release_date?: string;
   image_url?: string;
-  tracks_count?: number;
+  tracks?: number;
   external_url?: string;
   synced_at: string;
   created_at: string;
@@ -98,9 +99,9 @@ interface NormalizedAlbum {
   releaseDate: string;
   trackCount: number;
   dateAdded?: string;
-  sourceService: 'spotify' | 'apple-music';
+  sourceService: "spotify" | "apple-music";
   sourceId: string;
-  albumType: 'album' | 'single' | 'ep';
+  albumType: "album" | "single" | "ep";
 }
 
 interface DetailedAlbum extends NormalizedAlbum {
@@ -119,7 +120,7 @@ interface DetailedAlbum extends NormalizedAlbum {
 interface NormalizedPlaylist {
   id: string;
   user_id: string;
-  playlist_id: string;    // Platform-specific ID
+  playlist_id: string; // Platform-specific ID
   name: string;
   description?: string;
   artwork?: {
@@ -127,12 +128,12 @@ interface NormalizedPlaylist {
     height?: number | null;
     width?: number | null;
   };
-  tracks_count: number;
+  tracks: number;
   owner?: {
     id: string;
     display_name?: string;
   };
-  service: 'spotify' | 'apple-music';
+  service: "spotify" | "apple-music";
   is_public: boolean;
   external_url?: string;
   synced_at: string;
@@ -211,7 +212,7 @@ interface SearchResult {
 }
 
 interface SyncProgress {
-  phase: 'albums' | 'playlists' | 'complete';
+  phase: "albums" | "playlists" | "complete";
   current: number;
   total: number;
   service: ServiceType;
@@ -231,6 +232,7 @@ interface ApiError extends Error {
 ## Best Practices & Recommendations
 
 ### Timestamp Handling
+
 - All database models use consistent timestamp fields:
   - `created_at`
   - `updated_at`
@@ -238,17 +240,21 @@ interface ApiError extends Error {
 - All timestamps are stored as strings (ISO format recommended)
 
 ### Service Integration
+
 - Models support both Spotify and Apple Music through unified interfaces
 - Service-specific IDs are clearly marked
 - Common fields are normalized across services
 
 ### Data Consistency
+
 1. **Artwork/Images**
+
    - Consistent structure across models
    - Optional dimensions for flexibility
    - URLs always required when artwork is present
 
 2. **Optional Fields**
+
    - Marked with `?` for cross-service compatibility
    - Default values should be handled in business logic
 
@@ -259,16 +265,19 @@ interface ApiError extends Error {
 ### Future Improvements
 
 1. **Type Safety**
+
    - Consider using enums for `ServiceType` and `ViewMode`
    - Add explicit typing for API status codes
    - Create shared interfaces for common structures (e.g., artwork)
 
 2. **Data Evolution**
+
    - Add version fields for schema migrations
    - Consider adding metadata fields for tracking changes
    - Implement strict validation for timestamp formats
 
 3. **Documentation**
+
    - Add JSDoc comments for complex types
    - Document validation requirements
    - Include examples of valid data structures
@@ -279,4 +288,5 @@ interface ApiError extends Error {
    - Include service-specific error mappings
 
 ---
+
 Last Updated: 2024-12-19

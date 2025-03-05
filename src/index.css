@@ -1,13 +1,101 @@
 @import 'tailwindcss';
 
-@plugin 'tailwindcss-animate';
+/* PP Neue Montreal */
+@font-face {
+  font-family: "Montreal";
+  src: url("/fonts/Montreal/PPNeueMontreal-Thin.otf") format("opentype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
 
-@custom-variant dark (&:is(.dark *));
+@font-face {
+  font-family: "Montreal";
+  src: url("/fonts/Montreal/PPNeueMontreal-Book.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montreal";
+  src: url("/fonts/Montreal/PPNeueMontreal-Italic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montreal";
+  src: url("/fonts/Montreal/PPNeueMontreal-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montreal";
+  src: url("/fonts/Montreal/PPNeueMontreal-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montreal";
+  src: url("/fonts/Montreal/PPNeueMontreal-SemiBolditalic.otf") format("opentype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Forevs */
+@font-face {
+  font-family: "Forevs";
+  src: url("/fonts/Forevs/ForevsDemo-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Forevs";
+  src: url("/fonts/Forevs/ForevsDemo-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Forevs";
+  src: url("/fonts/Forevs/ForevsDemo-Super.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Mondwest */
+@font-face {
+  font-family: "Mondwest";
+  src: url("/fonts/PPMondwest-Regular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Casserole Blackletter */
+@font-face {
+  font-family: "Casserole-Blackletter";
+  src: url("/fonts/Casserole/CasseroleDemo-Blackletter.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 
 @theme {
   --animate-marquee: marquee 25s linear infinite;
 
-  --font-sans: Montreal, system-ui, sans-serif;
   --font-display: Montreal, system-ui, sans-serif;
   --font-mondwest: Mondwest, system-ui, sans-serif;
   --font-forevs: Forevs, system-ui, sans-serif;

@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,13 +6,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { usePlaylistSync } from '@/lib/hooks/usePlaylistSync';
-import { useUserPlaylists } from '@/lib/hooks/usePlaylistQueries';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useState } from 'react';
-import { NormalizedPlaylist } from '@/lib/types';
+} from "@/components/ui/dialog";
+import { usePlaylistSync } from "@/lib/hooks/usePlaylistSync";
+import { useUserPlaylists } from "@/lib/hooks/usePlaylistQueries";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react";
+import { NormalizedPlaylist } from "@/lib/types";
 
 interface LinkPlaylistModalProps {
   open: boolean;
@@ -29,19 +29,16 @@ export function LinkPlaylistModal({
   userId,
   onLinkComplete,
 }: LinkPlaylistModalProps) {
-  const [selectedPlaylist, setSelectedPlaylist] = useState<NormalizedPlaylist | null>(
-    null
-  );
+  const [selectedPlaylist, setSelectedPlaylist] =
+    useState<NormalizedPlaylist | null>(null);
 
   const { createSyncPair } = usePlaylistSync(userId);
 
   // Get playlists from the other service
   const targetService =
-    sourcePlaylist.service === 'spotify' ? 'apple-music' : 'spotify';
-  const { data: targetPlaylists, isLoading: loadingPlaylists } = useUserPlaylists(
-    userId,
-    targetService
-  );
+    sourcePlaylist.service === "spotify" ? "apple-music" : "spotify";
+  const { data: targetPlaylists, isLoading: loadingPlaylists } =
+    useUserPlaylists(userId, targetService);
 
   const handleLink = async () => {
     if (!selectedPlaylist) return;
@@ -63,8 +60,8 @@ export function LinkPlaylistModal({
         <DialogHeader>
           <DialogTitle>Link with {targetService} Playlist</DialogTitle>
           <DialogDescription>
-            Select a playlist to sync with "{sourcePlaylist.name}". Changes made to
-            either playlist will be reflected in both.
+            Select a playlist to sync with "{sourcePlaylist.name}". Changes made
+            to either playlist will be reflected in both.
           </DialogDescription>
         </DialogHeader>
 
@@ -85,13 +82,13 @@ export function LinkPlaylistModal({
                   onClick={() => setSelectedPlaylist(playlist)}
                   className={`w-full rounded-lg border p-4 text-left transition-colors hover:bg-accent ${
                     selectedPlaylist?.playlist_id === playlist.playlist_id
-                      ? 'border-primary bg-accent'
-                      : 'border-border'
+                      ? "border-primary bg-accent"
+                      : "border-border"
                   }`}
                 >
                   <div className="font-medium">{playlist.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {playlist.tracks_count} tracks
+                    {playlist.tracks} tracks
                   </div>
                 </button>
               ))}
@@ -117,7 +114,7 @@ export function LinkPlaylistModal({
                 Linking...
               </>
             ) : (
-              'Link Playlists'
+              "Link Playlists"
             )}
           </Button>
         </DialogFooter>

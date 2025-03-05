@@ -1,15 +1,16 @@
-import { Button } from '@/components/ui/button';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { useAuth } from '@/contexts/auth-context';
-import { useAlbumDetails } from '@/lib/hooks/useAlbumQueries';
-import { AlbumTrack } from '@/lib/types';
-import { formatDuration } from '@/lib/utils';
-import { MobileAlbumDetails } from '@/pages/Details/MobileAlbumDetails';
-import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Play, Plus } from 'lucide-react';
-import { useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useAuth } from "@/contexts/auth-context";
+import { useAlbumDetails } from "@/lib/hooks/useAlbumQueries";
+import { AlbumTrack } from "@/lib/types";
+import { formatDuration } from "@/lib/utils";
+import { MobileAlbumDetails } from "@/pages/Details/MobileAlbumDetails";
+import { ResponsiveContainer } from "@/shared/layouts/ResponsiveContainer";
+import { motion } from "framer-motion";
+import { ArrowLeft, Clock, Play, Plus } from "lucide-react";
+import { useEffect } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import logger from "../../lib/logger";
 
 export default function AlbumDetails() {
   const { id } = useParams<{ id: string }>();
@@ -18,13 +19,13 @@ export default function AlbumDetails() {
   const location = useLocation();
   const service =
     location.state?.service ||
-    (id?.startsWith('l.') ? 'apple-music' : 'spotify');
+    (id?.startsWith("l.") ? "apple-music" : "spotify");
   const previousParams = location.state?.previousParams;
 
   useEffect(() => {
     if (!user) {
-      console.log('No user found, redirecting to login');
-      navigate('/login', { state: { from: `/album/${id}` } });
+      logger.info("No user found, redirecting to login");
+      navigate("/login", { state: { from: `/album/${id}` } });
     }
   }, [user, id, navigate]);
 
@@ -32,7 +33,7 @@ export default function AlbumDetails() {
     // Store the current library params in session storage when mounting
     const currentParams = location.state?.previousParams;
     if (currentParams) {
-      sessionStorage.setItem('libraryParams', JSON.stringify(currentParams));
+      sessionStorage.setItem("libraryParams", JSON.stringify(currentParams));
     }
   }, [location.state]);
 
@@ -42,10 +43,10 @@ export default function AlbumDetails() {
     error,
   } = useAlbumDetails(id, user?.id, service);
 
-  console.log('Query state:', { album, isLoading, error });
+  logger.info("Query state:", { album, isLoading, error });
 
   if (error) {
-    console.error('Error fetching album:', error);
+    console.error("Error fetching album:", error);
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
@@ -71,7 +72,7 @@ export default function AlbumDetails() {
   }
 
   const handleBack = () => {
-    navigate('/library');
+    navigate("/library");
   };
 
   const handlePlayAlbum = () => {
@@ -82,7 +83,7 @@ export default function AlbumDetails() {
     // implement set is transfer modal open logic
   };
 
-  const defaultAlbumArt = ''; // implement default album art logic
+  const defaultAlbumArt = ""; // implement default album art logic
 
   const totalDuration = album.tracks.reduce(
     (acc, track) => acc + track.durationMs,

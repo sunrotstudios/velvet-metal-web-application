@@ -1,10 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/auth-context";
 import { LastFmProvider } from "@/contexts/last-fm-context";
-import {
-  checkAndTriggerSync,
-  initializeAutoSync,
-} from "@/lib/services/library-sync";
 import SpotifyCallback from "@/pages/Callbacks/SpotifyCallback";
 import AlbumDetails from "@/pages/Details/AlbumDetails";
 import PlaylistDetails from "@/pages/Details/PlaylistDetails";
@@ -12,7 +8,7 @@ import Home from "@/pages/Home/Home";
 import Landing from "@/pages/Landing/Landing";
 import Login from "@/pages/Landing/Login";
 import Register from "@/pages/Landing/Register/index";
-import { Library } from "@/pages/Library/index";
+import Library from "@/pages/Library/index";
 import Settings from "@/pages/Settings/Settings";
 import LastFmDashboard from "@/pages/Stats/LastFmDashboard";
 import Transfer from "@/pages/Transfer";
@@ -25,7 +21,6 @@ import FAQ from "@/pages/FAQ/FAQ";
 import Team from "@/pages/Team/Team";
 import Contact from "@/pages/Contact/Contact";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
 import {
   Navigate,
   Route,
@@ -45,21 +40,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  useEffect(() => {
-    // Initialize auto-sync system
-    initializeAutoSync();
-
-    // Initial sync check
-    checkAndTriggerSync();
-
-    // Set up periodic sync check (every 5 minutes)
-    const syncInterval = setInterval(() => {
-      checkAndTriggerSync();
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(syncInterval);
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>

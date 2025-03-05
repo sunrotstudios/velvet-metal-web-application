@@ -1,14 +1,14 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth } from '@/contexts/auth-context';
-import { usePrefetchAlbum } from '@/lib/hooks/useAlbumQueries';
-import { ViewMode } from '@/lib/types';
-import { cn } from '@/lib/utils';
-import { AlbumTransferModal } from '@/shared/modals/AlbumTransferModal';
-import { ArrowLeftRight, Play } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/auth-context";
+import { usePrefetchAlbum } from "@/lib/hooks/useAlbumQueries";
+import { ViewMode } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { AlbumTransferModal } from "@/shared/modals/AlbumTransferModal";
+import { ArrowLeftRight, Play } from "lucide-react";
+import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface AlbumCardProps {
   album: {
@@ -18,14 +18,14 @@ interface AlbumCardProps {
     artist_name: string;
     image_url: string | null;
     release_date: string;
-    service: 'spotify' | 'apple-music';
-    tracks_count: number;
+    service: "spotify" | "apple-music";
+    tracks: number;
     external_url: string | null;
     album_type: string;
   };
   viewMode: ViewMode;
   isSelectionMode: boolean;
-  onSelect?: (album: AlbumCardProps['album']) => void;
+  onSelect?: (album: AlbumCardProps["album"]) => void;
   isSelected?: boolean;
 }
 
@@ -38,7 +38,7 @@ export const AlbumCard = ({
 }: AlbumCardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const releaseYear = album.release_date?.split('-')[0];
+  const releaseYear = album.release_date?.split("-")[0];
   const { user } = useAuth();
   const { prefetchAlbum } = usePrefetchAlbum();
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
@@ -50,7 +50,7 @@ export const AlbumCard = ({
     }
 
     if (!album.album_id) {
-      console.error('No album_id available for album:', album);
+      console.error("No album_id available for album:", album);
       return;
     }
 
@@ -62,9 +62,9 @@ export const AlbumCard = ({
     const currentParams = Object.fromEntries(searchParams.entries());
 
     navigate(`/album/${album.album_id}`, {
-      state: { 
+      state: {
         service: album.service,
-        previousParams: currentParams 
+        previousParams: currentParams,
       },
     });
   };
@@ -88,29 +88,29 @@ export const AlbumCard = ({
     <>
       <Card
         className={cn(
-          'group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-white/5 cursor-pointer',
-          viewMode === 'list' && 'hover:bg-white/5',
-          isSelected && 'bg-white/5'
+          "group relative overflow-hidden border-none bg-transparent shadow-none transition-all hover:bg-white/5 cursor-pointer",
+          viewMode === "list" && "hover:bg-white/5",
+          isSelected && "bg-white/5"
         )}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
       >
-        <CardContent className={cn('p-4', viewMode === 'list' && 'px-6 py-3')}>
+        <CardContent className={cn("p-4", viewMode === "list" && "px-6 py-3")}>
           <div
             className={cn(
-              'flex',
-              viewMode === 'grid'
-                ? 'flex-col space-y-2'
-                : 'flex-row items-center gap-6'
+              "flex",
+              viewMode === "grid"
+                ? "flex-col space-y-2"
+                : "flex-row items-center gap-6"
             )}
           >
             {/* Album Artwork */}
             <div
               className={cn(
-                'group relative overflow-hidden rounded-xl',
-                viewMode === 'grid'
-                  ? 'aspect-square w-full'
-                  : 'h-[72px] w-[72px] shrink-0'
+                "group relative overflow-hidden rounded-xl",
+                viewMode === "grid"
+                  ? "aspect-square w-full"
+                  : "h-[72px] w-[72px] shrink-0"
               )}
             >
               {album.image_url ? (
@@ -158,7 +158,7 @@ export const AlbumCard = ({
             </div>
 
             {/* Album Info */}
-            {viewMode === 'grid' ? (
+            {viewMode === "grid" ? (
               <div className="flex flex-col min-w-0">
                 <h3 className="line-clamp-1 text-sm font-medium text-white">
                   {album.name}
@@ -188,7 +188,7 @@ export const AlbumCard = ({
 
                 {/* Track Count */}
                 <div className="w-24 shrink-0 text-sm text-white/60 hidden md:block">
-                  {album.tracks_count} tracks
+                  {album.tracks} tracks
                 </div>
 
                 {/* Release Year */}

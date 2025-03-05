@@ -1,10 +1,10 @@
-import { Button } from '@/components/ui/button';
-import { DetailedPlaylist, PlaylistTrack } from '@/lib/types';
-import { formatDuration } from '@/lib/utils';
-import { ArrowLeft, Play, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { DetailedPlaylist, PlaylistTrack } from "@/lib/types";
+import { formatDuration } from "@/lib/utils";
+import { ArrowLeft, Play, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface MobilePlaylistDetailsProps {
   playlist: DetailedPlaylist;
@@ -23,7 +23,7 @@ export function MobilePlaylistDetails({
   useEffect(() => {
     const options = {
       threshold: 0,
-      rootMargin: '-80px 0px 0px 0px'
+      rootMargin: "-80px 0px 0px 0px",
     };
 
     observerRef.current = new IntersectionObserver(([entry]) => {
@@ -54,10 +54,12 @@ export function MobilePlaylistDetails({
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className={cn(
-            "flex items-center gap-4 transition-opacity duration-300",
-            isCollapsed ? "opacity-100" : "opacity-0 pointer-events-none"
-          )}>
+          <div
+            className={cn(
+              "flex items-center gap-4 transition-opacity duration-300",
+              isCollapsed ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
+          >
             {playlist.artwork?.url ? (
               <img
                 src={playlist.artwork.url}
@@ -70,7 +72,9 @@ export function MobilePlaylistDetails({
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h1 className="text-base font-semibold truncate">{playlist.name}</h1>
+              <h1 className="text-base font-semibold truncate">
+                {playlist.name}
+              </h1>
               <p className="text-sm text-muted-foreground truncate">
                 {playlist.owner?.display_name}
               </p>
@@ -96,10 +100,12 @@ export function MobilePlaylistDetails({
       <div className="flex-1 overflow-y-auto">
         {/* Playlist Info */}
         <div ref={headerRef} className="p-6 pb-4 bg-background">
-          <div className={cn(
-            "aspect-square w-full max-w-sm mx-auto mb-4 transition-all duration-300",
-            isCollapsed && "scale-95 opacity-0"
-          )}>
+          <div
+            className={cn(
+              "aspect-square w-full max-w-sm mx-auto mb-4 transition-all duration-300",
+              isCollapsed && "scale-95 opacity-0"
+            )}
+          >
             {playlist.artwork?.url ? (
               <img
                 src={playlist.artwork.url}
@@ -112,16 +118,18 @@ export function MobilePlaylistDetails({
               </div>
             )}
           </div>
-          <div className={cn(
-            "space-y-1 text-center transition-all duration-300",
-            isCollapsed && "scale-95 opacity-0"
-          )}>
+          <div
+            className={cn(
+              "space-y-1 text-center transition-all duration-300",
+              isCollapsed && "scale-95 opacity-0"
+            )}
+          >
             <h2 className="text-xl font-semibold">{playlist.name}</h2>
             <p className="text-muted-foreground">
               {playlist.owner?.display_name}
             </p>
             <p className="text-sm text-muted-foreground">
-              {playlist.tracks_count} songs
+              {playlist.tracks} songs
             </p>
             {playlist.description && (
               <p className="text-sm text-muted-foreground mt-2">

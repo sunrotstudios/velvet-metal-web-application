@@ -57,7 +57,7 @@ export async function syncPlaylistChanges(
     await supabase
       .from('playlist_sync_pairs')
       .update({
-        last_synced_at: new Date().toISOString(),
+        synced_at: new Date().toISOString(),
         error_count: 0,
         last_error: null,
         last_error_at: null,

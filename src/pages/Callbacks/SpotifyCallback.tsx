@@ -1,11 +1,12 @@
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { useAuth } from '@/contexts/auth-context';
-import { getSpotifyToken, syncSpotifyLibrary } from '@/lib/services/spotify';
-import { saveServiceAuth } from '@/lib/services/auth';
-import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useAuth } from "@/contexts/auth-context";
+import { getSpotifyToken, syncSpotifyLibrary } from "@/lib/services/spotify";
+import { saveServiceAuth } from "@/lib/services/auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import logger from "../../lib/logger";
 
 export default function SpotifyCallback() {
   const [searchParams] = useSearchParams();
@@ -15,9 +16,11 @@ export default function SpotifyCallback() {
   const processedCode = useRef<string | null>(null);
 
   useEffect(() => {
-    const code = searchParams.get('code');
-    const error = searchParams.get('error');
-    const callbackUrl = sessionStorage.getItem('auth_callback_url') || '/';
+    const code = searchParams.get("code");
+    const error = searchParams.get("error");
+    // Get the saved callback URL, defaulting to home if none exists
+    const callbackUrl =
+      sessionStorage.getItem("auth_callback_url") || "/register?step=services";
 
     // Wait for auth to load
     if (authLoading) {
@@ -26,23 +29,23 @@ export default function SpotifyCallback() {
 
     // Handle errors first
     if (error) {
-      console.error('Spotify auth error:', error);
-      toast.error('Failed to connect to Spotify');
+      console.error("Spotify auth error:", error);
+      toast.error("Failed to connect to Spotify");
       navigate(callbackUrl, { replace: true });
       return;
     }
 
     if (!code) {
-      console.error('Missing code:', { code });
-      toast.error('Failed to connect to Spotify');
+      console.error("Missing code:", { code });
+      toast.error("Failed to connect to Spotify");
       navigate(callbackUrl, { replace: true });
       return;
     }
 
     if (!user) {
-      console.error('No user found, redirecting to login');
-      toast.error('Please sign in to connect Spotify');
-      navigate('/login', { replace: true });
+      console.error("No user found, redirecting to login");
+      toast.error("Please sign in to connect Spotify");
+      navigate("/login", { replace: true });
       return;
     }
 
@@ -54,13 +57,13 @@ export default function SpotifyCallback() {
     const connectSpotify = async () => {
       try {
         processedCode.current = code;
-        console.log('Starting Spotify connection flow...', {
+        logger.info("Starting Spotify connection flow...", {
           userId: user.id,
           code,
         });
 
         const tokenResponse = await getSpotifyToken(code);
-        console.log('Got Spotify token:', {
+        logger.info("Got Spotify token:", {
           has_access_token: !!tokenResponse.accessToken,
           has_refresh_token: !!tokenResponse.refreshToken,
           expires_in: tokenResponse.expiresIn,
@@ -69,31 +72,34 @@ export default function SpotifyCallback() {
         const expiresAt = new Date();
         expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expiresIn);
 
-        await saveServiceAuth(user.id, 'spotify', {
+        // Save the service auth
+        await saveServiceAuth(user.id, "spotify", {
           accessToken: tokenResponse.accessToken,
           refreshToken: tokenResponse.refreshToken,
-          expiresAt,
+          expiresAt: expiresAt,
         });
 
-        await queryClient.invalidateQueries(['serviceConnection']);
-        await queryClient.invalidateQueries(['userServices']);
-
-        // Start library sync in the background
-        toast.promise(syncSpotifyLibrary(user.id, tokenResponse.accessToken), {
-          loading: 'Syncing Spotify library...',
-          success: 'Library sync complete!',
-          error: 'Failed to sync library',
+        // Immediately invalidate queries to update UI state
+        await queryClient.invalidateQueries({
+          queryKey: ["serviceConnection"],
         });
+        await queryClient.invalidateQueries({ queryKey: ["userServices"] });
 
-        // Clear the callback URL from session storage
-        sessionStorage.removeItem('auth_callback_url');
+        // Show success toast for connection
+        toast.success("Successfully connected to Spotify");
 
-        // Navigate back immediately after saving auth
+        // Navigate back first
         navigate(callbackUrl, { replace: true });
-        toast.success('Successfully connected to Spotify');
+
+        // Then start library sync with separate toast
+        toast.promise(syncSpotifyLibrary(user.id, tokenResponse.accessToken), {
+          loading: "Syncing Spotify library...",
+          success: "Library sync complete!",
+          error: "Failed to sync library",
+        });
       } catch (error) {
-        console.error('Failed to connect to Spotify:', error);
-        toast.error('Failed to connect to Spotify');
+        console.error("Failed to connect to Spotify:", error);
+        toast.error("Failed to connect to Spotify");
         navigate(callbackUrl, { replace: true });
       }
     };
@@ -120,4 +126,6 @@ export default function SpotifyCallback() {
       </div>
     );
   }
+
+  return null;
 }

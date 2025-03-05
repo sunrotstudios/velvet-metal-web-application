@@ -3,6 +3,7 @@ import { saveServiceAuth, removeServiceAuth } from '@/lib/services/auth';
 import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
+import logger from '@/lib/logger'
 
 export type SearchResult = {
   id: string;
@@ -44,6 +45,7 @@ export type DetailedAlbum = {
   service: 'apple-music';
   album_type: string;
   added_at?: string | null;
+  upc?: string | null;
 };
 
 export const APPLE_DEVELOPER_TOKEN = import.meta.env.VITE_APPLE_DEVELOPER_TOKEN;
@@ -76,17 +78,17 @@ async function loadMusicKitScript(): Promise<void> {
         'script[src="https://js-cdn.music.apple.com/musickit/v3/musickit.js"]'
       )
     ) {
-      console.log('MusicKit.js script already loaded');
+      logger.info('MusicKit.js script already loaded');
       resolve();
       return;
     }
 
-    console.log('Loading MusicKit.js script...');
+    logger.info('Loading MusicKit.js script...');
     const script = document.createElement('script');
     script.src = 'https://js-cdn.music.apple.com/musickit/v3/musickit.js';
     script.async = true;
     script.onload = () => {
-      console.log('MusicKit.js script loaded successfully');
+      logger.info('MusicKit.js script loaded successfully');
       resolve();
     };
     script.onerror = (error) => {
@@ -100,14 +102,14 @@ async function loadMusicKitScript(): Promise<void> {
 export async function initializeAppleMusic() {
   if (!musicKit) {
     try {
-      console.log('Loading MusicKit.js...');
+      logger.info('Loading MusicKit.js...');
       await loadMusicKitScript();
 
       if (!window.MusicKit) {
         throw new Error('MusicKit not found on window object');
       }
 
-      console.log('Configuring MusicKit...');
+      logger.info('Configuring MusicKit...');
       const developerToken = APPLE_DEVELOPER_TOKEN;
 
       if (!developerToken) {
@@ -126,7 +128,7 @@ export async function initializeAppleMusic() {
         },
       });
 
-      console.log('MusicKit configured successfully');
+      logger.info('MusicKit configured successfully');
       return musicKit;
     } catch (error) {
       console.error('Failed to initialize Apple Music:', error);
@@ -138,7 +140,7 @@ export async function initializeAppleMusic() {
 
 export async function authorizeAppleMusic(userId: string) {
   try {
-    console.log('Starting Apple Music authorization...', { userId });
+    logger.info('Starting Apple Music authorization...', { userId });
     const music = await initializeAppleMusic();
 
     if (!music) {
@@ -171,7 +173,7 @@ export async function authorizeAppleMusic(userId: string) {
       error: 'Failed to sync library',
     });
 
-    console.log('Apple Music authorization complete');
+    logger.info('Apple Music authorization complete');
     return musicUserToken;
   } catch (error) {
     console.error('Apple Music authorization failed:', error);
@@ -181,7 +183,7 @@ export async function authorizeAppleMusic(userId: string) {
 
 export async function unauthorizeAppleMusic(userId: string) {
   try {
-    console.log('Removing Apple Music authorization...');
+    logger.info('Removing Apple Music authorization...');
     const music = await initializeAppleMusic();
 
     if (!music) {
@@ -194,7 +196,7 @@ export async function unauthorizeAppleMusic(userId: string) {
     // Remove from database
     await removeServiceAuth(userId, 'apple-music');
 
-    console.log('Apple Music authorization removed successfully');
+    logger.info('Apple Music authorization removed successfully');
   } catch (error) {
     console.error('Failed to remove Apple Music authorization:', error);
     throw error;
@@ -209,7 +211,7 @@ export function isAppleMusicAuthorized(): boolean {
 // Library Functions
 // ============================================================
 
-export const getAppleMusicLibrary = async (token: string) => {
+export const getAppleMusicPlaylists = async (token: string) => {
   const response = await fetch(
     'https://api.music.apple.com/v1/me/library/playlists',
     {
@@ -299,7 +301,7 @@ export const getAllAppleMusicAlbums = async (token: string) => {
 
   while (hasMore) {
     const response = await fetch(
-      `https://api.music.apple.com/v1/me/library/albums?limit=${limit}&offset=${offset}`,
+      `https://api.music.apple.com/v1/me/library/albums?limit=${limit}&offset=${offset}&include=upc`,
       {
         headers: {
           Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
@@ -326,9 +328,10 @@ export const getAllAppleMusicAlbums = async (token: string) => {
         : null,
       release_date: album.attributes.releaseDate,
       service: 'apple-music' as const,
-      tracks_count: album.attributes.trackCount,
+      tracks: album.attributes.trackCount,
       external_url: null,
       album_type: album.attributes.playParams?.kind || 'album',
+      upc: album.attributes.upc || null,
     }));
     allAlbums = [...allAlbums, ...transformedAlbums];
 
@@ -514,9 +517,9 @@ export const getAppleMusicAlbumDetails = async (
         added_at: album.attributes.dateAdded || null,
       };
     } else {
-      // For catalog albums, use the catalog endpoint
+      // For catalog albums, use the catalog endpoint with upc include
       const response = await fetch(
-        `https://api.music.apple.com/v1/catalog/us/albums/${albumId}?include=tracks,artists`,
+        `https://api.music.apple.com/v1/catalog/us/albums/${albumId}?include=tracks,artists,upc`,
         {
           headers: {
             Authorization: `Bearer ${APPLE_DEVELOPER_TOKEN}`,
@@ -584,6 +587,7 @@ export const getAppleMusicAlbumDetails = async (
         external_url: null,
         service: 'apple-music' as const,
         album_type: album.attributes.albumType || 'album',
+        upc: album.attributes.upc || null, // Add UPC to the response
       };
     }
   } catch (error) {
@@ -627,15 +631,15 @@ async function syncAppleMusicPlaylists(
     let hasMore = true;
 
     while (hasMore) {
-      console.log('Fetching playlists with offset:', offset);
+      logger.info('Fetching playlists with offset:', offset);
       const response = await music.api.music('/v1/me/library/playlists', {
         limit,
         offset,
       });
-      console.log('API Response:', response);
+      logger.info('API Response:', response);
 
       if (!response?.data?.data || response.data.data.length === 0) {
-        console.log('No more playlists found');
+        logger.info('No more playlists found');
         hasMore = false;
       } else {
         allPlaylists = [...allPlaylists, ...response.data.data];
@@ -643,7 +647,7 @@ async function syncAppleMusicPlaylists(
       }
     }
 
-    console.log('Total playlists found:', allPlaylists.length);
+    logger.info('Total playlists found:', allPlaylists.length);
 
     // Transform playlists to our format and filter out invalid ones
     const transformedPlaylists = await Promise.all(
@@ -662,7 +666,7 @@ async function syncAppleMusicPlaylists(
             playlist.id // Use the main playlist ID instead of playParams.id
           );
 
-          console.log('Playlist track count:', {
+          logger.info('Playlist track count:', {
             name: playlist.attributes.name,
             id: playlist.id,
             trackCount,
@@ -678,7 +682,7 @@ async function syncAppleMusicPlaylists(
             image_url:
               playlist.attributes.artwork?.url?.replace('{w}x{h}', '300x300') ||
               null,
-            tracks_count: trackCount,
+            tracks: trackCount,
             external_url: null,
             synced_at: new Date().toISOString(),
           };
@@ -715,7 +719,7 @@ export async function syncAppleMusicLibrary(
       .from('user_services')
       .update({ 
         sync_in_progress: true,
-        last_library_sync: null 
+        synced_at: null 
       })
       .eq('user_id', userId)
       .eq('service', 'apple-music');
@@ -741,7 +745,7 @@ export async function syncAppleMusicLibrary(
       !initialResponse?.data?.data ||
       initialResponse.data.data.length === 0
     ) {
-      console.log('Apple Music library is empty');
+      logger.info('Apple Music library is empty');
       if (onProgress) {
         onProgress(100);
       }
@@ -771,11 +775,11 @@ export async function syncAppleMusicLibrary(
       }
     }
 
-    console.log(`Found ${allAlbums.length} albums in Apple Music library`);
+    logger.info(`Found ${allAlbums.length} albums in Apple Music library`);
 
     const transformedAlbums = allAlbums
       .map((album) => {
-        console.log('Processing album:', album);
+        logger.info('Processing album:', album);
 
         // Ensure we have required fields
         if (!album.attributes?.name || !album.attributes?.artistName) {
@@ -798,7 +802,7 @@ export async function syncAppleMusicLibrary(
             album.attributes.artwork?.url?.replace('{w}x{h}', '300x300') ||
             null,
           release_date: album.attributes.releaseDate || null,
-          tracks_count: album.attributes.trackCount || 0,
+          tracks: album.attributes.trackCount || 0,
           external_url: null,
           album_type: 'album',
           synced_at: new Date().toISOString(),
@@ -830,14 +834,14 @@ export async function syncAppleMusicLibrary(
         }
       }
     } else {
-      console.log('No valid albums to sync');
+      logger.info('No valid albums to sync');
       if (onProgress) {
         onProgress(50);
       }
     }
 
     // Now sync playlists
-    console.log('Syncing playlists...');
+    logger.info('Syncing playlists...');
     const playlists = await syncAppleMusicPlaylists(userId, music);
 
     // Set final progress
@@ -858,7 +862,7 @@ export async function syncAppleMusicLibrary(
       .from('user_services')
       .update({ 
         sync_in_progress: false,
-        last_library_sync: new Date().toISOString() 
+        synced_at: new Date().toISOString() 
       })
       .eq('user_id', userId)
       .eq('service', 'apple-music');
@@ -897,7 +901,7 @@ export async function searchAppleMusicAlbum(
     const albums = data.results.albums?.data;
 
     if (!albums || albums.length === 0) {
-      console.log('No albums found in search results');
+      logger.info('No albums found in search results');
       return null;
     }
 
@@ -952,7 +956,7 @@ export function findBestMatchingAlbum(
   targetAlbum: { name: string; artist_name: string }
 ): string | null {
   if (!searchResults?.albums?.data) {
-    console.log('No search results found');
+    logger.info('No search results found');
     return null;
   }
 
@@ -976,7 +980,7 @@ export function findBestMatchingAlbum(
   }
 
   if (bestMatch && bestScore > 0) {
-    console.log('Found best match:', {
+    logger.info('Found best match:', {
       id: bestMatch.id,
       name: bestMatch.attributes.name,
       artist: bestMatch.attributes.artistName,
@@ -985,7 +989,7 @@ export function findBestMatchingAlbum(
     return bestMatch.id;
   }
 
-  console.log('No suitable match found');
+  logger.info('No suitable match found');
   return null;
 }
 
@@ -1017,7 +1021,7 @@ async function retryWithBackoff<T>(
       }
 
       const delayMs = baseDelay * Math.pow(2, attempt);
-      console.log(`Attempt ${attempt + 1} failed, retrying in ${delayMs}ms...`);
+      logger.info(`Attempt ${attempt + 1} failed, retrying in ${delayMs}ms...`);
       await delay(delayMs);
     }
   }
@@ -1070,7 +1074,7 @@ export async function checkAlbumsInLibrary(
   token: string
 ): Promise<{ [id: string]: boolean }> {
   try {
-    console.log('Starting library check for albums:', albumIds);
+    logger.info('Starting library check for albums:', albumIds);
     const results: { [id: string]: boolean } = {};
 
     // Process in smaller batches to avoid URL length limits
@@ -1080,7 +1084,7 @@ export async function checkAlbumsInLibrary(
       const idsParam = batchIds.map((id) => `ids[albums]=${id}`).join('&');
       const url = `https://api.music.apple.com/v1/me/library/albums?${idsParam}`;
 
-      console.log('Checking batch with URL:', url);
+      logger.info('Checking batch with URL:', url);
 
       const response = await retryWithBackoff(async () => {
         const res = await fetch(url, {
@@ -1106,14 +1110,14 @@ export async function checkAlbumsInLibrary(
       });
 
       const data = await response.json();
-      console.log('Library check response:', data);
+      logger.info('Library check response:', data);
 
       const foundIds = new Set(data.data?.map((item: any) => item.id));
-      console.log('Found IDs in library:', Array.from(foundIds));
+      logger.info('Found IDs in library:', Array.from(foundIds));
 
       for (const id of batchIds) {
         results[id] = foundIds.has(id);
-        console.log(
+        logger.info(
           `Album ${id}: ${results[id] ? 'found' : 'not found'} in library`
         );
       }
@@ -1186,7 +1190,7 @@ export async function addAlbumsToAppleMusicLibrary(
   if (!albumIds.length) return;
 
   try {
-    console.log('Adding albums to library:', { albumIds });
+    logger.info('Adding albums to library:', { albumIds });
 
     // Process in larger batches while staying under URL length limits
     const batchSize = 25; // Increased from 10 to 25
@@ -1196,18 +1200,18 @@ export async function addAlbumsToAppleMusicLibrary(
       batches.push(albumIds.slice(i, i + batchSize));
     }
 
-    console.log(`Processing ${batches.length} batches of albums...`);
+    logger.info(`Processing ${batches.length} batches of albums...`);
 
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
-      console.log(
+      logger.info(
         `Processing batch ${i + 1}/${batches.length} (${batch.length} albums)`
       );
 
       const idsParam = batch.map((id) => `ids[albums]=${id}`).join('&');
       const url = `https://api.music.apple.com/v1/me/library?${idsParam}`;
 
-      console.log('Adding batch to library:', { url });
+      logger.info('Adding batch to library:', { url });
 
       await retryWithBackoff(async () => {
         const response = await fetch(url, {
@@ -1230,7 +1234,7 @@ export async function addAlbumsToAppleMusicLibrary(
           throw new Error(errorMessage);
         }
 
-        console.log(`Batch ${i + 1}/${batches.length} accepted (status 202)`);
+        logger.info(`Batch ${i + 1}/${batches.length} accepted (status 202)`);
         return response;
       });
 
@@ -1306,8 +1310,8 @@ export async function addAppleMusicAlbumToLibrary(
       return response;
     });
 
-    console.log('Successfully added album to library (status 202 Accepted)');
-    console.log(
+    logger.info('Successfully added album to library (status 202 Accepted)');
+    logger.info(
       'Note: There may be a delay before the album appears in your library'
     );
 
@@ -1323,7 +1327,7 @@ export async function addAppleMusicAlbumToLibrary(
       try {
         libraryAlbum = await findAlbumInLibrary(albumId, token);
         if (libraryAlbum) {
-          console.log('Found album in library on attempt', attempt + 1, {
+          logger.info('Found album in library on attempt', attempt + 1, {
             libraryId: libraryAlbum.id,
             catalogId: albumId,
             name: libraryAlbum.attributes.name,
@@ -1332,14 +1336,14 @@ export async function addAppleMusicAlbumToLibrary(
           break;
         }
       } catch (error) {
-        console.log('Error checking library on attempt', attempt + 1, error);
+        logger.info('Error checking library on attempt', attempt + 1, error);
         // Continue to next attempt
       }
     }
 
     if (!libraryAlbum) {
-      console.log('Album not found in library after multiple attempts');
-      console.log(
+      logger.info('Album not found in library after multiple attempts');
+      logger.info(
         'This is normal - there may be a longer delay before the album appears'
       );
     }
@@ -1349,36 +1353,4 @@ export async function addAppleMusicAlbumToLibrary(
   }
 }
 
-export async function getAppleMusicPlaylists(
-  musicUserToken: string
-): Promise<any[]> {
-  const music = await initializeAppleMusic();
-  
-  try {
-    const response = await music.api.library.playlists();
-    
-    return response.map((playlist: any) => ({
-      id: playlist.id,
-      user_id: '', // Apple Music doesn't provide this
-      playlist_id: playlist.id,
-      name: playlist.attributes.name,
-      description: playlist.attributes.description?.standard || undefined,
-      artwork: playlist.attributes.artwork ? {
-        url: playlist.attributes.artwork.url,
-        height: playlist.attributes.artwork.height,
-        width: playlist.attributes.artwork.width,
-      } : undefined,
-      tracks_count: playlist.attributes.trackCount || 0,
-      owner: {
-        id: '', // Apple Music doesn't provide this
-        display_name: undefined,
-      },
-      service: 'apple-music' as const,
-      is_public: false, // Apple Music playlists are private by default
-      external_url: playlist.attributes.url,
-    }));
-  } catch (error) {
-    console.error('Error fetching Apple Music playlists:', error);
-    throw error;
-  }
-}
+

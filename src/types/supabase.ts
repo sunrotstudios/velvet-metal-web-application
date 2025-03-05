@@ -135,7 +135,7 @@ export type Database = {
           is_active: boolean | null
           last_error: string | null
           last_error_at: string | null
-          last_synced_at: string | null
+          synced_at: string | null
           source_playlist_id: string
           source_service: string
           sync_enabled: boolean | null
@@ -151,7 +151,7 @@ export type Database = {
           is_active?: boolean | null
           last_error?: string | null
           last_error_at?: string | null
-          last_synced_at?: string | null
+          synced_at?: string | null
           source_playlist_id: string
           source_service: string
           sync_enabled?: boolean | null
@@ -167,7 +167,7 @@ export type Database = {
           is_active?: boolean | null
           last_error?: string | null
           last_error_at?: string | null
-          last_synced_at?: string | null
+          synced_at?: string | null
           source_playlist_id?: string
           source_service?: string
           sync_enabled?: boolean | null
@@ -353,7 +353,7 @@ export type Database = {
           release_date: string | null
           service: Database["public"]["Enums"]["service_type"]
           synced_at: string | null
-          tracks_count: number | null
+          tracks: number | null
           upc: string | null
           updated_at: string | null
           user_id: string | null
@@ -371,7 +371,7 @@ export type Database = {
           release_date?: string | null
           service: Database["public"]["Enums"]["service_type"]
           synced_at?: string | null
-          tracks_count?: number | null
+          tracks?: number | null
           upc?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -389,7 +389,7 @@ export type Database = {
           release_date?: string | null
           service?: Database["public"]["Enums"]["service_type"]
           synced_at?: string | null
-          tracks_count?: number | null
+          tracks?: number | null
           upc?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -413,7 +413,7 @@ export type Database = {
           public: boolean | null
           service: Database["public"]["Enums"]["service_type"]
           synced_at: string | null
-          tracks_count: number | null
+          tracks: number | null
           updated_at: string | null
           user_id: string | null
         }
@@ -433,7 +433,7 @@ export type Database = {
           public?: boolean | null
           service: Database["public"]["Enums"]["service_type"]
           synced_at?: string | null
-          tracks_count?: number | null
+          tracks?: number | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -453,7 +453,7 @@ export type Database = {
           public?: boolean | null
           service?: Database["public"]["Enums"]["service_type"]
           synced_at?: string | null
-          tracks_count?: number | null
+          tracks?: number | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -464,11 +464,11 @@ export type Database = {
           access_token: string
           created_at: string | null
           id: string
-          last_library_sync: string | null
+          synced_at: string | null
           music_user_token: string | null
           refresh_token: string | null
           service: Database["public"]["Enums"]["service_type"]
-          token_expires_at: string | null
+          expires_at: string | null
           updated_at: string | null
           user_id: string
         }
@@ -476,11 +476,11 @@ export type Database = {
           access_token: string
           created_at?: string | null
           id?: string
-          last_library_sync?: string | null
+          synced_at?: string | null
           music_user_token?: string | null
           refresh_token?: string | null
           service: Database["public"]["Enums"]["service_type"]
-          token_expires_at?: string | null
+          expires_at?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -488,11 +488,11 @@ export type Database = {
           access_token?: string
           created_at?: string | null
           id?: string
-          last_library_sync?: string | null
+          synced_at?: string | null
           music_user_token?: string | null
           refresh_token?: string | null
           service?: Database["public"]["Enums"]["service_type"]
-          token_expires_at?: string | null
+          expires_at?: string | null
           updated_at?: string | null
           user_id?: string
         }

@@ -8,6 +8,7 @@ import { database } from './database';
 import { normalizeAlbumData, normalizePlaylistData } from './normalizers';
 import { getStoredLibrary, storage } from './storage';
 import { getServiceAuth } from './streaming-auth';
+import logger from '@/lib/logger';
 
 export async function syncLibrary(
   userId: string,
@@ -59,7 +60,7 @@ export async function syncLibrary(
         ? await getSpotifyPlaylists(auth.accessToken)
         : await getAppleMusicLibrary(auth.musicUserToken || '');
 
-    console.log(`Fetched ${playlists.items.length} playlists for ${service}`);
+    logger.info(`Fetched ${playlists.items.length} playlists for ${service}`);
 
     // Update progress after playlists are fetched
     onProgress?.({
@@ -73,16 +74,17 @@ export async function syncLibrary(
       .map((playlist) => normalizePlaylistData(playlist, service))
       .filter((p) => p !== null); // Filter out null playlists
 
-    console.log(
-      `Normalized ${normalizedPlaylists.length} playlists for ${service}`
+    logger.info(
+      'Successfully synced library:',
+      { service, playlists: normalizedPlaylists.length, albums: normalizedAlbums.length }
     );
 
     // Save to database
-    console.log('Saving to database...');
+    logger.info('Saving to database...');
     await database.savePlaylists(userId, normalizedPlaylists);
 
     // Save to storage for offline access
-    console.log('Saving to storage...');
+    logger.info('Saving to storage...');
     await syncLibraryToStorage(userId, service, {
       albums: normalizedAlbums,
       playlists: normalizedPlaylists,
