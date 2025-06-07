@@ -17,7 +17,7 @@ type Step = "account" | "subscription" | "services";
 export default function Register() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { register, user } = useAuth();
+  const { register } = useAuth();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>(() => {
     const stepParam = searchParams.get("step");
@@ -53,25 +53,6 @@ export default function Register() {
   });
 
   const { data: connectedServices } = useConnectedServices();
-
-  // Query sync status for all services
-  const { data: syncStatuses } = useQuery({
-    queryKey: ["syncStatuses", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data } = await supabase
-        .from("user_services")
-        .select("service, last_library_sync")
-        .eq("user_id", user.id);
-      return data;
-    },
-    enabled: !!user?.id,
-    refetchInterval: connectedServices?.length ? 2000 : false,
-  });
-
-  const isAnySyncing = syncStatuses?.some(
-    (status) => status.last_library_sync === null
-  );
 
   const handleProfileSubmit = async (formData: ProfileFormData) => {
     setLoading(true);
@@ -151,7 +132,6 @@ export default function Register() {
         return (
           <ServiceConnections
             connectedServices={connectedServices || []}
-            isAnySyncing={isAnySyncing || false}
             onFinish={() => navigate("/home")}
           />
         );
@@ -282,10 +262,10 @@ export default function Register() {
                                   ? "w-full rounded-l-sm"
                                   : "w-full rounded-l-sm"
                                 : step === "subscription"
-                                  ? isCurrentStep
-                                    ? "w-1/2 rounded-l-sm"
-                                    : "w-full rounded-l-sm"
+                                ? isCurrentStep
+                                  ? "w-1/2 rounded-l-sm"
                                   : "w-full rounded-l-sm"
+                                : "w-full rounded-l-sm"
                             )}
                           />
                         )}
@@ -299,9 +279,9 @@ export default function Register() {
                             "transition-all",
                             isActive &&
                               index <
-                              ["account", "subscription", "services"].indexOf(
-                                currentStep
-                              )
+                                ["account", "subscription", "services"].indexOf(
+                                  currentStep
+                                )
                               ? "bg-black"
                               : "bg-white"
                           )}
@@ -340,11 +320,14 @@ export default function Register() {
                       "bg-yellow-300"
                     )}
                   >
-                    {["account", "subscription", "services"].indexOf(currentStep) + 1}
+                    {["account", "subscription", "services"].indexOf(
+                      currentStep
+                    ) + 1}
                   </div>
                   <div>
                     <h2 className="font-black text-3xl uppercase leading-tight">
-                      {currentStep.charAt(0).toUpperCase() + currentStep.slice(1)}
+                      {currentStep.charAt(0).toUpperCase() +
+                        currentStep.slice(1)}
                     </h2>
                     <p className="text-base text-black/70 mt-1">
                       {getStepDescription()}
@@ -353,18 +336,24 @@ export default function Register() {
                 </div>
 
                 <div className="flex gap-3">
-                  {["account", "subscription", "services"].map((step, index) => {
-                    const isActive = index <= ["account", "subscription", "services"].indexOf(currentStep);
-                    return (
-                      <div
-                        key={step}
-                        className={cn(
-                          "flex-1 h-5 border-3 border-black rounded-md",
-                          isActive ? "bg-black" : "bg-gray-100"
-                        )}
-                      />
-                    );
-                  })}
+                  {["account", "subscription", "services"].map(
+                    (step, index) => {
+                      const isActive =
+                        index <=
+                        ["account", "subscription", "services"].indexOf(
+                          currentStep
+                        );
+                      return (
+                        <div
+                          key={step}
+                          className={cn(
+                            "flex-1 h-5 border-3 border-black rounded-md",
+                            isActive ? "bg-black" : "bg-gray-100"
+                          )}
+                        />
+                      );
+                    }
+                  )}
                 </div>
               </div>
             </div>

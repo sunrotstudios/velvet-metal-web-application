@@ -1,13 +1,13 @@
-import { refreshSpotifyToken } from '@/lib/api/spotify';
+import { refreshSpotifyToken, addSpotifyAlbumToLibrary, searchSpotifyAlbum } from '@/lib/services/spotify';
 import { isTokenExpired } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import { ServiceType } from '@/lib/types';
+import { ServiceType } from '@/lib/services/auth';
 import {
   addAppleMusicAlbumToLibrary,
   searchAppleMusicAlbum,
-} from '../api/apple-music';
-import { addSpotifyAlbumToLibrary, searchSpotifyAlbum } from '../api/spotify';
-import { getServiceAuth, saveServiceAuth } from './streaming-auth';
+} from '@/lib/services/apple-music';
+import { getServiceAuth, saveServiceAuth } from '@/lib/services/auth';
+import logger from '@/lib/logger';
 
 interface Track {
   name: string;
@@ -85,12 +85,12 @@ async function ensureFreshToken(
 
         // Save the new tokens
         await saveServiceAuth(userId, service, {
-          accessToken: newAuth.access_token,
-          refreshToken: newAuth.refresh_token,
-          expiresAt: new Date(Date.now() + newAuth.expires_in * 1000),
+          accessToken: newAuth.accessToken,
+          refreshToken: newAuth.refreshToken,
+          expiresAt: new Date(Date.now() + newAuth.expiresIn * 1000),
         });
 
-        return newAuth.access_token;
+        return newAuth.accessToken;
       } catch (error) {
         console.error('Failed to refresh token:', error);
         throw new Error(
@@ -154,7 +154,7 @@ async function retryWithBackoff(
         i < retries - 1
       ) {
         const delayTime = baseDelay * Math.pow(2, i);
-        console.log(`Rate limited. Retrying in ${delayTime}ms...`);
+        logger.info(`Rate limited. Retrying in ${delayTime}ms...`);
         await delay(delayTime);
         continue;
       }
@@ -174,7 +174,7 @@ async function createPlaylist(
     throw new Error(`No ${service} authentication found`);
   }
 
-  console.log(`Creating playlist in ${service}:`, { name, description, imageUrl });
+  logger.info(`Creating playlist in ${service}:`, { name, description, imageUrl });
 
   if (service === 'spotify') {
     // First create the playlist
@@ -198,12 +198,12 @@ async function createPlaylist(
     }
 
     const data = await response.json();
-    console.log('Successfully created Spotify playlist:', data);
+    logger.info('Successfully created Spotify playlist:', data);
 
     // If we have an image URL, upload it to the playlist
     if (imageUrl) {
       try {
-        console.log('Fetching image from URL:', imageUrl);
+        logger.info('Fetching image from URL:', imageUrl);
         const imageResponse = await fetch(imageUrl);
         if (!imageResponse.ok) {
           console.error('Failed to fetch image:', await imageResponse.text());
@@ -228,7 +228,7 @@ async function createPlaylist(
         if (!uploadResponse.ok) {
           console.error('Failed to upload image:', await uploadResponse.text());
         } else {
-          console.log('Successfully uploaded playlist image');
+          logger.info('Successfully uploaded playlist image');
         }
       } catch (error) {
         console.error('Error uploading playlist image:', error);
@@ -270,7 +270,7 @@ async function createPlaylist(
     }
 
     const data = await response.json();
-    console.log('Successfully created Apple Music playlist:', data);
+    logger.info('Successfully created Apple Music playlist:', data);
     
     if (!data.data?.[0]?.id) {
       throw new Error('Invalid response from Apple Music API');
@@ -315,7 +315,7 @@ export async function transferPlaylist({
       imageUrl = playlist.attributes.artwork.url
         .replace('{w}', '640')
         .replace('{h}', '640');
-      console.log('Found Apple Music playlist artwork:', imageUrl);
+      logger.info('Found Apple Music playlist artwork:', imageUrl);
     }
 
     const tracks = await getPlaylistTracks(
@@ -406,7 +406,7 @@ async function getPlaylistTracks(
 ): Promise<Track[]> {
   const freshToken = await ensureFreshToken(service, token, userId);
 
-  console.log(`Fetching tracks from ${service} playlist ${playlistId}`);
+  logger.info(`Fetching tracks from ${service} playlist ${playlistId}`);
 
   if (service === 'spotify') {
     const response = await fetch(
@@ -425,7 +425,7 @@ async function getPlaylistTracks(
     }
 
     const data = await response.json();
-    console.log(`Found ${data.items.length} tracks in Spotify playlist`);
+    logger.info(`Found ${data.items.length} tracks in Spotify playlist`);
 
     return data.items.map((item: any) => {
       const track = {
@@ -434,7 +434,7 @@ async function getPlaylistTracks(
         album: item.track.album.name,
         isrc: item.track.external_ids?.isrc,
       };
-      console.log('Processed Spotify track:', track);
+      logger.info('Processed Spotify track:', track);
       return track;
     });
   } else {
@@ -455,7 +455,7 @@ async function getPlaylistTracks(
     }
 
     const data = await response.json();
-    console.log(`Found ${data.data.length} tracks in Apple Music playlist`);
+    logger.info(`Found ${data.data.length} tracks in Apple Music playlist`);
 
     return data.data.map((item: any) => {
       const track = {
@@ -464,7 +464,7 @@ async function getPlaylistTracks(
         album: item.attributes.albumName,
         isrc: item.attributes.isrc,
       };
-      console.log('Processed Apple Music track:', track);
+      logger.info('Processed Apple Music track:', track);
       return track;
     });
   }
@@ -483,8 +483,8 @@ async function addTracksToPlaylist(
     throw new Error(`No ${service} authentication found`);
   }
 
-  console.log(`Adding ${tracks.length} tracks to ${service} playlist ${playlistId}`);
-  console.log('Sample of tracks to add:', tracks.slice(0, 3));
+  logger.info(`Adding ${tracks.length} tracks to ${service} playlist ${playlistId}`);
+  logger.info('Sample of tracks to add:', tracks.slice(0, 3));
 
   if (service === 'spotify') {
     // Process tracks in batches of 100 (Spotify API limit)
@@ -497,7 +497,7 @@ async function addTracksToPlaylist(
         batch.map(async (track) => {
           try {
             const query = encodeURIComponent(`track:${track.name} artist:${track.artist}`);
-            console.log(`Searching Spotify for: ${track.name} by ${track.artist}`);
+            logger.info(`Searching Spotify for: ${track.name} by ${track.artist}`);
             
             const searchResponse = await fetch(
               `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`,
@@ -517,7 +517,7 @@ async function addTracksToPlaylist(
             const uri = data.tracks?.items[0]?.uri;
             
             if (uri) {
-              console.log(`✓ Found Spotify track: ${uri} for "${track.name}"`);
+              logger.info(`✓ Found Spotify track: ${uri} for "${track.name}"`);
               return uri;
             } else {
               console.warn(`✗ No Spotify match found for: ${track.name} by ${track.artist}`);
@@ -531,7 +531,7 @@ async function addTracksToPlaylist(
       );
 
       const validUris = spotifyUris.filter(Boolean);
-      console.log(`Found ${validUris.length}/${batch.length} tracks in this batch`);
+      logger.info(`Found ${validUris.length}/${batch.length} tracks in this batch`);
 
       if (validUris.length > 0) {
         try {
@@ -555,7 +555,7 @@ async function addTracksToPlaylist(
             throw new Error('Failed to add tracks to Spotify playlist');
           }
 
-          console.log(`✓ Successfully added ${validUris.length} tracks to Spotify playlist`);
+          logger.info(`✓ Successfully added ${validUris.length} tracks to Spotify playlist`);
         } catch (error) {
           console.error('Error adding tracks to playlist:', error);
           throw error;
@@ -574,7 +574,7 @@ async function addTracksToPlaylist(
       const appleMusicTracks = await Promise.all(
         batch.map(async (track) => {
           const query = encodeURIComponent(`${track.name} ${track.artist}`);
-          console.log(`Searching Apple Music for: ${track.name} by ${track.artist}`);
+          logger.info(`Searching Apple Music for: ${track.name} by ${track.artist}`);
           
           try {
             const response = await fetch(
@@ -596,7 +596,7 @@ async function addTracksToPlaylist(
             const songId = data?.results?.songs?.data?.[0]?.id;
             
             if (songId) {
-              console.log(`✓ Found Apple Music track: ${songId} for "${track.name}"`);
+              logger.info(`✓ Found Apple Music track: ${songId} for "${track.name}"`);
               return {
                 id: songId,
                 type: 'songs',
@@ -613,7 +613,7 @@ async function addTracksToPlaylist(
       );
 
       const validTracks = appleMusicTracks.filter(Boolean);
-      console.log(`Found ${validTracks.length}/${batch.length} tracks in this batch`);
+      logger.info(`Found ${validTracks.length}/${batch.length} tracks in this batch`);
 
       if (validTracks.length > 0) {
         try {
@@ -639,7 +639,7 @@ async function addTracksToPlaylist(
             throw new Error('Failed to add tracks to Apple Music playlist');
           }
 
-          console.log(`✓ Successfully added ${validTracks.length} tracks to Apple Music playlist`);
+          logger.info(`✓ Successfully added ${validTracks.length} tracks to Apple Music playlist`);
         } catch (error) {
           console.error('Error adding tracks to playlist:', error);
           throw error;

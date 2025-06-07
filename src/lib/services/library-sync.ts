@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabase';
-import { ServiceType } from '@/lib/types';
-import { refreshSpotifyToken } from '@/lib/api/spotify';
+import { ServiceType } from '@/lib/services/auth';
+import { refreshSpotifyToken, getAllSpotifyAlbums, getSpotifyPlaylists } from '@/lib/services/spotify';
 import { isTokenExpired } from '@/lib/auth';
-import { getAllSpotifyAlbums, getSpotifyPlaylists } from '@/lib/api/spotify';
+import logger from '@/lib/logger';
 
 // Configuration
 const SYNC_INTERVALS = {
@@ -31,8 +31,41 @@ interface LibrarySyncStats {
   };
 }
 
+interface Album {
+  album_id: string;
+  [key: string]: any;
+}
+
+interface Playlist {
+  playlist_id: string;
+  [key: string]: any;
+}
+
+interface LibraryData {
+  albums: Album[];
+  playlists: Playlist[];
+}
+
+interface SpotifyPlaylist {
+  playlist_id: string;
+  name: string;
+  description?: string;
+  is_public?: boolean;
+  tracks?: number;
+  artwork?: {
+    url: string | null;
+  };
+}
+
 // Get the current stored library data for a user's service
 async function getStoredLibrary(userId: string, service: ServiceType) {
+  // Check that we're working with a valid authenticated user
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user || session.user.id !== userId) {
+    logger.error(`[getStoredLibrary] User authentication mismatch. Expected: ${userId}, Got: ${session?.user?.id}`);
+    throw new Error('User authentication mismatch');
+  }
+  
   const { data: albums } = await supabase
     .from('user_albums')
     .select('*')
@@ -53,6 +86,13 @@ async function getStoredLibrary(userId: string, service: ServiceType) {
 
 // Get or create library sync record
 async function getLibrarySync(userId: string, service: ServiceType) {
+  // Check that we're working with a valid authenticated user
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user || session.user.id !== userId) {
+    logger.error(`[getLibrarySync] User authentication mismatch. Expected: ${userId}, Got: ${session?.user?.id}`);
+    throw new Error('User authentication mismatch');
+  }
+  
   // Try to get existing record
   const { data: existing } = await supabase
     .from('library_syncs')
@@ -107,6 +147,13 @@ async function updateLibrarySync(
     stats: any;
   }>
 ) {
+  // Check that we're working with a valid authenticated user
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user || session.user.id !== userId) {
+    logger.error(`[updateLibrarySync] User authentication mismatch. Expected: ${userId}, Got: ${session?.user?.id}`);
+    throw new Error('User authentication mismatch');
+  }
+  
   const { error } = await supabase
     .from('library_syncs')
     .update(updates)
@@ -130,8 +177,8 @@ function calculateNextSyncTime(errorCount: number): Date {
 
 // Compare old and new library data to calculate stats
 function calculateSyncStats(
-  oldData: { albums: any[]; playlists: any[] } | null,
-  newData: { albums: any[]; playlists: any[] },
+  oldData: LibraryData | null,
+  newData: LibraryData,
   oldStats: LibrarySyncStats
 ): LibrarySyncStats {
   const stats: LibrarySyncStats = {
@@ -168,15 +215,15 @@ function calculateSyncStats(
 
 // Sync library with streaming service
 async function syncLibrary(userId: string, service: ServiceType) {
-  console.log(`[syncLibrary] Starting ${service} library sync...`);
-  const result: { albums: any[]; playlists: any[] } = {
+  logger.info(`[syncLibrary] Starting ${service} library sync...`);
+  const result: { albums: any[]; playlists: SpotifyPlaylist[] } = {
     albums: [],
     playlists: []
   };
 
   if (service === 'spotify') {
     // Get Spotify auth
-    console.log('[syncLibrary] Getting Spotify auth...');
+    logger.info('[syncLibrary] Getting Spotify auth...');
     const { data: auth } = await supabase
       .from('user_services')
       .select('access_token')
@@ -190,12 +237,12 @@ async function syncLibrary(userId: string, service: ServiceType) {
 
     try {
       // Get user's saved albums with progress logging
-      console.log('[syncLibrary] Fetching Spotify albums...');
+      logger.info('[syncLibrary] Fetching Spotify albums...');
       const albums = await getAllSpotifyAlbums(userId, auth.access_token, (current, total) => {
-        console.log(`[syncLibrary] Fetched ${current}/${total} albums...`);
+        logger.info(`[syncLibrary] Fetched ${current}/${total} albums...`);
       });
       
-      console.log(`[syncLibrary] Found ${albums.length} albums, checking for new ones...`);
+      logger.info(`[syncLibrary] Found ${albums.length} albums, checking for new ones...`);
       
       // Get all existing albums with pagination
       let allExistingAlbums: { album_id: string }[] = [];
@@ -203,7 +250,7 @@ async function syncLibrary(userId: string, service: ServiceType) {
       const pageSize = 1000;
       
       while (true) {
-        console.log(`[syncLibrary] Fetching page ${page + 1} of existing albums...`);
+        logger.info(`[syncLibrary] Fetching page ${page + 1} of existing albums...`);
         const { data: existingAlbums, error: existingError } = await supabase
           .from('user_albums')
           .select('album_id')
@@ -229,37 +276,37 @@ async function syncLibrary(userId: string, service: ServiceType) {
         page++;
       }
 
-      console.log(`[syncLibrary] Found ${allExistingAlbums.length} existing albums in database`);
+      logger.info(`[syncLibrary] Found ${allExistingAlbums.length} existing albums in database`);
 
       // Create a set of existing album IDs for faster lookup
       const existingAlbumIds = new Set(allExistingAlbums.map(a => a.album_id));
       
       // Debug logging of first few album IDs
-      console.log('[syncLibrary] First few existing album IDs:', 
+      logger.info('[syncLibrary] First few existing album IDs:', 
         allExistingAlbums.slice(0, 3).map(a => a.album_id));
-      console.log('[syncLibrary] First few incoming album IDs:', 
+      logger.info('[syncLibrary] First few incoming album IDs:', 
         albums.slice(0, 3).map(a => a.album_id));
       
       // Filter out albums that already exist
       const newAlbums = albums.filter(album => !existingAlbumIds.has(album.album_id));
       
-      console.log(`[syncLibrary] Found ${newAlbums.length} new albums to add`);
+      logger.info(`[syncLibrary] Found ${newAlbums.length} new albums to add`);
       
       if (newAlbums.length > 0) {
-        console.log(`[syncLibrary] Storing ${newAlbums.length} new albums...`);
+        logger.info(`[syncLibrary] Storing ${newAlbums.length} new albums...`);
         
         // Insert albums in batches
         for (let i = 0; i < newAlbums.length; i += 50) {
           const batch = newAlbums.slice(i, i + 50);
-          console.log(`[syncLibrary] Processing batch ${i}-${i + batch.length}`);
-          console.log('[syncLibrary] First album in batch:', batch[0]);
+          logger.info(`[syncLibrary] Processing batch ${i}-${i + batch.length}`);
+          logger.info('[syncLibrary] First album in batch:', batch[0]);
           const batchData = batch.map(album => ({
             album_id: album.album_id,
             name: album.name,
             artist_name: album.artist_name,
             image_url: album.image_url,
             release_date: album.release_date,
-            tracks_count: album.tracks_count,
+            tracks: album.tracks,
             external_url: album.external_url,
             album_type: album.album_type,
             added_at: album.added_at,
@@ -270,29 +317,38 @@ async function syncLibrary(userId: string, service: ServiceType) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }));
-
+          
+          // Verify session before making database changes
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (!currentSession?.user || currentSession.user.id !== userId) {
+            logger.error(`[syncLibrary] Session invalid before album insert. Expected: ${userId}, Got: ${currentSession?.user?.id}`);
+            throw new Error('Session expired or invalid');
+          }
+          
           const { error: insertError } = await supabase
             .from('user_albums')
-            .upsert(batchData, { onConflict: 'album_id' });
-
+            .upsert(batchData, {
+              onConflict: 'user_id,service,album_id'
+            });
+            
           if (insertError) {
-            console.error('[syncLibrary] Error storing albums batch:', insertError);
+            logger.error('[syncLibrary] Error storing albums batch:', insertError);
             throw insertError;
           }
         }
-        console.log(`[syncLibrary] Successfully stored ${newAlbums.length} new albums`);
+        logger.info(`[syncLibrary] Successfully stored ${newAlbums.length} new albums`);
       } else {
-        console.log('[syncLibrary] No new albums to store');
+        logger.info('[syncLibrary] No new albums to store');
       }
 
       // Store all albums in result
       result.albums = albums;
 
       // Get user's playlists
-      console.log('[syncLibrary] Fetching Spotify playlists...');
-      const playlists = await getSpotifyPlaylists(auth.access_token, userId);
-      console.log('[syncLibrary] First raw playlist from Spotify:', playlists[0]);
-      console.log(`[syncLibrary] Found ${playlists.length} playlists, checking for new ones...`);
+      logger.info('[syncLibrary] Fetching Spotify playlists...');
+      const playlists = await getSpotifyPlaylists(auth.access_token, userId) as SpotifyPlaylist[];
+      logger.info('[syncLibrary] First raw playlist from Spotify:', playlists[0]);
+      logger.info(`[syncLibrary] Found ${playlists.length} playlists, checking for new ones...`);
       
       if (playlists?.length > 0) {
         // Get existing playlists with pagination
@@ -301,7 +357,7 @@ async function syncLibrary(userId: string, service: ServiceType) {
         const pageSize = 1000;
         
         while (true) {
-          console.log(`[syncLibrary] Fetching page ${page + 1} of existing playlists...`);
+          logger.info(`[syncLibrary] Fetching page ${page + 1} of existing playlists...`);
           const { data: existingPlaylists, error: existingError } = await supabase
             .from('user_playlists')
             .select('playlist_id')
@@ -327,25 +383,25 @@ async function syncLibrary(userId: string, service: ServiceType) {
           page++;
         }
 
-        console.log(`[syncLibrary] Found ${allExistingPlaylists.length} existing playlists in database`);
-        console.log('[syncLibrary] First few existing playlist IDs:', allExistingPlaylists.slice(0, 3).map(p => p.playlist_id));
-        console.log('[syncLibrary] First few incoming playlist IDs:', playlists.slice(0, 3).map(p => p.playlist_id));
+        logger.info(`[syncLibrary] Found ${allExistingPlaylists.length} existing playlists in database`);
+        logger.info('[syncLibrary] First few existing playlist IDs:', allExistingPlaylists.slice(0, 3).map((p: { playlist_id: string }) => p.playlist_id));
+        logger.info('[syncLibrary] First few incoming playlist IDs:', playlists.slice(0, 3).map((p: SpotifyPlaylist) => p.playlist_id));
         
         // Create a set of existing playlist IDs for faster lookup
         const existingPlaylistIds = new Set(allExistingPlaylists.map(p => p.playlist_id));
         
         // Filter out playlists that already exist
-        const newPlaylists = playlists.filter(playlist => !existingPlaylistIds.has(playlist.playlist_id));
+        const newPlaylists = playlists.filter((playlist: SpotifyPlaylist) => !existingPlaylistIds.has(playlist.playlist_id));
         
         if (newPlaylists.length > 0) {
-          console.log(`[syncLibrary] Storing ${newPlaylists.length} new playlists...`);
+          logger.info(`[syncLibrary] Storing ${newPlaylists.length} new playlists...`);
           
           // Insert in batches of 50
           for (let i = 0; i < newPlaylists.length; i += 50) {
             const batch = newPlaylists.slice(i, i + 50);
-            console.log(`[syncLibrary] Processing batch ${i}-${i + batch.length}`);
-            console.log('[syncLibrary] First playlist in batch:', batch[0]);
-            const batchData = batch.map(playlist => ({
+            logger.info(`[syncLibrary] Processing batch ${i}-${i + batch.length}`);
+            logger.info('[syncLibrary] First playlist in batch:', batch[0]);
+            const batchData = batch.map((playlist: SpotifyPlaylist) => ({
               user_id: userId,
               service,
               playlist_id: playlist.playlist_id,
@@ -353,25 +409,35 @@ async function syncLibrary(userId: string, service: ServiceType) {
               description: playlist.description || '',
               is_public: playlist.is_public || false,
               collaborative: false, // Not supported by Spotify API
-              tracks_count: playlist.tracks_count || 0,
+              tracks: playlist.tracks || 0,
               artwork_url: playlist.artwork?.url || null,
               synced_at: new Date().toISOString(),
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             }));
 
+            // Verify session before making database changes
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession?.user || currentSession.user.id !== userId) {
+              logger.error(`[syncLibrary] Session invalid before playlist insert. Expected: ${userId}, Got: ${currentSession?.user?.id}`);
+              throw new Error('Session expired or invalid');
+            }
+
             const { error: insertError } = await supabase
               .from('user_playlists')
-              .upsert(batchData, { onConflict: 'playlist_id' });
+              .upsert(batchData, { 
+                onConflict: 'user_id,service,playlist_id',
+                ignoreDuplicates: false
+              });
 
             if (insertError) {
               console.error('[syncLibrary] Error storing playlists batch:', insertError);
               throw insertError;
             }
           }
-          console.log(`[syncLibrary] Successfully stored ${newPlaylists.length} new playlists`);
+          logger.info(`[syncLibrary] Successfully stored ${newPlaylists.length} new playlists`);
         } else {
-          console.log('[syncLibrary] No new playlists to store');
+          logger.info('[syncLibrary] No new playlists to store');
         }
 
         // Store all playlists in result
@@ -384,13 +450,13 @@ async function syncLibrary(userId: string, service: ServiceType) {
   }
   // Add other services here (Apple Music, etc.)
 
-  console.log('[syncLibrary] Sync completed successfully');
+  logger.info('[syncLibrary] Sync completed successfully');
   return result;
 }
 
 // Main sync function with error handling and retry logic
 async function performSync(userId: string, service: ServiceType, force: boolean = false) {
-  console.log(`Starting sync for ${service}...`);
+  logger.info(`Starting sync for ${service}...`);
   const syncRecord = await getLibrarySync(userId, service);
   
   // Check if sync is already in progress
@@ -400,19 +466,19 @@ async function performSync(userId: string, service: ServiceType, force: boolean 
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     
     if (lastSyncTime < fiveMinutesAgo) {
-      console.log(`Found stale sync for ${service}, resetting...`);
+      logger.info(`Found stale sync for ${service}, resetting...`);
       await updateLibrarySync(userId, service, {
         sync_status: 'idle',
         last_error: 'Previous sync was stale',
       });
     } else {
-      console.log(`Sync already in progress for ${service}`);
+      logger.info(`Sync already in progress for ${service}`);
       return;
     }
   }
 
   try {
-    console.log(`Updating sync status to syncing for ${service}...`);
+    logger.info(`Updating sync status to syncing for ${service}...`);
     // Update status to syncing
     await updateLibrarySync(userId, service, {
       sync_status: 'syncing',
@@ -420,7 +486,7 @@ async function performSync(userId: string, service: ServiceType, force: boolean 
     });
 
     // Get service auth
-    console.log(`Getting ${service} auth...`);
+    logger.info(`Getting ${service} auth...`);
     const { data: auth } = await supabase
       .from('user_services')
       .select('*')
@@ -433,8 +499,8 @@ async function performSync(userId: string, service: ServiceType, force: boolean 
     }
 
     // Check if token needs refresh for Spotify
-    if (service === 'spotify' && isTokenExpired(auth.token_expires_at)) {
-      console.log('Refreshing Spotify token...');
+    if (service === 'spotify' && isTokenExpired(auth.expires_at)) {
+      logger.info('Refreshing Spotify token...');
       const refreshedAuth = await refreshSpotifyToken(auth.refresh_token);
       if (!refreshedAuth) {
         throw new Error('Failed to refresh Spotify token');
@@ -442,15 +508,15 @@ async function performSync(userId: string, service: ServiceType, force: boolean 
     }
 
     // Get current library data before sync
-    console.log(`Getting current library data for ${service}...`);
+    logger.info(`Getting current library data for ${service}...`);
     const oldLibraryData = await getStoredLibrary(userId, service);
 
     // Perform the sync
-    console.log(`Syncing ${service} library...`);
+    logger.info(`Syncing ${service} library...`);
     const newLibraryData = await syncLibrary(userId, service);
 
     // Calculate sync stats
-    console.log(`Calculating sync stats for ${service}...`);
+    logger.info(`Calculating sync stats for ${service}...`);
     const newStats = calculateSyncStats(
       oldLibraryData,
       newLibraryData,
@@ -461,7 +527,7 @@ async function performSync(userId: string, service: ServiceType, force: boolean 
     );
 
     // Update sync record with success
-    console.log(`Sync completed for ${service}. Updating sync record...`);
+    logger.info(`Sync completed for ${service}. Updating sync record...`);
     
     // Update library_syncs table
     await updateLibrarySync(userId, service, {
@@ -472,19 +538,19 @@ async function performSync(userId: string, service: ServiceType, force: boolean 
       stats: newStats
     });
 
-    // Update last_library_sync in user_services table
+    // Update synced_at in user_services table
     const now = new Date().toISOString();
     const { error: userServiceError } = await supabase
       .from('user_services')
-      .update({ last_library_sync: now })
+      .update({ synced_at: now })
       .eq('user_id', userId)
       .eq('service', service);
 
     if (userServiceError) {
-      console.error('Failed to update last_library_sync:', userServiceError);
+      console.error('Failed to update synced_at:', userServiceError);
     }
 
-    console.log(`${service} sync stats:`, {
+    logger.info(`${service} sync stats:`, {
       albums: {
         total: newStats.albums.total,
         added: newStats.albums.added,
@@ -505,12 +571,23 @@ async function performSync(userId: string, service: ServiceType, force: boolean 
     const newErrorCount = (syncRecord?.error_count || 0) + 1;
     const nextSyncTime = calculateNextSyncTime(newErrorCount);
 
-    await updateLibrarySync(userId, service, {
-      sync_status: 'error',
-      error_count: newErrorCount,
-      last_error: error.message,
-      next_sync_time: nextSyncTime.toISOString()
-    });
+    // Update both library_syncs and user_services tables to ensure UI state is reset
+    await Promise.all([
+      updateLibrarySync(userId, service, {
+        sync_status: 'error',
+        error_count: newErrorCount,
+        last_error: error instanceof Error ? error.message : String(error),
+        next_sync_time: nextSyncTime.toISOString()
+      }),
+      supabase
+        .from('user_services')
+        .update({ 
+          sync_in_progress: false,
+          synced_at: null 
+        })
+        .eq('user_id', userId)
+        .eq('service', service)
+    ]);
 
     // If we've exceeded max retries, we need manual intervention
     if (newErrorCount >= MAX_RETRY_COUNT) {

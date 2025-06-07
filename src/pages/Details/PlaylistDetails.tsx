@@ -1,18 +1,19 @@
-import { Button } from '@/components/ui/button';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { useAuth } from '@/contexts/auth-context';
-import { usePlaylistDetails } from '@/lib/hooks/usePlaylistQueries';
-import { usePlaylistSync } from '@/lib/hooks/usePlaylistSync';
-import { formatDuration } from '@/lib/utils';
-import { MobilePlaylistDetails } from '@/pages/Details/MobilePlaylistDetails';
-import { ResponsiveContainer } from '@/shared/layouts/ResponsiveContainer';
-import { LinkPlaylistModal } from '@/shared/modals/LinkPlaylistModal';
-import { TransferPlaylistModal } from '@/shared/modals/PlaylistTransferModal';
-import { useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Link as LinkIcon, Play, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useAuth } from "@/contexts/auth-context";
+import { usePlaylistDetails } from "@/lib/hooks/usePlaylistQueries";
+import { usePlaylistSync } from "@/lib/hooks/usePlaylistSync";
+import { formatDuration } from "@/lib/utils";
+import { MobilePlaylistDetails } from "@/pages/Details/MobilePlaylistDetails";
+import { ResponsiveContainer } from "@/shared/layouts/ResponsiveContainer";
+import { LinkPlaylistModal } from "@/shared/modals/LinkPlaylistModal";
+import { TransferPlaylistModal } from "@/shared/modals/PlaylistTransferModal";
+import { useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { ArrowLeft, Clock, Link as LinkIcon, Play, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import logger from "../../lib/logger";
 
 export default function PlaylistDetails() {
   const { id } = useParams<{ id: string }>();
@@ -23,8 +24,8 @@ export default function PlaylistDetails() {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const location = useLocation();
   const service = location.state?.service as
-    | 'spotify'
-    | 'apple-music'
+    | "spotify"
+    | "apple-music"
     | undefined;
   const previousParams = location.state?.previousParams;
 
@@ -32,20 +33,20 @@ export default function PlaylistDetails() {
     // Store the current library params in session storage when mounting
     const currentParams = location.state?.previousParams;
     if (currentParams) {
-      sessionStorage.setItem('libraryParams', JSON.stringify(currentParams));
+      sessionStorage.setItem("libraryParams", JSON.stringify(currentParams));
     }
   }, [location.state]);
 
   useEffect(() => {
     if (!user) {
-      console.log('No user found, redirecting to login');
-      navigate('/login', { state: { from: `/playlist/${id}` } });
+      logger.info("No user found, redirecting to login");
+      navigate("/login", { state: { from: `/playlist/${id}` } });
     }
   }, [user, id, navigate]);
 
-  console.log('Playlist ID:', id);
-  console.log('User ID:', user?.id);
-  console.log('Service:', service);
+  logger.info("Playlist ID:", id);
+  logger.info("User ID:", user?.id);
+  logger.info("Service:", service);
 
   const {
     data: playlist,
@@ -79,13 +80,13 @@ export default function PlaylistDetails() {
   };
 
   const handleBack = () => {
-    navigate('/library');
+    navigate("/library");
   };
 
-  console.log('Query state:', { playlist, isLoading, error });
+  logger.info("Query state:", { playlist, isLoading, error });
 
   if (error) {
-    console.error('Error fetching playlist:', error);
+    console.error("Error fetching playlist:", error);
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
@@ -93,7 +94,7 @@ export default function PlaylistDetails() {
             Error loading playlist
           </h2>
           <p className="mt-2 text-muted-foreground">
-            {error instanceof Error ? error.message : 'Unknown error occurred'}
+            {error instanceof Error ? error.message : "Unknown error occurred"}
           </p>
           <Button variant="ghost" className="mt-4" onClick={() => navigate(-1)}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -117,7 +118,7 @@ export default function PlaylistDetails() {
   }
 
   const handlePlayPlaylist = () => {
-    console.log('Play playlist');
+    logger.info("Play playlist");
   };
 
   const totalDuration = playlist.tracks.reduce(
@@ -126,7 +127,14 @@ export default function PlaylistDetails() {
   );
 
   return (
-    <ResponsiveContainer mobileContent={<MobilePlaylistDetails playlist={playlist} onTransfer={handleTransfer} />}>
+    <ResponsiveContainer
+      mobileContent={
+        <MobilePlaylistDetails
+          playlist={playlist}
+          onTransfer={handleTransfer}
+        />
+      }
+    >
       <div className="flex h-screen w-full">
         {/* Desktop Layout */}
         <div className="flex flex-col h-full w-full">
@@ -232,7 +240,7 @@ export default function PlaylistDetails() {
                     onClick={handleTransfer}
                     whileHover={{
                       scale: 1.02,
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
                       transition: { duration: 0.2 },
                     }}
                     whileTap={{ scale: 0.98 }}
@@ -246,7 +254,7 @@ export default function PlaylistDetails() {
                       onClick={handleLink}
                       whileHover={{
                         scale: 1.02,
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
                         transition: { duration: 0.2 },
                       }}
                       whileTap={{ scale: 0.98 }}
@@ -260,7 +268,7 @@ export default function PlaylistDetails() {
                       className="h-11 px-8 rounded-md inline-flex items-center justify-center gap-2 border! border-yellow-500! bg-yellow-500/10! text-yellow-500! font-medium"
                       whileHover={{
                         scale: 1.02,
-                        backgroundColor: 'rgba(234, 179, 8, 0.2)',
+                        backgroundColor: "rgba(234, 179, 8, 0.2)",
                         transition: { duration: 0.2 },
                       }}
                       whileTap={{ scale: 0.98 }}
@@ -315,7 +323,7 @@ export default function PlaylistDetails() {
                         {Array.isArray(track.artists)
                           ? track.artists
                               .map((artist) => artist.name)
-                              .join(', ')
+                              .join(", ")
                           : track.artist}
                       </p>
                     </div>

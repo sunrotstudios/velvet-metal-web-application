@@ -1,26 +1,37 @@
-export const logger = {
-  info: (component: string, message: string, data?: any) => {
-    console.log(
-      `[${new Date().toISOString()}] [INFO] [${component}] ${message}`,
-      data ? data : ''
-    );
+interface Logger {
+  info: (message: string, ...args: any[]) => void;
+  error: (message: string, ...args: any[]) => void;
+  warn: (message: string, ...args: any[]) => void;
+}
+
+function formatLogMessage(message: string, args: any[]): string {
+  if (args.length === 0) return message;
+  try {
+    const formattedArgs = args.map(arg => {
+      if (typeof arg === 'object' && arg !== null) {
+        return '\n' + JSON.stringify(arg, null, 2);
+      }
+      return JSON.stringify(arg);
+    }).join(' ');
+    return `${message}${formattedArgs}`;
+  } catch (e) {
+    return message;
+  }
+}
+
+const logger: Logger = {
+  info: (message: string, ...args: any[]) => {
+    const formattedMessage = formatLogMessage(message, args);
+    console.log(`[INFO] ${formattedMessage}`);
   },
-  error: (component: string, message: string, error?: any) => {
-    console.error(
-      `[${new Date().toISOString()}] [ERROR] [${component}] ${message}`,
-      error ? error : ''
-    );
+  error: (message: string, ...args: any[]) => {
+    const formattedMessage = formatLogMessage(message, args);
+    console.error(`[ERROR] ${formattedMessage}`);
   },
-  warn: (component: string, message: string, data?: any) => {
-    console.warn(
-      `[${new Date().toISOString()}] [WARN] [${component}] ${message}`,
-      data ? data : ''
-    );
-  },
-  debug: (component: string, message: string, data?: any) => {
-    console.debug(
-      `[${new Date().toISOString()}] [DEBUG] [${component}] ${message}`,
-      data ? data : ''
-    );
-  },
+  warn: (message: string, ...args: any[]) => {
+    const formattedMessage = formatLogMessage(message, args);
+    console.warn(`[WARN] ${formattedMessage}`);
+  }
 };
+
+export default logger;

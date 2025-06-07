@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import logger from "../../lib/logger";
 
 interface Transfer {
   id: string;
@@ -38,7 +39,7 @@ export default function TransferHistory() {
     queryKey: ["transfers", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      console.log("Fetching Transfers for User:", user.id);
+      logger.info("Fetching Transfers for User:", user.id);
       const { data, error } = await supabase
         .from("transfers")
         .select("*")
@@ -49,7 +50,7 @@ export default function TransferHistory() {
         console.error("Error fetching transfers:", error);
         throw error;
       }
-      console.log("Fetched Transfers:", data);
+      logger.info("Fetched Transfers:", data);
       return data as Transfer[];
     },
     enabled: !!user,

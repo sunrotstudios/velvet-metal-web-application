@@ -111,101 +111,65 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
       {/* Desktop Form - Matching mobile style */}
       <form onSubmit={handleSubmit} className="hidden md:block space-y-6">
         {/* Form Box */}
-        <div className="bg-white border-3 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-5">
-          {/* Top Row: Avatar and Main Fields */}
-          <div className="grid grid-cols-[auto_1fr] gap-6 mb-5">
-            {/* Avatar Upload - Desktop */}
-            <div
-              className={cn(
-                "border-3 border-black rounded-lg bg-yellow-300 p-4 w-36 h-36 flex flex-col items-center justify-center",
-                isDragging ? "translate-x-[-2px] translate-y-[-2px]" : ""
-              )}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              {previewUrl ? (
-                <div className="relative w-28 h-28">
-                  <img
-                    src={previewUrl}
-                    alt="Avatar preview"
-                    className="w-full h-full object-cover rounded-full border-3 border-black"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeAvatar}
-                    className="absolute -top-2 -right-2 p-1 bg-white border-3 border-black rounded-full transition-all"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <Upload className="w-10 h-10 mb-2" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="avatar-upload-desktop"
-                  />
-                  <label
-                    htmlFor="avatar-upload-desktop"
-                    className="text-base font-bold cursor-pointer text-center"
-                  >
-                    UPLOAD PHOTO
-                  </label>
-                  <p className="text-xs mt-2 text-center">Drag & drop or click</p>
-                </>
-              )}
-            </div>
-
-            {/* Top Form Fields */}
-            <div className="space-y-4">
-              <Input
-                name="display_name"
-                type="text"
-                placeholder="DISPLAY NAME"
-                value={formData.display_name}
-                onChange={handleChange}
-                required
-                className={cn(
-                  "h-14 bg-white text-base",
-                  "border-3 border-black rounded-lg",
-                  "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
-                  "placeholder:text-black/60 px-3",
-                  "font-bold"
-                )}
-              />
-              <Input
-                name="email"
-                type="email"
-                placeholder="EMAIL"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className={cn(
-                  "h-14 bg-white text-base",
-                  "border-3 border-black rounded-lg",
-                  "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
-                  "placeholder:text-black/60 px-3",
-                  "font-bold"
-                )}
-              />
-            </div>
+        {/* Top Row: Avatar and Main Fields */}
+        <div className="grid grid-cols-[auto_1fr] gap-6 mb-5">
+          {/* Avatar Upload - Desktop */}
+          <div
+            className={cn(
+              "border-3 border-black rounded-lg bg-yellow-300 p-0 w-36 h-36 flex flex-col items-center justify-center relative overflow-hidden",
+              isDragging ? "translate-x-[-2px] translate-y-[-2px]" : ""
+            )}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {previewUrl ? (
+              <>
+                <img
+                  src={previewUrl}
+                  alt="Avatar preview"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={removeAvatar}
+                  className="absolute top-0 right-0 p-1 bg-white border-b-3 border-l-3 border-black transition-all z-10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <Upload className="w-10 h-10 mb-2" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="avatar-upload-desktop"
+                />
+                <label
+                  htmlFor="avatar-upload-desktop"
+                  className="text-base font-bold cursor-pointer text-center"
+                >
+                  UPLOAD PHOTO
+                </label>
+                <p className="text-xs mt-2 text-center">Drag & drop or click</p>
+              </>
+            )}
           </div>
 
-          {/* Password Fields */}
+          {/* Top Form Fields */}
           <div className="space-y-4">
             <Input
-              name="password"
-              type="password"
-              placeholder="PASSWORD"
-              value={formData.password}
+              name="display_name"
+              type="text"
+              placeholder="DISPLAY NAME"
+              value={formData.display_name}
               onChange={handleChange}
               required
               className={cn(
-                "h-14 bg-white text-base w-full",
+                "h-14 bg-white text-base",
                 "border-3 border-black rounded-lg",
                 "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
                 "placeholder:text-black/60 px-3",
@@ -213,14 +177,14 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
               )}
             />
             <Input
-              name="confirmPassword"
-              type="password"
-              placeholder="CONFIRM PASSWORD"
-              value={formData.confirmPassword}
+              name="email"
+              type="email"
+              placeholder="EMAIL"
+              value={formData.email}
               onChange={handleChange}
               required
               className={cn(
-                "h-14 bg-white text-base w-full",
+                "h-14 bg-white text-base",
                 "border-3 border-black rounded-lg",
                 "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
                 "placeholder:text-black/60 px-3",
@@ -228,6 +192,40 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
               )}
             />
           </div>
+        </div>
+
+        {/* Password Fields */}
+        <div className="space-y-4">
+          <Input
+            name="password"
+            type="password"
+            placeholder="PASSWORD"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className={cn(
+              "h-14 bg-white text-base w-full",
+              "border-3 border-black rounded-lg",
+              "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
+              "placeholder:text-black/60 px-3",
+              "font-bold"
+            )}
+          />
+          <Input
+            name="confirmPassword"
+            type="password"
+            placeholder="CONFIRM PASSWORD"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+            className={cn(
+              "h-14 bg-white text-base w-full",
+              "border-3 border-black rounded-lg",
+              "shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
+              "placeholder:text-black/60 px-3",
+              "font-bold"
+            )}
+          />
         </div>
 
         {/* Desktop Submit Button */}
@@ -258,7 +256,7 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
           </p>
         </div>
       </form>
-      
+
       {/* Mobile Form - Neo-brutalist style */}
       <form onSubmit={handleSubmit} className="md:hidden space-y-4">
         {/* Mobile Form with Avatar and Fields */}
@@ -268,7 +266,7 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
             {/* Avatar Upload - Mobile */}
             <div
               className={cn(
-                "border-3 border-black rounded-lg bg-yellow-300 p-2 w-20 h-20 flex flex-col items-center justify-center",
+                "border-3 border-black rounded-lg bg-yellow-300 p-0 w-20 h-20 flex flex-col items-center justify-center relative overflow-hidden",
                 isDragging ? "translate-x-[-2px] translate-y-[-2px]" : ""
               )}
               onDragOver={handleDragOver}
@@ -276,20 +274,20 @@ export function ProfileCreation({ onSubmit, loading }: ProfileCreationProps) {
               onDrop={handleDrop}
             >
               {previewUrl ? (
-                <div className="relative w-16 h-16">
+                <>
                   <img
                     src={previewUrl}
                     alt="Avatar preview"
-                    className="w-full h-full object-cover rounded-full border-2 border-black"
+                    className="w-full h-full object-cover"
                   />
                   <button
                     type="button"
                     onClick={removeAvatar}
-                    className="absolute -top-1 -right-1 p-0.5 bg-white border-2 border-black rounded-full transition-all"
+                    className="absolute top-0 right-0 p-0.5 bg-white border-b-2 border-l-2 border-black transition-all z-10"
                   >
                     <X className="w-2 h-2" />
                   </button>
-                </div>
+                </>
               ) : (
                 <>
                   <Upload className="w-6 h-6 mb-1" />

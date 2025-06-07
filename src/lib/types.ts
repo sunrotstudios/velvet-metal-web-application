@@ -1,5 +1,14 @@
-export type ServiceType = 'spotify' | 'apple-music';
-export type ViewMode = 'grid' | 'list';
+export type ServiceType = "spotify" | "apple-music" | "tidal" | "lastfm";
+export type LibraryContentType = "albums" | "playlists";
+export type ViewMode = "grid" | "list";
+
+export interface ConnectedService {
+  id: string;
+  service: ServiceType;
+  user_id: string;
+  created_at: string;
+  synced_at: string | null;
+}
 
 export interface UserAlbums {
   user: string; // Relation to users collection
@@ -17,20 +26,16 @@ export interface UserPlaylists {
 
 export interface UserPlaylist {
   id: string;
-  user_id: string;
-  service: ServiceType;
-  playlist_id: string;
   name: string;
   description?: string;
-  image_url?: string;
-  tracks_count?: number;
-  owner_id?: string;
-  owner_name?: string;
-  is_public: boolean;
-  external_url?: string;
-  synced_at: string;
+  artwork_url?: string;
+  service_id: string;
+  user_id: string;
+  service: ServiceType;
   created_at: string;
+  image_url: string;
   updated_at: string;
+  tracks?: number;
 }
 
 export interface UserAlbum {
@@ -42,14 +47,16 @@ export interface UserAlbum {
   artist_name: string;
   release_date?: string;
   image_url?: string;
-  tracks_count?: number;
+  tracks?: number;  // Changed back to tracks from tracks_count
   external_url?: string;
   synced_at: string;
   created_at: string;
   updated_at: string;
+  album_type?: string;  // Added
+  added_at?: string;    // Added
+  upc?: string;         // Added
 }
 
-// THE FINAL ALBUM TYPE
 export interface NormalizedAlbum {
   id: string;
   name: string;
@@ -65,6 +72,7 @@ export interface NormalizedAlbum {
   sourceService: 'spotify' | 'apple-music';
   sourceId: string;
   albumType: 'album' | 'single' | 'ep';
+  upc: string;
 }
 
 export interface NormalizedPlaylist {
@@ -78,7 +86,7 @@ export interface NormalizedPlaylist {
     height?: number | null;
     width?: number | null;
   };
-  tracks_count: number;
+  tracks: number;
   owner?: {
     id: string;
     display_name?: string;
@@ -114,34 +122,44 @@ export interface DetailedAlbum extends NormalizedAlbum {
 }
 
 export interface Album {
+  service: any;
   id: string;
-  album?: {
-    name: string;
-    images?: { url: string }[];
-    artists?: { name: string }[];
-    release_date?: string;
-    total_tracks?: number;
+  name: string;
+  artist_name: string;
+  image_url: string;
+  album_type?: string;
+  tracks?: number;
+  added_at?: string;
+  artwork?: {
+    url: string;
+    width?: number | null;
+    height?: number | null;
   };
-  attributes?: {
-    name: string;
-    artwork?: { url: string };
-    artistName?: string;
-    releaseDate?: string;
-    trackCount?: number;
-  };
+  artistName?: string;
+  releaseDate?: Date;
+  externalUrl?: string;
 }
 
 export interface Playlist {
   id: string;
-  name?: string;
-  images?: { url: string }[];
-  attributes?: {
-    name: string;
-    artwork?: { url: string };
-    trackCount?: number;
+  name: string;
+  description?: string;
+  metadata: {
+    platform: ServiceType;
+    isPublic?: boolean;
+    externalUrl?: string;
+  };
+  artwork?: {
+    url: string;
+    height?: number;
+    width?: number;
   };
   tracks?: {
     total?: number;
+  };
+  owner?: {
+    id: string;
+    displayName: string;
   };
 }
 
@@ -175,4 +193,23 @@ export interface SearchResult {
 export interface ApiError extends Error {
   status?: number;
   code?: string;
+}
+
+export interface ServiceConnection {
+  id: string;
+  user_id: string;
+  service: ServiceType;
+  connected_at: string;
+  synced_at: string | null;
+  sync_in_progress: boolean;
+  refresh_token?: string;
+  access_token?: string;
+  expires_at?: string;
+}
+
+export interface AppleAlbumSearchResult {
+  id: string;
+  name: string;
+  artistName: string;
+  artworkUrl?: string;
 }

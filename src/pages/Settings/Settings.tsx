@@ -2,18 +2,29 @@ import { useAuth } from "@/contexts/auth-context";
 import { useLastFm } from "@/contexts/last-fm-context";
 import { useConnectedServices } from "@/lib/hooks/useConnectedServices";
 import { supabase } from "@/lib/supabase";
-import { ServiceConnection } from "@/shared/services/ServiceConnection";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { LogOut, Music, Music2, Radio, Trash2, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { authorizeSpotify, unauthorizeSpotify } from "@/lib/services/spotify";
+import {
+  authorizeAppleMusic,
+  unauthorizeAppleMusic,
+} from "@/lib/services/apple-music";
+import { authorizeLastFm, unauthorizeLastFm } from "@/lib/services/lastfm-auth";
+import { useToast } from "@/components/ui/use-toast";
+import { ServiceType } from "@/lib/services/auth";
 
 export default function Settings() {
   const { user, logout } = useAuth();
-  const { data: connectedServices } = useConnectedServices();
-  const { username: lastFmUsername } = useLastFm();
+  const { data: connectedServices, refetch: refetchConnectedServices } =
+    useConnectedServices();
+  const { username: lastFmUsername, setUsername: setLastFmUsername } =
+    useLastFm();
   const [profile, setProfile] = useState<any>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -29,6 +40,88 @@ export default function Settings() {
         });
     }
   }, [user]);
+
+  const handleConnect = async (service: ServiceType) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to connect services.",
+      });
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      if (service === "spotify") {
+        await authorizeSpotify(user.id);
+      } else if (service === "apple-music") {
+        await authorizeAppleMusic(user.id);
+      } else if (service === "lastfm") {
+        const username = prompt("Enter your Last.fm username:");
+        if (username) {
+          await authorizeLastFm(username);
+          setLastFmUsername(username);
+        }
+      }
+      await refetchConnectedServices();
+    } catch (error) {
+      console.error("Error connecting service:", error);
+      toast({
+        title: "Error",
+        description: "Failed to connect service. Please try again.",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleDisconnect = async (service: ServiceType) => {
+    if (!user) return;
+
+    setIsConnecting(true);
+    try {
+      // First remove the service authorization
+      if (service === "spotify") {
+        await unauthorizeSpotify(user.id);
+      } else if (service === "apple-music") {
+        await unauthorizeAppleMusic(user.id);
+      } else if (service === "lastfm") {
+        await unauthorizeLastFm();
+        setLastFmUsername("");
+      }
+
+      // Then clean up the user's data for this service
+      if (service !== "lastfm") {
+        // Delete albums
+        await supabase
+          .from("user_albums")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("service", service);
+
+        // Delete playlists
+        await supabase
+          .from("user_playlists")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("service", service);
+      }
+
+      await refetchConnectedServices();
+      toast({
+        title: "Success",
+        description: "Service disconnected successfully.",
+      });
+    } catch (error) {
+      console.error("Error disconnecting service:", error);
+      toast({
+        title: "Error",
+        description: "Failed to disconnect service. Please try again.",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
   if (!user) return null;
 
@@ -141,18 +234,32 @@ export default function Settings() {
                       <h3 className="font-bold">{service.name}</h3>
                       <p className="text-sm">
                         {service.isConnected ? "Connected" : "Not connected"}
+                        {service.type === "lastfm" &&
+                          service.username &&
+                          ` (${service.username})`}
                       </p>
                     </div>
                   </div>
                   <button
+                    onClick={() =>
+                      service.isConnected
+                        ? handleDisconnect(service.type)
+                        : handleConnect(service.type)
+                    }
+                    disabled={isConnecting}
                     className={cn(
                       "px-4 py-1.5 bg-white border-2 border-black rounded-lg text-sm font-bold transition-all",
                       "text-black",
                       "hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
-                      "hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                      "hover:translate-x-[-2px] hover:translate-y-[-2px]",
+                      "disabled:opacity-50 disabled:cursor-not-allowed"
                     )}
                   >
-                    {service.isConnected ? "Disconnect" : "Connect"}
+                    {isConnecting
+                      ? "Loading..."
+                      : service.isConnected
+                      ? "Disconnect"
+                      : "Connect"}
                   </button>
                 </div>
               </motion.div>

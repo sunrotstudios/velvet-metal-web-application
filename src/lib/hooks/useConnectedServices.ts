@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getUserServices } from '@/lib/services/streaming-auth';
+import { getUserServices } from '@/lib/services/auth';
 import { useAuth } from '@/contexts/auth-context';
 
 export function useConnectedServices() {

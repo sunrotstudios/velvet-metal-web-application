@@ -1,5 +1,6 @@
 /* eslint-disable prefer-const */
 import { supabase } from '@/lib/supabase';
+import logger from '@/lib/logger';
 
 export const storage = {
   async getItem(key: string) {
@@ -64,7 +65,7 @@ export const storage = {
 
 export async function getStoredLibrary(userId: string, service: string) {
   try {
-    console.log('Fetching library from database for:', { userId, service });
+    logger.info('Fetching library from database for:', { userId, service });
 
     // Fetch albums with pagination
     let allAlbums: any[] = [];

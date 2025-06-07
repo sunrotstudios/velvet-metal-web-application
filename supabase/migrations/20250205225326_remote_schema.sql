@@ -52,7 +52,7 @@ create table "public"."playlist_sync_pairs" (
     "source_service" text not null,
     "target_playlist_id" text not null,
     "target_service" text not null,
-    "last_synced_at" timestamp with time zone,
+    "synced_at" timestamp with time zone,
     "is_active" boolean default true,
     "sync_enabled" boolean default true,
     "last_error" text,
@@ -135,7 +135,7 @@ create table "public"."user_albums" (
     "artist_name" text not null,
     "release_date" text,
     "image_url" text,
-    "tracks_count" integer,
+    "tracks" integer,
     "external_url" text,
     "synced_at" timestamp with time zone default CURRENT_TIMESTAMP,
     "created_at" timestamp with time zone default CURRENT_TIMESTAMP,
@@ -156,7 +156,7 @@ create table "public"."user_playlists" (
     "name" text not null,
     "description" text,
     "image_url" text,
-    "tracks_count" integer,
+    "tracks" integer,
     "owner_id" text,
     "owner_name" text,
     "is_public" boolean default true,
@@ -178,11 +178,11 @@ create table "public"."user_services" (
     "service" service_type not null,
     "access_token" text not null,
     "refresh_token" text,
-    "token_expires_at" timestamp with time zone,
+    "expires_at" timestamp with time zone,
     "created_at" timestamp with time zone default timezone('utc'::text, now()),
     "updated_at" timestamp with time zone default timezone('utc'::text, now()),
     "music_user_token" text,
-    "last_library_sync" timestamp with time zone
+    "synced_at" timestamp with time zone
 );
 
 

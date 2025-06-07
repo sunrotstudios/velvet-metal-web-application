@@ -6,6 +6,7 @@ import {
   findBestMatchingAlbum,
   searchAppleMusicCatalog,
 } from '../api/apple-music';
+import logger from '@/lib/logger';
 
 export type TransferProgress = {
   current: number;
@@ -31,7 +32,7 @@ export async function transferLibrary(
   onProgress: (progress: TransferProgress) => void,
   logger: TransferLogger
 ) {
-  console.log('Starting transfer library process:', {
+  logger.info('Starting transfer library process:', {
     userId,
     fromService,
     toService,
@@ -438,7 +439,7 @@ export async function verifyTransfer(
   appleMusicToken: string,
   logger: TransferLogger
 ) {
-  console.log('Verifying transferred albums...');
+  logger.info('Verifying transferred albums...');
 
   // Get the most recent transfer
   const { data: transfer, error: transferError } = await supabase
@@ -479,7 +480,7 @@ export async function verifyTransfer(
 
   // Check if albums exist in Apple Music library
   const albumIds = albums.map((album) => album.service_id);
-  console.log(`Checking ${albumIds.length} albums in Apple Music library...`);
+  logger.info(`Checking ${albumIds.length} albums in Apple Music library...`);
 
   const results = await checkAlbumsInLibrary(albumIds, appleMusicToken);
 

@@ -75,7 +75,7 @@
 /* Mondwest */
 @font-face {
   font-family: "Mondwest";
-  src: url("/fonts/PPMondwest-Regular.otf") format("opentype");
+  src: url("/fonts/Mondwest/PPMondwest-Regular.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;

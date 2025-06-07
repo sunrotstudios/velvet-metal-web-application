@@ -1,4 +1,5 @@
 import { ServiceType } from '../types';
+import logger from '@/lib/logger';
 
 interface SyncQueueItem {
   userId: string;
@@ -16,14 +17,14 @@ class LibrarySyncQueue {
   private readonly baseDelay = 1000; // 1 second
 
   public enqueue(userId: string, service: ServiceType, priority = 0) {
-    console.log('Enqueueing sync task:', { userId, service, priority });
+    logger.info('Enqueueing sync task:', { userId, service, priority });
     
     const existingItem = this.queue.find(
       (item) => item.userId === userId && item.service === service
     );
 
     if (existingItem) {
-      console.log('Found existing sync task, updating priority');
+      logger.info('Found existing sync task, updating priority');
       existingItem.priority = Math.max(existingItem.priority, priority);
       return;
     }
@@ -35,11 +36,11 @@ class LibrarySyncQueue {
       retryCount: 0,
     });
 
-    console.log('Current queue:', this.queue);
+    logger.info('Current queue:', this.queue);
     this.sortQueue();
     
     if (!this.isProcessing) {
-      console.log('Starting queue processing');
+      logger.info('Starting queue processing');
       this.processQueue();
     }
   }
@@ -50,20 +51,20 @@ class LibrarySyncQueue {
 
   private async processQueue() {
     if (this.isProcessing || this.queue.length === 0) {
-      console.log('Queue processing skipped:', { 
-        isProcessing: this.isProcessing, 
-        queueLength: this.queue.length 
+      logger.info('Queue processing skipped:', { 
+        queueEmpty: this.queue.length === 0,
+        isProcessing: this.isProcessing
       });
       return;
     }
 
     this.isProcessing = true;
     const item = this.queue[0];
-    console.log('Processing sync task:', item);
+    logger.info('Processing sync task:', item);
 
     try {
       await this.processSyncItem(item);
-      console.log('Sync task completed successfully');
+      logger.info('Sync task completed successfully');
       this.queue.shift(); // Remove the processed item
     } catch (error) {
       console.error(`Sync failed for ${item.service}:`, error);
@@ -71,7 +72,7 @@ class LibrarySyncQueue {
       if (item.retryCount < this.maxRetries) {
         item.retryCount++;
         item.lastAttempt = new Date();
-        console.log(`Retrying sync task (attempt ${item.retryCount}/${this.maxRetries})`);
+        logger.info(`Retrying sync task (attempt ${item.retryCount}/${this.maxRetries})`);
         // Move to the end of the queue
         this.queue.shift();
         this.queue.push(item);
@@ -87,7 +88,7 @@ class LibrarySyncQueue {
     if (this.queue.length > 0) {
       const nextItem = this.queue[0];
       const delay = this.calculateBackoff(nextItem);
-      console.log(`Scheduling next sync task in ${delay}ms`);
+      logger.info(`Scheduling next sync task in ${delay}ms`);
       setTimeout(() => this.processQueue(), delay);
     }
   }
